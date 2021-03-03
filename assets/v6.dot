@@ -1,0 +1,25 @@
+digraph G {
+	s2_q1_s5->q1[ label=<<font color="blue">x</font>> ];
+	s2->q1[ label=<<font color="blue">x</font>> ];
+	q0->s3[ label=<<font color="blue">y</font>> ];
+	s7_s4->q1[ label=<<font color="blue">x</font>> ];
+	s7->s7[ label=<<font color="blue">a</font>> ];
+	s7_s4->s3[ label=<<font color="blue">y</font>> ];
+	s7_s4->s2[ label=<<font color="blue">b</font>> ];
+	s2->s3[ label=<<font color="blue">y</font>> ];
+	q0->s7_s4[ label=<<font color="blue">a</font>> ];
+	q0->s2_q1_s5[ label=<<font color="blue">x</font>> ];
+	s7->s3[ label=<<font color="blue">y</font>> ];
+	s7->q1[ label=<<font color="blue">x</font>> ];
+	s2_q1_s5->s2_q1_s5[ label=<<font color="blue">y</font>> ];
+	s7_s4->s7[ label=<<font color="blue">a</font>> ];
+	s3->s3[ label=<<font color="blue">y</font>> ];
+	q0;
+	q1;
+	s2;
+	s2_q1_s5;
+	s3;
+	s7;
+	s7_s4;
+
+}
