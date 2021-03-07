@@ -1,19 +1,20 @@
 package fsm
 
 import (
+	"fmt"
 	"gocompiler/internal/graph"
 	"log"
+	"sort"
 	"strings"
 )
 
 // FSM НКА
 type FSM struct {
 	*graph.Graph
-	//transitionTable map[string]string
 }
 
 // RemoveShortCircuits убрать замыкания
-func (fsm *FSM) RemoveShortCircuits() {
+func (fsm *FSM) RemoveShortCircuits() *FSM {
 	for _, e := range fsm.Edges {
 		if e.Weight == "*" {
 			vIn := fsm.Vertexes[e.From].In
@@ -25,7 +26,6 @@ func (fsm *FSM) RemoveShortCircuits() {
 				}
 				fsm.RemoveEdge(ei)
 				fsm.AddEdge(&newEdge)
-
 				fsm.AddEdge(&graph.Edge{
 					From:   ei.To,
 					To:     ei.To,
@@ -41,10 +41,11 @@ func (fsm *FSM) RemoveShortCircuits() {
 			fsm.RemoveVertex(v.ID)
 		}
 	}
+	return fsm
 }
 
 // ReplaceEpsilons заменить епсилон-переходы
-func (fsm *FSM) ReplaceEpsilons() {
+func (fsm *FSM) ReplaceEpsilons() *FSM {
 	log.Println("Заменить епсилон-переходы")
 	var newFSM = &FSM{graph.NewGraph()}
 	for _, v := range fsm.Vertexes {
@@ -74,10 +75,11 @@ func (fsm *FSM) ReplaceEpsilons() {
 	}
 
 	*fsm = *newFSM
+	return fsm
 }
 
 // ReplaceEqualEdges - убрать ребра-дубли
-func (fsm *FSM) ReplaceEqualEdges() {
+func (fsm *FSM) ReplaceEqualEdges() *FSM {
 	log.Println("Убрать ребра дубли")
 	var (
 		removeVertexes = make([]*graph.Vertex, 0)
@@ -134,6 +136,7 @@ func (fsm *FSM) ReplaceEqualEdges() {
 	for _, v := range removeVertexes {
 		fsm.RemoveVertex(v.ID)
 	}
+	return fsm
 }
 
 type DKAVertex struct {
@@ -141,12 +144,47 @@ type DKAVertex struct {
 	Olds []string
 }
 
+// Beautify установить красивые названия
+func (fsm *FSM) Beautify() *FSM {
+	return fsm
+	var (
+		newFSM        = &FSM{graph.NewGraph()}
+		counter       = 0
+		queue         = []string{fsm.GetFirst().ID}
+		namesRemember = make(map[string]string, 0)
+		setName       = func(oldName string) string {
+			v, ok := namesRemember[oldName]
+			if ok {
+				return v
+			}
+			var name = fmt.Sprintf("%d", counter)
+			namesRemember[oldName] = name
+			counter++
+			return name
+		}
+	)
+	for len(queue) != 0 {
+		head := fsm.Vertexes[queue[0]]
+
+		for _, edge := range head.Out {
+			newFSM.AddEdge(edge, graph.VertexOptChangeName(setName))
+			if edge.From == edge.To {
+				continue
+			}
+			queue = append(queue, edge.To)
+		}
+
+		queue = queue[1:]
+	}
+	return newFSM
+}
+
 // NkaToDka - построение эквивалентного ДКА к НКА
 // алгоритм Томпсона https://neerc.ifmo.ru/wiki/index.php?title=Построение_по_НКА_эквивалентного_ДКА,_алгоритм_Томпсона
-func (fsm *FSM) NkaToDka() {
+func (fsm *FSM) NkaToDka() *FSM {
 	log.Println("Построить ДКА, эквивалентное указанному НКА")
 	if len(fsm.Vertexes) == 0 {
-		return
+		return fsm
 	}
 	var (
 		visitedCombinations = make(map[string]bool, 0)
@@ -168,6 +206,7 @@ func (fsm *FSM) NkaToDka() {
 		// вложенная мэпа, чтобы гарантировать уникальность узлов
 		var paths = make(map[string]map[string]bool, 0)
 		for _, old := range head.Olds {
+			log.Println("old", old, fsm.Vertexes[old])
 			toWhom := fsm.Vertexes[old].Out
 			for _, e := range toWhom {
 				// if e.From == e.To {
@@ -188,9 +227,11 @@ func (fsm *FSM) NkaToDka() {
 			for vertex := range vertexes {
 				ids = append(ids, vertex)
 			}
-			id := strings.Join(ids, "_")
+			var id string
+			sort.Strings(ids)
+			id = strings.Join(ids, " ")
 
-			newVertex := newFSM.AddVertex(id)
+			newVertex := newFSM.AddVertex(graph.VertexOptID(id))
 			newFSM.AddEdge(&graph.Edge{
 				From:   head.From,
 				To:     newVertex,
@@ -213,6 +254,7 @@ func (fsm *FSM) NkaToDka() {
 		queue = queue[1:]
 	}
 	*fsm = *newFSM
+	return fsm
 }
 
 func (fsm *FSM) replaceEpsilons(

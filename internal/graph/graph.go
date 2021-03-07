@@ -1,6 +1,8 @@
 package graph
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Vertex - структура вершин
 type Vertex struct {
@@ -41,10 +43,41 @@ func NewGraph() *Graph {
 	}
 }
 
+type VertexOpts struct {
+	changeName func(string) string
+	id         string
+}
+
+type VertexOpt func(*VertexOpts)
+
+func VertexOptChangeName(changeName func(string) string) VertexOpt {
+	return func(o *VertexOpts) {
+		o.changeName = changeName
+	}
+}
+
+func VertexOptID(id string) VertexOpt {
+	return func(o *VertexOpts) {
+		o.id = id
+	}
+}
+
 // AddVertex - добавить вершину
-func (g *Graph) AddVertex(id string) string {
+func (g *Graph) AddVertex(opts ...VertexOpt) string {
+	options := &VertexOpts{}
+	for _, opt := range opts {
+		opt(options)
+	}
+	var id string
+	if options.changeName != nil {
+		id = options.changeName(options.id)
+	}
 	if id == "" {
-		id = fmt.Sprintf("s%d", g.counter)
+		if options.id != "" {
+			id = options.id
+		} else {
+			id = fmt.Sprintf("s%d", g.counter)
+		}
 	}
 	_, ok := g.Vertexes[id]
 	if !ok {
@@ -70,6 +103,7 @@ func (g *Graph) GetFirst() *Vertex {
 	}
 	var vertex = &Vertex{}
 	for _, v := range g.Vertexes {
+		vertex = v // Нельзя оставить вершину не проинициализированной
 		if len(v.In) == 0 {
 			return v
 		}
@@ -91,9 +125,14 @@ func (g *Graph) VertexesArr() []*Vertex {
 }
 
 // AddEdge - добавить ребро
-func (g *Graph) AddEdge(e *Edge) {
-	e.From = g.AddVertex(e.From)
-	e.To = g.AddVertex(e.To)
+func (g *Graph) AddEdge(ce *Edge, opts ...VertexOpt) {
+	var e = &Edge{
+		From:   ce.From,
+		To:     ce.To,
+		Weight: ce.Weight,
+	}
+	e.From = g.AddVertex(append(opts, VertexOptID(e.From))...)
+	e.To = g.AddVertex(append(opts, VertexOptID(e.To))...)
 	id := e.ID()
 
 	g.Edges[id] = e

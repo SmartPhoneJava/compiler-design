@@ -14,7 +14,7 @@ import (
 func MustVisualizeFSM(g *fsm.FSM, path string) {
 	err := VisualizeFSM(g, path)
 	if err != nil {
-		log.Fatalf("err: %e", err)
+		log.Fatalf("err: %v", err)
 	}
 }
 
@@ -27,11 +27,11 @@ func VisualizeFSM(g *fsm.FSM, path string) error {
 	}
 	var attrs = make(map[string]string, 0)
 	for _, v := range g.Vertexes {
-		graph.AddNode("G", v.ID, nil)
+		graph.AddNode("G", toString(v.ID), nil)
 	}
 	for _, e := range g.Edges {
 		attrs["label"] = fmt.Sprintf(`<<font color="blue">%s</font>>`, e.Weight)
-		graph.AddEdge(e.From, e.To, true, attrs)
+		graph.AddEdge(toString(e.From), toString(e.To), true, attrs)
 	}
 	file, err := os.Create(path)
 
@@ -42,4 +42,8 @@ func VisualizeFSM(g *fsm.FSM, path string) error {
 	file.WriteString(graph.String())
 
 	return nil
+}
+
+func toString(s string) string {
+	return `"` + s + `"`
 }
