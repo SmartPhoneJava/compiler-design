@@ -1,0 +1,16 @@
+digraph G {
+	"D"->"B"[ label=<<font color="blue">a</font>> ];
+	"D"->"C"[ label=<<font color="blue">c</font>> ];
+	"A"->"B"[ label=<<font color="blue">a</font>> ];
+	"A"->"C"[ label=<<font color="blue">c</font>> ];
+	"C"->"E"[ label=<<font color="blue">c</font>> ];
+	"E"->"B"[ label=<<font color="blue">a</font>> ];
+	"B"->"E"[ label=<<font color="blue">c</font>> ];
+	"B"->"D"[ label=<<font color="blue">b</font>> ];
+	"A" [ label=<<font color="green">A</font>> ];
+	"B";
+	"C";
+	"D";
+	"E";
+
+}

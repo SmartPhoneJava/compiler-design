@@ -2,7 +2,6 @@ package graph
 
 import (
 	"fmt"
-	"log"
 )
 
 // Vertex - структура вершин
@@ -102,27 +101,6 @@ func (g *Graph) SetFirstLast(f, l []string) {
 	g.Last = l
 
 }
-
-// SetFirstLast - установить первый и последний узлы
-func (g *Graph) SwitchFirstLast() {
-	g.First, g.Last = g.Last, g.First
-}
-
-// // GetFirst - получить исток
-// func (g *Graph) GetFirst() *Vertex {
-// 	// log.Println("g.firstVertex", g.firstVertex, g.firstVertex.countIn())
-// 	// if g.firstVertex != nil && g.firstVertex.countIn() == 0 {
-// 	// 	return g.firstVertex
-// 	// }
-// 	// //var vertex = &Vertex{}
-// 	// for _, v := range g.Vertexes {
-// 	// 	vertex = v // Нельзя оставить вершину не проинициализированной
-// 	// 	if v.countIn() == 0 {
-// 	// 		return v
-// 	// 	}
-// 	// }
-// 	return g.First
-// }
 
 // GetFirst - получить исток
 func (v Vertex) countIn() int {
@@ -230,17 +208,62 @@ func (g *Graph) FindInString(find string, ids []string) bool {
 	return false
 }
 
+func (g *Graph) fixFirstLast() {
+	g.fixArr(&g.First)
+	g.fixArr(&g.Last)
+}
+
+func (g *Graph) fixArr(oldArr *[]string) {
+	var vertexes = make(map[string]bool, 0)
+	for _, v := range *oldArr {
+		_, ok := g.Vertexes[v]
+		if ok {
+			vertexes[v] = true
+		}
+	}
+	var arr = make([]string, 0)
+	for v := range vertexes {
+		arr = append(arr, v)
+	}
+	*oldArr = arr
+}
+
 // Beautify установить красивые названия
 func (g *Graph) Beautify() *Graph {
-	//return g
-	// last и first тоже заменять
-	log.Println("before", len(g.First), len(g.Last))
 	var (
 		namesReplacer = make(map[string]string, 0)
 		newFSM        = NewGraph()
 		i             int
 	)
+	g.fixFirstLast()
+	vertexes := g.First
+	for _, vID := range vertexes {
+		if vID == "" {
+			continue
+		}
+		_, ok := namesReplacer[vID]
+		if !ok {
+			namesReplacer[vID] = fmt.Sprintf("%d", i+1)
+			i++
+		}
+		vertex := g.Vertexes[vID]
+		if vertex == nil {
+			continue
+		}
+		for _, edge := range vertex.Out {
+			_, ok := namesReplacer[edge.To]
+			if !ok {
+				namesReplacer[edge.To] = fmt.Sprintf("%d", i+1)
+				i++
+			}
+			vertexes = append(vertexes, edge.To)
+		}
+	}
 	for _, v := range g.Vertexes {
+		_, ok := namesReplacer[v.ID]
+		if ok {
+			continue
+		}
 		namesReplacer[v.ID] = fmt.Sprintf("%d", i+1)
 		i++
 	}
@@ -257,8 +280,5 @@ func (g *Graph) Beautify() *Graph {
 	for _, str := range g.Last {
 		newFSM.Last = append(newFSM.Last, namesReplacer[str])
 	}
-	//newFSM.SetFirstLast(namesReplacer[g.First], namesReplacer[g.Last])
-	*g = *newFSM
-	log.Println("after", len(g.First), len(g.Last))
 	return newFSM
 }

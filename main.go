@@ -17,22 +17,22 @@ const (
 func main() {
 	var rw = expressions.NewRW("(xy* | ab | (x | a*)) (x | y*)")
 	kda := converter.ExpressionToNKA(&rw)
-	visualizer.MustVisualizeFSM(kda, "assets/v1.dot")
+	visualizer.MustVisualizeFSM(kda, "assets", "v1.dot")
 
 	kda.RemoveShortCircuits()
-	visualizer.MustVisualizeFSM(kda, "assets/v2.dot")
+	visualizer.MustVisualizeFSM(kda, "assets", "v2.dot")
 
 	kda.ReplaceEpsilons()
-	visualizer.MustVisualizeFSM(kda, "assets/v3.dot")
+	visualizer.MustVisualizeFSM(kda, "assets", "v3.dot")
 
 	kda.ReplaceEqualEdges()
-	visualizer.MustVisualizeFSM(kda, "assets/v4.dot")
+	visualizer.MustVisualizeFSM(kda, "assets", "v4.dot")
 
-	kda.NkaToDka()
-	visualizer.MustVisualizeFSM(kda, "assets/v5.dot")
+	kda.ToDka()
+	visualizer.MustVisualizeFSM(kda, "assets", "v5.dot")
 
 	kda.ReplaceEqualEdges()
-	visualizer.MustVisualizeFSM(kda, "assets/v6.dot")
+	visualizer.MustVisualizeFSM(kda, "assets", "v6.dot")
 
 	// for _, v := range kda.Vertexes {
 	// 	log.Println("vertex is", v.ID)

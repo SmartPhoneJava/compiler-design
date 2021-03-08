@@ -2,6 +2,7 @@ package fsm
 
 import (
 	"gocompiler/internal/graph"
+	"log"
 )
 
 // DR - КА с поддержкой операций d,r
@@ -26,11 +27,15 @@ func NewDRFromFS(fsm FSM) *DR {
 }
 
 // NewDRFromEdges - как NewDR, но на основе списка ребёр
-func NewDRFromEdges(edges []graph.Edge) *DR {
+func NewDRFromEdges(
+	edges []graph.Edge,
+	first, last []string,
+) *DR {
 	var dr = NewDR()
 	for _, edge := range edges {
 		dr.AddEdge(&edge)
 	}
+	dr.SetFirstLast(first, last)
 	return dr
 }
 
@@ -52,6 +57,9 @@ func (A *DR) R() *DR {
 		})
 	}
 
+	log.Println("reverse last", A.Last)
+	log.Println("reverse first", A.First)
+
 	reverseMe.SetFirstLast(A.Last, A.First)
 	reverseMe = &DR{FSM{reverseMe.Beautify()}}
 	*A = *reverseMe
@@ -60,7 +68,7 @@ func (A *DR) R() *DR {
 
 // IsSame - сранить два КА
 func (A DR) IsSame(B DR) bool {
-	var try = 100
+	var try = 1
 	for try > 0 {
 		try--
 		right := A.isSame(B)

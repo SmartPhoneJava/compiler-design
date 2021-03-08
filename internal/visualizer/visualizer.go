@@ -11,15 +11,15 @@ import (
 
 // MustVisualizeFSM - попробовать визуализировать граф
 //  если не выйдет, то бросаем фатальную ошибку
-func MustVisualizeFSM(g *fsm.FSM, path string) {
-	err := VisualizeFSM(g, path)
+func MustVisualizeFSM(g *fsm.FSM, path, name string) {
+	err := VisualizeFSM(g, path, name)
 	if err != nil {
 		log.Fatalf("err: %v", err)
 	}
 }
 
 // VisualizeFSM - визуализировать граф
-func VisualizeFSM(g *fsm.FSM, path string) error {
+func VisualizeFSM(g *fsm.FSM, path, name string) error {
 	graphAst, _ := gographviz.ParseString(`digraph G {}`)
 	graph := gographviz.NewGraph()
 	if err := gographviz.Analyse(graphAst, graph); err != nil {
@@ -40,7 +40,13 @@ func VisualizeFSM(g *fsm.FSM, path string) error {
 		attrs["label"] = fmt.Sprintf(`<<font color="blue">%s</font>>`, e.Weight)
 		graph.AddEdge(toString(e.From), toString(e.To), true, attrs)
 	}
-	file, err := os.Create(path)
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		err := os.MkdirAll(path, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+	file, err := os.Create(path + "/" + name)
 
 	if err != nil {
 		return err

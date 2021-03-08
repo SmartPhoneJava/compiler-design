@@ -143,7 +143,7 @@ type DKAVertex struct {
 	Olds []string
 }
 
-// NkaToDka - построение эквивалентного ДКА к НКА
+// ToDka - построение эквивалентного ДКА к НКА
 // http://esyr.org/wiki/Конструирование_Компиляторов%2C_Алгоритмы_решения_задач#.D0.9F.D0.BE.D1.81.D1.82.D1.80.D0.BE.D0.B5.D0.BD.D0.B8.D0.B5_.D0.94.D0.9A.D0.90_.D0.BF.D0.BE_.D0.9D.D0.9A.D0.90
 func (fsm *FSM) ToDka() *FSM {
 	log.Println("Построить ДКА, эквивалентное указанному НКА")
@@ -161,7 +161,6 @@ func (fsm *FSM) ToDka() *FSM {
 		}
 		lastVertexes []string
 	)
-	// newFSM.AddVertex(fsm.GetFirst().ID)
 	for len(queue) != 0 {
 		head := queue[0]
 
@@ -169,12 +168,8 @@ func (fsm *FSM) ToDka() *FSM {
 		// вложенная мэпа, чтобы гарантировать уникальность узлов
 		var paths = make(map[string]map[string]bool, 0)
 		for _, old := range head.Olds {
-			//log.Println("old", old, fsm.Vertexes[old])
 			toWhom := fsm.Vertexes[old].Out
 			for _, e := range toWhom {
-				// if e.From == e.To {
-				// 	continue
-				// }
 				_, ok := paths[e.Weight]
 				if !ok {
 					paths[e.Weight] = make(map[string]bool, 0)
@@ -199,7 +194,6 @@ func (fsm *FSM) ToDka() *FSM {
 			id = strings.Join(ids, " ")
 
 			newVertex := newFSM.AddVertex(graph.VertexOptID(id))
-			log.Printf("add edge %s -> %s by %s", head.From, newVertex, path)
 			newFSM.AddEdge(&graph.Edge{
 				From:   head.From,
 				To:     newVertex,
@@ -227,12 +221,6 @@ func (fsm *FSM) ToDka() *FSM {
 	newFSM.SetFirstLast(fsm.First, lastVertexes)
 	*fsm = *newFSM
 	return fsm
-}
-
-// NkaToDka - построение эквивалентного ДКА к НКА
-// алгоритм Томпсона https://neerc.ifmo.ru/wiki/index.php?title=Построение_по_НКА_эквивалентного_ДКА,_алгоритм_Томпсона
-func (fsm *FSM) NkaToDka() *FSM {
-	return fsm.ToDka()
 }
 
 func (fsm *FSM) replaceEpsilons(
