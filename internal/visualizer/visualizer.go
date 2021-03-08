@@ -18,6 +18,15 @@ func MustVisualizeFSM(g *fsm.FSM, path, name string) {
 	}
 }
 
+// MustVisualizeDR - попробовать визуализировать граф
+//  если не выйдет, то бросаем фатальную ошибку
+func MustVisualizeDR(g *fsm.DR, path, name string) {
+	err := VisualizeFSM(&g.FSM, path, name)
+	if err != nil {
+		log.Fatalf("err: %v", err)
+	}
+}
+
 // VisualizeFSM - визуализировать граф
 func VisualizeFSM(g *fsm.FSM, path, name string) error {
 	graphAst, err := gographviz.ParseString(`digraph G {}`)

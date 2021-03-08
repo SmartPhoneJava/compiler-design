@@ -1,15 +1,15 @@
 digraph G {
-	"s6"->"s2"[ label=<<font color="blue">*</font>> ];
-	"q0"->"s2"[ label=<<font color="blue">x </font>> ];
-	"s7"->"s2"[ label=<<font color="blue">*</font>> ];
+	"s6"->"q1"[ label=<<font color="blue">*</font>> ];
+	"s2"->"q1"[ label=<<font color="blue">x</font>> ];
+	"s2"->"s6"[ label=<<font color="blue">y</font>> ];
+	"q0"->"s4"[ label=<<font color="blue">x</font>> ];
 	"s3"->"s2"[ label=<<font color="blue">b</font>> ];
-	"s4"->"q1"[ label=<<font color="blue">*</font>> ];
-	"s5"->"s6"[ label=<<font color="blue">y</font>> ];
-	"q0"->"s5"[ label=<<font color="blue">x</font>> ];
-	"q0"->"s7"[ label=<<font color="blue">a</font>> ];
-	"s2"->"q1"[ label=<<font color="blue">x </font>> ];
+	"s5"->"s2"[ label=<<font color="blue">*</font>> ];
 	"q0"->"s3"[ label=<<font color="blue">a</font>> ];
-	"s2"->"s4"[ label=<<font color="blue">y</font>> ];
+	"s4"->"s5"[ label=<<font color="blue">y</font>> ];
+	"q0"->"s2"[ label=<<font color="blue">x</font>> ];
+	"q0"->"s7"[ label=<<font color="blue">a</font>> ];
+	"s7"->"s2"[ label=<<font color="blue">*</font>> ];
 	"q0";
 	"q1";
 	"s2";

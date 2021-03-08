@@ -1,24 +1,25 @@
 digraph G {
-	"p1"->"p4"[ label=<<font color="blue">x</font>> ];
-	"p0"->"p2"[ label=<<font color="blue">y</font>> ];
-	"p0"->"p3"[ label=<<font color="blue">a</font>> ];
-	"p3"->"p5"[ label=<<font color="blue">a</font>> ];
-	"p3"->"p6"[ label=<<font color="blue">b</font>> ];
-	"p2"->"p2"[ label=<<font color="blue">y</font>> ];
-	"p6"->"p2"[ label=<<font color="blue">y</font>> ];
-	"p1"->"p1"[ label=<<font color="blue">y</font>> ];
-	"p5"->"p5"[ label=<<font color="blue">a</font>> ];
-	"p5"->"p2"[ label=<<font color="blue">y</font>> ];
-	"p5"->"p4"[ label=<<font color="blue">x</font>> ];
-	"p6"->"p4"[ label=<<font color="blue">x</font>> ];
-	"p0"->"p1"[ label=<<font color="blue">x</font>> ];
-	"p3"->"p2"[ label=<<font color="blue">y</font>> ];
-	"p0" [ label=<<font color="green">p0</font>> ];
-	"p1";
-	"p2";
-	"p3";
-	"p4" [ label=<<font color="red">p4</font>> ];
-	"p5";
-	"p6";
+	"1 a a"->"1 a x"[ label=<<font color="blue">x</font>> ];
+	"1 a"->"1 y"[ label=<<font color="blue">y</font>> ];
+	"1 a b"->"1 a x"[ label=<<font color="blue">x</font>> ];
+	"1"->"1 x"[ label=<<font color="blue">x</font>> ];
+	"1"->"1 y"[ label=<<font color="blue">y</font>> ];
+	"1 a"->"1 a a"[ label=<<font color="blue">a</font>> ];
+	"1 x"->"1 a x"[ label=<<font color="blue">x</font>> ];
+	"1 y"->"1 y"[ label=<<font color="blue">y</font>> ];
+	"1 a a"->"1 y"[ label=<<font color="blue">y</font>> ];
+	"1 a a"->"1 a a"[ label=<<font color="blue">a</font>> ];
+	"1 a"->"1 a x"[ label=<<font color="blue">x</font>> ];
+	"1 a"->"1 a b"[ label=<<font color="blue">b</font>> ];
+	"1 a b"->"1 y"[ label=<<font color="blue">y</font>> ];
+	"1 x"->"1 x"[ label=<<font color="blue">y</font>> ];
+	"1"->"1 a"[ label=<<font color="blue">a</font>> ];
+	"1 a a";
+	"1 a b";
+	"1 a x" [ label=<<font color="red">1 a x</font>> ];
+	"1 a";
+	"1 x";
+	"1 y";
+	"1" [ label=<<font color="green">1</font>> ];
 
 }

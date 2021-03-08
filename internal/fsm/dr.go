@@ -64,7 +64,7 @@ func (A *DR) R() *DR {
 
 // IsSame - сранить два КА
 func (A DR) IsSame(B DR) bool {
-	var try = 1
+	var try = 100
 	for try > 0 {
 		try--
 		right := A.isSame(B)
@@ -72,7 +72,11 @@ func (A DR) IsSame(B DR) bool {
 			return true
 		}
 	}
-	return false
+	return A.isSame(B)
+}
+
+func (A DR) CompareMode() *DR {
+	return &DR{FSM: FSM{A.Graph.CompareMode()}}
 }
 
 // IsSame - сранить два КА
@@ -80,8 +84,8 @@ func (A DR) isSame(B DR) bool {
 	var (
 		// Если не бьютифаить графы, то могут не
 		// совпасть названия узлов
-		copyA = A.Beautify()
-		copyB = B.Beautify()
+		copyA = A.CompareMode()
+		copyB = B.CompareMode()
 	)
 	if len(copyA.Vertexes) != len(copyB.Vertexes) ||
 		len(copyA.Edges) != len(copyB.Edges) {

@@ -6,7 +6,6 @@ import (
 	"gocompiler/internal/fsm"
 	"gocompiler/internal/graph"
 	"gocompiler/internal/visualizer"
-	"log"
 	"testing"
 )
 
@@ -30,7 +29,6 @@ func TestExpression1(t *testing.T) {
 	visualizer.MustVisualizeFSM(kda, folder, "v4.dot")
 
 	kda.AutoDetectFirstLast()
-	log.Println("first, last", kda.First, kda.Last)
 
 	kda.ToDka()
 	visualizer.MustVisualizeFSM(kda, folder, "v5.dot")
@@ -109,13 +107,18 @@ func TestExpression1(t *testing.T) {
 			To:     "p4",
 			Weight: "x",
 		},
+		{
+			From:   "p3",
+			To:     "p4",
+			Weight: "x",
+		},
 	}, []string{"p0"}, []string{"p4"})
 
 	origin := fsm.NewDRFromFS(*kda)
 	//origin.R().D().R().D()
 
-	visualizer.MustVisualizeFSM(&origin.FSM, folder, "real.dot")
-	visualizer.MustVisualizeFSM(&expected.FSM, folder, "expected.dot")
+	visualizer.MustVisualizeDR(origin.CompareMode(), folder, "real.dot")
+	visualizer.MustVisualizeDR(expected.CompareMode(), folder, "expected.dot")
 
 	if !expected.IsSame(*origin) {
 		t.Fatalf("Графы не сошлись, см. картинки в /assets/test")

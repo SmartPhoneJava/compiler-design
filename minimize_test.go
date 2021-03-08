@@ -223,8 +223,8 @@ func TestMinimize2(t *testing.T) {
 
 	real.R().D().R().D()
 
-	visualizer.MustVisualizeFSM(&real.FSM, "assets/test/min/2", "real.dot")
-	visualizer.MustVisualizeFSM(&expected.FSM, "assets/test/min/2", "expected.dot")
+	visualizer.MustVisualizeDR(real.CompareMode(), "assets/test/min/2", "real.dot")
+	visualizer.MustVisualizeDR(expected.CompareMode(), "assets/test/min/2", "expected.dot")
 
 	if !expected.IsSame(real) {
 		t.Fatalf("Графы не сошлись, см. картинки в /assets/test")

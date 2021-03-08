@@ -282,3 +282,54 @@ func (g *Graph) Beautify() *Graph {
 	}
 	return newFSM
 }
+
+func (g *Graph) CompareMode() *Graph {
+	var (
+		namesReplacer = make(map[string]string, 0)
+		newFSM        = NewGraph()
+		i             int
+	)
+	g.fixFirstLast()
+	vertexes := g.First
+	for len(vertexes) > 0 {
+		var newVertexes = make([]string, 0)
+		for _, vID := range vertexes {
+			if vID == "" {
+				continue
+			}
+			_, ok := namesReplacer[vID]
+			if !ok {
+				namesReplacer[vID] = fmt.Sprintf("%d", i+1)
+				i++
+			}
+			vertex := g.Vertexes[vID]
+			if vertex == nil {
+				continue
+			}
+			for _, edge := range vertex.Out {
+				_, ok := namesReplacer[edge.To]
+				if ok {
+					continue
+				}
+				namesReplacer[edge.To] = fmt.Sprintf("%s", namesReplacer[edge.From]+" "+edge.Weight)
+				i++
+				newVertexes = append(newVertexes, edge.To)
+			}
+		}
+		vertexes = newVertexes
+	}
+	for _, e := range g.Edges {
+		newFSM.AddEdge(&Edge{
+			From:   namesReplacer[e.From],
+			To:     namesReplacer[e.To],
+			Weight: e.Weight,
+		})
+	}
+	for _, str := range g.First {
+		newFSM.First = append(newFSM.First, namesReplacer[str])
+	}
+	for _, str := range g.Last {
+		newFSM.Last = append(newFSM.Last, namesReplacer[str])
+	}
+	return newFSM
+}
