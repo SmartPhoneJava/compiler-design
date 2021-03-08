@@ -2,7 +2,7 @@ package graph
 
 import (
 	"fmt"
-	"log"
+	"strings"
 )
 
 // Vertex - структура вершин
@@ -133,7 +133,7 @@ func (g *Graph) AddEdge(ce *Edge, opts ...VertexOpt) Edge {
 	var e = &Edge{
 		From:   ce.From,
 		To:     ce.To,
-		Weight: ce.Weight,
+		Weight: strings.TrimSpace(ce.Weight),
 	}
 	e.From = g.AddVertex(append(opts, VertexOptID(e.From))...)
 	e.To = g.AddVertex(append(opts, VertexOptID(e.To))...)
@@ -179,7 +179,6 @@ func (g *Graph) SplitEdge(e *Edge, newWeights ...string) {
 		if i == len(newWeights)-1 {
 			newEdge.To = e.To
 		}
-		log.Println("newEdge", newEdge.From, newEdge.To, newEdge.Weight)
 		prevEdge = g.AddEdge(newEdge)
 	}
 	g.RemoveEdge(e)
