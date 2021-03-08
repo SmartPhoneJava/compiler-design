@@ -20,11 +20,16 @@ func MustVisualizeFSM(g *fsm.FSM, path, name string) {
 
 // VisualizeFSM - визуализировать граф
 func VisualizeFSM(g *fsm.FSM, path, name string) error {
-	graphAst, _ := gographviz.ParseString(`digraph G {}`)
+	graphAst, err := gographviz.ParseString(`digraph G {}`)
+	if err != nil {
+		return err
+	}
+
 	graph := gographviz.NewGraph()
 	if err := gographviz.Analyse(graphAst, graph); err != nil {
-		panic(err)
+		return err
 	}
+
 	var attrs = make(map[string]string, 0)
 	for _, v := range g.Vertexes {
 		var vattr = make(map[string]string, 0)
@@ -47,7 +52,6 @@ func VisualizeFSM(g *fsm.FSM, path, name string) error {
 		}
 	}
 	file, err := os.Create(path + "/" + name)
-
 	if err != nil {
 		return err
 	}

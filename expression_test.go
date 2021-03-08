@@ -1,0 +1,123 @@
+package main
+
+import (
+	"gocompiler/internal/converter"
+	"gocompiler/internal/expressions"
+	"gocompiler/internal/fsm"
+	"gocompiler/internal/graph"
+	"gocompiler/internal/visualizer"
+	"log"
+	"testing"
+)
+
+// Пример из https://habr.com/ru/post/166777/
+func TestExpression1(t *testing.T) {
+	var (
+		rw     = expressions.NewRW("(xy* | ab | (x | a*)) (x | y*)")
+		kda    = converter.ExpressionToNKA(&rw)
+		folder = "assets/test/expressions/2"
+	)
+
+	visualizer.MustVisualizeFSM(kda, folder, "v1.dot")
+
+	kda.RemoveShortCircuits()
+	visualizer.MustVisualizeFSM(kda, folder, "v2.dot")
+
+	kda.ReplaceEpsilons()
+	visualizer.MustVisualizeFSM(kda, folder, "v3.dot")
+
+	kda.ReplaceEqualEdges()
+	visualizer.MustVisualizeFSM(kda, folder, "v4.dot")
+
+	kda.AutoDetectFirstLast()
+	log.Println("first, last", kda.First, kda.Last)
+
+	kda.ToDka()
+	visualizer.MustVisualizeFSM(kda, folder, "v5.dot")
+
+	kda.ReplaceEqualEdges()
+	visualizer.MustVisualizeFSM(kda, folder, "v6.dot")
+
+	var expected = fsm.NewDRFromEdges([]graph.Edge{
+		{
+			From:   "p0",
+			To:     "p1",
+			Weight: "x",
+		},
+		{
+			From:   "p1",
+			To:     "p1",
+			Weight: "y",
+		},
+		{
+			From:   "p1",
+			To:     "p4",
+			Weight: "x",
+		},
+		{
+			From:   "p0",
+			To:     "p2",
+			Weight: "y",
+		},
+		{
+			From:   "p2",
+			To:     "p2",
+			Weight: "y",
+		},
+		{
+			From:   "p0",
+			To:     "p3",
+			Weight: "a",
+		},
+		{
+			From:   "p3",
+			To:     "p2",
+			Weight: "y",
+		},
+		{
+			From:   "p3",
+			To:     "p5",
+			Weight: "a",
+		},
+		{
+			From:   "p3",
+			To:     "p6",
+			Weight: "b",
+		},
+		{
+			From:   "p5",
+			To:     "p5",
+			Weight: "a",
+		},
+		{
+			From:   "p5",
+			To:     "p2",
+			Weight: "y",
+		},
+		{
+			From:   "p5",
+			To:     "p4",
+			Weight: "x",
+		},
+		{
+			From:   "p6",
+			To:     "p2",
+			Weight: "y",
+		},
+		{
+			From:   "p6",
+			To:     "p4",
+			Weight: "x",
+		},
+	}, []string{"p0"}, []string{"p4"})
+
+	origin := fsm.NewDRFromFS(*kda)
+	//origin.R().D().R().D()
+
+	visualizer.MustVisualizeFSM(&origin.FSM, folder, "real.dot")
+	visualizer.MustVisualizeFSM(&expected.FSM, folder, "expected.dot")
+
+	if !expected.IsSame(*origin) {
+		t.Fatalf("Графы не сошлись, см. картинки в /assets/test")
+	}
+}

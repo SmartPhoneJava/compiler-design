@@ -2,7 +2,6 @@ package fsm
 
 import (
 	"gocompiler/internal/graph"
-	"log"
 	"sort"
 	"strings"
 )
@@ -45,7 +44,7 @@ func (fsm *FSM) RemoveShortCircuits() *FSM {
 
 // ReplaceEpsilons заменить епсилон-переходы
 func (fsm *FSM) ReplaceEpsilons() *FSM {
-	log.Println("Заменить епсилон-переходы")
+	//log.Println("Заменить епсилон-переходы")
 	var newFSM = &FSM{graph.NewGraph()}
 	for _, v := range fsm.Vertexes {
 		m := fsm.replaceEpsilons(v, "e", false)
@@ -79,7 +78,7 @@ func (fsm *FSM) ReplaceEpsilons() *FSM {
 
 // ReplaceEqualEdges - убрать ребра-дубли
 func (fsm *FSM) ReplaceEqualEdges() *FSM {
-	log.Println("Убрать ребра дубли")
+	//log.Println("Убрать ребра дубли")
 	var (
 		removeVertexes = make([]*graph.Vertex, 0)
 		vertexCount    = len(fsm.Vertexes)
@@ -122,7 +121,7 @@ func (fsm *FSM) ReplaceEqualEdges() *FSM {
 					})
 				}
 
-				log.Println("Следующие состояния эквивалентны", v1.ID, v2.ID)
+				//log.Println("Следующие состояния эквивалентны", v1.ID, v2.ID)
 
 				//  Первая вершина нам больше не нужна, но мы
 				// не можем ее сразу удалить поскольку итерируемся
@@ -146,7 +145,7 @@ type DKAVertex struct {
 // ToDka - построение эквивалентного ДКА к НКА
 // http://esyr.org/wiki/Конструирование_Компиляторов%2C_Алгоритмы_решения_задач#.D0.9F.D0.BE.D1.81.D1.82.D1.80.D0.BE.D0.B5.D0.BD.D0.B8.D0.B5_.D0.94.D0.9A.D0.90_.D0.BF.D0.BE_.D0.9D.D0.9A.D0.90
 func (fsm *FSM) ToDka() *FSM {
-	log.Println("Построить ДКА, эквивалентное указанному НКА")
+	//log.Println("Построить ДКА, эквивалентное указанному НКА")
 	if len(fsm.Vertexes) == 0 {
 		return fsm
 	}
@@ -222,6 +221,17 @@ func (fsm *FSM) ToDka() *FSM {
 	//newFSM.ReplaceEqualEdges()
 	*fsm = *newFSM
 	return fsm
+}
+
+func (fsm *FSM) AutoDetectFirstLast() {
+	for _, v := range fsm.Vertexes {
+		if len(v.Out) == 0 {
+			fsm.Last = append(fsm.Last, v.ID)
+		}
+		if len(v.In) == 0 {
+			fsm.First = append(fsm.First, v.ID)
+		}
+	}
 }
 
 func (fsm *FSM) replaceEpsilons(

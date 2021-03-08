@@ -1,8 +1,12 @@
 package expressions
 
 import (
+	"fmt"
+	"gocompiler/internal/fsm"
 	"gocompiler/internal/graph"
+	"gocompiler/internal/visualizer"
 	"log"
+	"strings"
 )
 
 // RW регулярное выражение
@@ -118,25 +122,33 @@ func (str *RW) ToGraph() *graph.Graph {
 		To:     "q1",
 		Weight: string(*str),
 	})
-	var maxTry = 1000
-	for maxTry > 0 {
+	visualizer.VisualizeFSM(&fsm.FSM{kda}, "assets/debug", fmt.Sprint("aaa.dot"))
+	var maxTry = 100
+	var changes = 1
+	for changes > 0 && maxTry > 0 {
 		arr := kda.Edges
-		var changes int
+		changes = 0
 
 		for _, edge := range arr {
-			if len(edge.Weight) == 1 {
+			weight := strings.TrimSpace(edge.Weight)
+			if len(weight) == 1 {
 				continue
 			}
 
-			ew := RW(edge.Weight)
+			ew := RW(weight)
 			rws := (&ew).Unions()
 			kda.MultiplyEdge(edge, rws.toString()...)
 			changes += len(rws)
+			if len(rws) != 0 {
+				continue
+			}
 
-			rws = RW(edge.Weight).Concatenations()
+			rws = (&ew).Concatenations()
 			kda.SplitEdge(edge, rws.toString()...)
+
 			changes += len(rws)
 		}
+
 		if changes == 0 {
 			break
 		}

@@ -2,6 +2,7 @@ package graph
 
 import (
 	"fmt"
+	"log"
 )
 
 // Vertex - структура вершин
@@ -128,7 +129,7 @@ func (g *Graph) VertexesArr() []*Vertex {
 }
 
 // AddEdge - добавить ребро
-func (g *Graph) AddEdge(ce *Edge, opts ...VertexOpt) {
+func (g *Graph) AddEdge(ce *Edge, opts ...VertexOpt) Edge {
 	var e = &Edge{
 		From:   ce.From,
 		To:     ce.To,
@@ -141,6 +142,7 @@ func (g *Graph) AddEdge(ce *Edge, opts ...VertexOpt) {
 	g.Edges[id] = e
 	g.Vertexes[e.From].Out[id] = e
 	g.Vertexes[e.To].In[id] = e
+	return *e
 }
 
 // RemoveVertex - убрать вершину
@@ -166,8 +168,7 @@ func (g *Graph) SplitEdge(e *Edge, newWeights ...string) {
 	if len(newWeights) == 0 {
 		return
 	}
-	g.RemoveEdge(e)
-	var prevEdge = &Edge{
+	var prevEdge = Edge{
 		To: e.From,
 	}
 	for i, weight := range newWeights {
@@ -178,9 +179,10 @@ func (g *Graph) SplitEdge(e *Edge, newWeights ...string) {
 		if i == len(newWeights)-1 {
 			newEdge.To = e.To
 		}
-		g.AddEdge(newEdge)
-		prevEdge = newEdge
+		log.Println("newEdge", newEdge.From, newEdge.To, newEdge.Weight)
+		prevEdge = g.AddEdge(newEdge)
 	}
+	g.RemoveEdge(e)
 }
 
 // MultiplyEdge создать несколько ребер вместо одного
@@ -188,8 +190,6 @@ func (g *Graph) MultiplyEdge(e *Edge, newWeights ...string) {
 	if len(newWeights) < 2 {
 		return
 	}
-	g.RemoveEdge(e)
-
 	for _, weight := range newWeights {
 		g.AddEdge(&Edge{
 			From:   e.From,
@@ -197,6 +197,7 @@ func (g *Graph) MultiplyEdge(e *Edge, newWeights ...string) {
 			Weight: weight,
 		})
 	}
+	g.RemoveEdge(e)
 }
 
 func (g *Graph) FindInString(find string, ids []string) bool {

@@ -1,0 +1,6 @@
+digraph G {
+	"q0"->"q1"[ label=<<font color="blue">(xy* | ab | (x | a*)) (x | y*)</font>> ];
+	"q0";
+	"q1";
+
+}
