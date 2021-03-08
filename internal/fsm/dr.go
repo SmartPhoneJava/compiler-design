@@ -2,7 +2,6 @@ package fsm
 
 import (
 	"gocompiler/internal/graph"
-	"log"
 )
 
 // DR - КА с поддержкой операций d,r
@@ -56,9 +55,6 @@ func (A *DR) R() *DR {
 			Weight: edge.Weight,
 		})
 	}
-
-	log.Println("reverse last", A.Last)
-	log.Println("reverse first", A.First)
 
 	reverseMe.SetFirstLast(A.Last, A.First)
 	reverseMe = &DR{FSM{reverseMe.Beautify()}}

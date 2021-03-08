@@ -219,6 +219,7 @@ func (fsm *FSM) ToDka() *FSM {
 		queue = queue[1:]
 	}
 	newFSM.SetFirstLast(fsm.First, lastVertexes)
+	//newFSM.ReplaceEqualEdges()
 	*fsm = *newFSM
 	return fsm
 }

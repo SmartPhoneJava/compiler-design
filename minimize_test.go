@@ -452,10 +452,9 @@ func TestMinimize4(t *testing.T) {
 	}
 }
 */
-
+/*
 // // http://esyr.org/wiki/Конструирование_Компиляторов%2C_Алгоритмы_решения_задач#.D0.9F.D0.BE.D1.81.D1.82.D1.80.D0.BE.D0.B5.D0.BD.D0.B8.D0.B5_.D0.94.D0.9A.D0.90_.D0.BF.D0.BE_.D0.9D.D0.9A.D0.90
 func TestMinimize5(t *testing.T) {
-	return
 	var origin = fsm.NewDRFromEdges([]graph.Edge{
 		{
 			From:   "A",
@@ -497,7 +496,7 @@ func TestMinimize5(t *testing.T) {
 			To:     "C",
 			Weight: "c",
 		},
-	}, []string{"A"}, []string{"С"})
+	}, []string{"A"}, []string{"C"})
 	var expected = fsm.NewDRFromEdges([]graph.Edge{
 		{
 			From:   "A",
@@ -532,6 +531,7 @@ func TestMinimize5(t *testing.T) {
 		t.Fatalf("Графы не сошлись, см. картинки в /assets/test")
 	}
 }
+*/
 
 // // https://intuit.ru/studies/courses/26/26/lecture/801?page=4
 // func TestMinimize6(t *testing.T) {
