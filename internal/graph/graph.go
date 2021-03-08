@@ -2,6 +2,7 @@ package graph
 
 import (
 	"fmt"
+	"log"
 )
 
 // Vertex - структура вершин
@@ -32,7 +33,9 @@ type Graph struct {
 	// счётчик для автоматического нумерования узлов
 	counter int
 	// первый узел графа
-	firstVertex *Vertex
+	First []string
+	// первый узел графа
+	Last []string
 }
 
 // NewGraph - создать новый граф
@@ -86,9 +89,6 @@ func (g *Graph) AddVertex(opts ...VertexOpt) string {
 			Out: make(map[string]*Edge, 0),
 			In:  make(map[string]*Edge, 0),
 		}
-		if len(g.Vertexes) == 0 {
-			g.firstVertex = v
-		}
 		g.Vertexes[id] = v
 
 		g.counter++
@@ -96,19 +96,44 @@ func (g *Graph) AddVertex(opts ...VertexOpt) string {
 	return id
 }
 
+// SetFirstLast - установить первый и последний узлы
+func (g *Graph) SetFirstLast(f, l []string) {
+	g.First = f
+	g.Last = l
+
+}
+
+// SetFirstLast - установить первый и последний узлы
+func (g *Graph) SwitchFirstLast() {
+	g.First, g.Last = g.Last, g.First
+}
+
+// // GetFirst - получить исток
+// func (g *Graph) GetFirst() *Vertex {
+// 	// log.Println("g.firstVertex", g.firstVertex, g.firstVertex.countIn())
+// 	// if g.firstVertex != nil && g.firstVertex.countIn() == 0 {
+// 	// 	return g.firstVertex
+// 	// }
+// 	// //var vertex = &Vertex{}
+// 	// for _, v := range g.Vertexes {
+// 	// 	vertex = v // Нельзя оставить вершину не проинициализированной
+// 	// 	if v.countIn() == 0 {
+// 	// 		return v
+// 	// 	}
+// 	// }
+// 	return g.First
+// }
+
 // GetFirst - получить исток
-func (g *Graph) GetFirst() *Vertex {
-	if g.firstVertex != nil && len(g.firstVertex.In) == 0 {
-		return g.firstVertex
-	}
-	var vertex = &Vertex{}
-	for _, v := range g.Vertexes {
-		vertex = v // Нельзя оставить вершину не проинициализированной
-		if len(v.In) == 0 {
-			return v
+func (v Vertex) countIn() int {
+	var c int
+	for _, edge := range v.In {
+		if edge.From == edge.To {
+			continue
 		}
+		c++
 	}
-	return vertex
+	return c
 }
 
 // VertexesArr - получить список вершин
@@ -194,4 +219,46 @@ func (g *Graph) MultiplyEdge(e *Edge, newWeights ...string) {
 			Weight: weight,
 		})
 	}
+}
+
+func (g *Graph) FindInString(find string, ids []string) bool {
+	for _, id := range ids {
+		if id == find {
+			return true
+		}
+	}
+	return false
+}
+
+// Beautify установить красивые названия
+func (g *Graph) Beautify() *Graph {
+	//return g
+	// last и first тоже заменять
+	log.Println("before", len(g.First), len(g.Last))
+	var (
+		namesReplacer = make(map[string]string, 0)
+		newFSM        = NewGraph()
+		i             int
+	)
+	for _, v := range g.Vertexes {
+		namesReplacer[v.ID] = fmt.Sprintf("%d", i+1)
+		i++
+	}
+	for _, e := range g.Edges {
+		newFSM.AddEdge(&Edge{
+			From:   namesReplacer[e.From],
+			To:     namesReplacer[e.To],
+			Weight: e.Weight,
+		})
+	}
+	for _, str := range g.First {
+		newFSM.First = append(newFSM.First, namesReplacer[str])
+	}
+	for _, str := range g.Last {
+		newFSM.Last = append(newFSM.Last, namesReplacer[str])
+	}
+	//newFSM.SetFirstLast(namesReplacer[g.First], namesReplacer[g.Last])
+	*g = *newFSM
+	log.Println("after", len(g.First), len(g.Last))
+	return newFSM
 }

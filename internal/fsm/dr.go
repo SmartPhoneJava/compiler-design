@@ -2,7 +2,6 @@ package fsm
 
 import (
 	"gocompiler/internal/graph"
-	"log"
 )
 
 // DR - КА с поддержкой операций d,r
@@ -37,29 +36,43 @@ func NewDRFromEdges(edges []graph.Edge) *DR {
 
 // D Детерминизировать КА
 func (A *DR) D() *DR {
-	// Beautify()
-	return &DR{*A.NkaToDka()}
-	// return &DR{*A.NkaToDka(true).ReplaceEqualEdges()}
+	v := &DR{FSM{A.ToDka().Beautify()}}
+	*A = *v
+	return A
 }
 
 // R Построить обратный КА
 func (A *DR) R() *DR {
 	var reverseMe = NewDR()
 	for _, edge := range A.Edges {
-		log.Println("direct", edge.From, edge.To)
 		reverseMe.AddEdge(&graph.Edge{
 			From:   edge.To,
 			To:     edge.From,
 			Weight: edge.Weight,
 		})
-		log.Println("back", edge.To, edge.From)
 	}
+
+	reverseMe.SetFirstLast(A.Last, A.First)
+	reverseMe = &DR{FSM{reverseMe.Beautify()}}
 	*A = *reverseMe
 	return A
 }
 
 // IsSame - сранить два КА
 func (A DR) IsSame(B DR) bool {
+	var try = 100
+	for try > 0 {
+		try--
+		right := A.isSame(B)
+		if right {
+			return true
+		}
+	}
+	return false
+}
+
+// IsSame - сранить два КА
+func (A DR) isSame(B DR) bool {
 	var (
 		// Если не бьютифаить графы, то могут не
 		// совпасть названия узлов

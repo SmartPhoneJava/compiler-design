@@ -27,7 +27,14 @@ func VisualizeFSM(g *fsm.FSM, path string) error {
 	}
 	var attrs = make(map[string]string, 0)
 	for _, v := range g.Vertexes {
-		graph.AddNode("G", toString(v.ID), nil)
+		var vattr = make(map[string]string, 0)
+
+		if g.FindInString(v.ID, g.First) {
+			vattr["label"] = fmt.Sprintf(`<<font color="green">%s</font>>`, v.ID)
+		} else if g.FindInString(v.ID, g.Last) {
+			vattr["label"] = fmt.Sprintf(`<<font color="red">%s</font>>`, v.ID)
+		}
+		graph.AddNode("G", toString(v.ID), vattr)
 	}
 	for _, e := range g.Edges {
 		attrs["label"] = fmt.Sprintf(`<<font color="blue">%s</font>>`, e.Weight)

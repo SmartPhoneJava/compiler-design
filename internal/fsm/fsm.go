@@ -1,7 +1,6 @@
 package fsm
 
 import (
-	"fmt"
 	"gocompiler/internal/graph"
 	"log"
 	"sort"
@@ -144,44 +143,9 @@ type DKAVertex struct {
 	Olds []string
 }
 
-// Beautify установить красивые названия
-func (fsm *FSM) Beautify() *FSM {
-	return fsm
-	var (
-		newFSM        = &FSM{graph.NewGraph()}
-		counter       = 0
-		queue         = []string{fsm.GetFirst().ID}
-		namesRemember = make(map[string]string, 0)
-		setName       = func(oldName string) string {
-			v, ok := namesRemember[oldName]
-			if ok {
-				return v
-			}
-			var name = fmt.Sprintf("%d", counter)
-			namesRemember[oldName] = name
-			counter++
-			return name
-		}
-	)
-	for len(queue) != 0 {
-		head := fsm.Vertexes[queue[0]]
-
-		for _, edge := range head.Out {
-			newFSM.AddEdge(edge, graph.VertexOptChangeName(setName))
-			if edge.From == edge.To {
-				continue
-			}
-			queue = append(queue, edge.To)
-		}
-
-		queue = queue[1:]
-	}
-	return newFSM
-}
-
 // NkaToDka - построение эквивалентного ДКА к НКА
-// алгоритм Томпсона https://neerc.ifmo.ru/wiki/index.php?title=Построение_по_НКА_эквивалентного_ДКА,_алгоритм_Томпсона
-func (fsm *FSM) NkaToDka() *FSM {
+// http://esyr.org/wiki/Конструирование_Компиляторов%2C_Алгоритмы_решения_задач#.D0.9F.D0.BE.D1.81.D1.82.D1.80.D0.BE.D0.B5.D0.BD.D0.B8.D0.B5_.D0.94.D0.9A.D0.90_.D0.BF.D0.BE_.D0.9D.D0.9A.D0.90
+func (fsm *FSM) ToDka() *FSM {
 	log.Println("Построить ДКА, эквивалентное указанному НКА")
 	if len(fsm.Vertexes) == 0 {
 		return fsm
@@ -191,12 +155,11 @@ func (fsm *FSM) NkaToDka() *FSM {
 		newFSM              = &FSM{graph.NewGraph()}
 		queue               = []DKAVertex{
 			{
-				Olds: []string{
-					fsm.GetFirst().ID,
-				},
-				From: fsm.GetFirst().ID,
+				Olds: fsm.First,
+				From: fsm.First[0],
 			},
 		}
+		lastVertexes []string
 	)
 	// newFSM.AddVertex(fsm.GetFirst().ID)
 	for len(queue) != 0 {
@@ -206,7 +169,7 @@ func (fsm *FSM) NkaToDka() *FSM {
 		// вложенная мэпа, чтобы гарантировать уникальность узлов
 		var paths = make(map[string]map[string]bool, 0)
 		for _, old := range head.Olds {
-			log.Println("old", old, fsm.Vertexes[old])
+			//log.Println("old", old, fsm.Vertexes[old])
 			toWhom := fsm.Vertexes[old].Out
 			for _, e := range toWhom {
 				// if e.From == e.To {
@@ -222,21 +185,29 @@ func (fsm *FSM) NkaToDka() *FSM {
 
 		for path, vertexes := range paths {
 			var (
-				ids = make([]string, 0)
+				ids      = make([]string, 0)
+				withLast bool
 			)
 			for vertex := range vertexes {
 				ids = append(ids, vertex)
+				if !withLast {
+					withLast = fsm.FindInString(vertex, fsm.Last)
+				}
 			}
 			var id string
 			sort.Strings(ids)
 			id = strings.Join(ids, " ")
 
 			newVertex := newFSM.AddVertex(graph.VertexOptID(id))
+			log.Printf("add edge %s -> %s by %s", head.From, newVertex, path)
 			newFSM.AddEdge(&graph.Edge{
 				From:   head.From,
 				To:     newVertex,
 				Weight: path,
 			})
+			if withLast {
+				lastVertexes = append(lastVertexes, newVertex)
+			}
 
 			_, ok := visitedCombinations[id]
 			if ok {
@@ -253,8 +224,15 @@ func (fsm *FSM) NkaToDka() *FSM {
 
 		queue = queue[1:]
 	}
+	newFSM.SetFirstLast(fsm.First, lastVertexes)
 	*fsm = *newFSM
 	return fsm
+}
+
+// NkaToDka - построение эквивалентного ДКА к НКА
+// алгоритм Томпсона https://neerc.ifmo.ru/wiki/index.php?title=Построение_по_НКА_эквивалентного_ДКА,_алгоритм_Томпсона
+func (fsm *FSM) NkaToDka() *FSM {
+	return fsm.ToDka()
 }
 
 func (fsm *FSM) replaceEpsilons(
