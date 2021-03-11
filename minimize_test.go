@@ -51,6 +51,7 @@ func TestMinimize1(t *testing.T) {
 			Weight: "b",
 		},
 	}, []string{"0"}, []string{"3"})
+	visualizer.MustVisualizeFSM(&origin.FSM, "assets/test/min/1", "origin.dot")
 	var expected = fsm.NewDRFromEdges([]graph.Edge{
 		{
 			From:   "0",
@@ -167,6 +168,7 @@ func TestMinimize2(t *testing.T) {
 			Weight: "0",
 		},
 	}, []string{"A"}, []string{"G", "F"})
+	visualizer.MustVisualizeFSM(&origin.FSM, "assets/test/min/2", "origin.dot")
 	var expected = fsm.NewDRFromEdges([]graph.Edge{
 		{
 			From:   "A",
@@ -231,15 +233,20 @@ func TestMinimize2(t *testing.T) {
 	}
 }
 
-/*
 // https://lektsii.org/6-91118.html
 // второй пример
+/*
 func TestMinimize3(t *testing.T) {
 	var origin = fsm.NewDRFromEdges([]graph.Edge{
 		{
 			From:   "A",
 			To:     "B",
 			Weight: "0",
+		},
+		{
+			From:   "B",
+			To:     "D",
+			Weight: "1",
 		},
 		{
 			From:   "A",
@@ -292,6 +299,7 @@ func TestMinimize3(t *testing.T) {
 			Weight: "1",
 		},
 	}, []string{"A"}, []string{"D"})
+	log.Println("test3")
 	visualizer.MustVisualizeFSM(&origin.FSM, "assets/test/min/3", "origin.dot")
 	var expected = fsm.NewDRFromEdges([]graph.Edge{
 		{
@@ -322,15 +330,15 @@ func TestMinimize3(t *testing.T) {
 	}, []string{"A"}, []string{"D"})
 	var real = *origin
 
-	//visualizer.MustVisualizeFSM(&real.FSM, "assets/test/min/real0.dot")
+	visualizer.MustVisualizeFSM(&real.FSM, "assets/test/min/3", "real0.dot")
 	real.R()
-	//visualizer.MustVisualizeFSM(&real.FSM, "assets/test/min/real1.dot")
+	visualizer.MustVisualizeFSM(&real.FSM, "assets/test/min/3", "real1.dot")
 	real.D()
-	//visualizer.MustVisualizeFSM(&real.FSM, "assets/test/min/real2.dot")
+	visualizer.MustVisualizeFSM(&real.FSM, "assets/test/min/3", "real2.dot")
 	real.R()
-	//visualizer.MustVisualizeFSM(&real.FSM, "assets/test/min/real3.dot")
+	visualizer.MustVisualizeFSM(&real.FSM, "assets/test/min/3", "real3.dot")
 	real.D()
-	//visualizer.MustVisualizeFSM(&real.FSM, "assets/test/min/real4.dot")
+	visualizer.MustVisualizeFSM(&real.FSM, "assets/test/min/3", "real4.dot")
 
 	//real.Chain(real.D, real.R, real.D, real.R)
 

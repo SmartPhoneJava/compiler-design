@@ -20,10 +20,11 @@ func NewFileLoader(path string) *FileLoader {
 	return &FileLoader{Path: path}
 }
 
+// Load - загрузить граф из файла
 func (fl FileLoader) Load() (*graph.Graph, error) {
-	file, err := os.Open("path")
+	file, err := os.Open(fl.Path)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	defer file.Close()
 
@@ -51,6 +52,18 @@ func (fl FileLoader) Load() (*graph.Graph, error) {
 			Weight: weight,
 		})
 	}
+	var (
+		starts, ends []string
+	)
+	for _, n := range gr.Nodes.Nodes {
+		weight := strings.Replace(n.Attrs["label"], `<<font color="blue">`, "", -1)
+		if strings.Contains(weight, "green") {
+			starts = append(starts, n.Name)
+		} else if strings.Contains(weight, "red") {
+			ends = append(ends, n.Name)
+		}
+	}
+	graphS.SetFirstLast(starts, ends)
 
 	return graphS, nil
 }
@@ -80,19 +93,16 @@ func LoadGraf(
 	var graf = cache.Take(prevCode)
 	log.Println("Выберите способ, чтобы задать граф")
 	log.Println("1. Задать новый гриф с помощью файла")
-	log.Println("2. Ввести данные грифа вручную в консоль")
 	if graf != nil {
-		log.Println("3. Использовать данные, полученные в прошлом действии")
+		log.Println("2. Использовать данные, полученные в прошлом действии")
 	}
 	log.Println("X. Назад")
 	var repCode int
 	GetInt(&repCode, `Ваш выбор?`)
-	if repCode == 3 {
+	if repCode == 2 {
 		if graf == nil {
 			return
 		}
-	} else if repCode == 2 {
-
 	} else if repCode == 1 {
 		var (
 			text string
@@ -105,6 +115,11 @@ func LoadGraf(
 			return
 		}
 		graf = &fsm.FSM{grafF}
+		err = visualizer.VisualizeFSM(graf, "assets", "loaded.dot")
+		if err != nil {
+			log.Printf("Не удалось визуализировтаь граф: %s", err)
+			return
+		}
 	} else {
 		return
 	}

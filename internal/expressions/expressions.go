@@ -66,29 +66,6 @@ func (str RW) Concatenations() []RW {
 	return lexemes
 }
 
-func (str *RW) trumBrackets() {
-	if (*str)[0] != '(' {
-		return
-	}
-	var (
-		bracketOn int
-	)
-	for i, r := range *str {
-		switch r {
-		case '(':
-			bracketOn++
-		case ')':
-			bracketOn--
-			if bracketOn == 0 {
-				if i == len(*str)-1 {
-					*str = (*str)[1 : len(*str)-1]
-					return
-				}
-			}
-		}
-	}
-}
-
 // Unions разбить на множество объединений
 func (str *RW) Unions() RWS {
 	var lexemes = make(RWS, 0)

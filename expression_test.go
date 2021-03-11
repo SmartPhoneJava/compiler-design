@@ -115,7 +115,6 @@ func TestExpression1(t *testing.T) {
 	}, []string{"p0"}, []string{"p4"})
 
 	origin := fsm.NewDRFromFS(*kda)
-	//origin.R().D().R().D()
 
 	visualizer.MustVisualizeDR(origin.CompareMode(), folder, "real.dot")
 	visualizer.MustVisualizeDR(expected.CompareMode(), folder, "expected.dot")

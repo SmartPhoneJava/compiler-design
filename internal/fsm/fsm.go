@@ -121,8 +121,6 @@ func (fsm *FSM) ReplaceEqualEdges() *FSM {
 					})
 				}
 
-				//log.Println("Следующие состояния эквивалентны", v1.ID, v2.ID)
-
 				//  Первая вершина нам больше не нужна, но мы
 				// не можем ее сразу удалить поскольку итерируемся
 				// по списку вершин, поэтому удалим ее попозже
@@ -176,7 +174,6 @@ func (fsm *FSM) ToDka() *FSM {
 				paths[e.Weight][e.To] = true
 			}
 		}
-
 		for path, vertexes := range paths {
 			var (
 				ids      = make([]string, 0)

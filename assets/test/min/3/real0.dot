@@ -1,9 +1,4 @@
 digraph G {
-	"A"->"B"[ label=<<font color="blue">0</font>> ];
-	"B"->"D"[ label=<<font color="blue">1</font>> ];
-	"C"->"D"[ label=<<font color="blue">0</font>> ];
-	"D"->"E"[ label=<<font color="blue">1</font>> ];
-	"F"->"G"[ label=<<font color="blue">0</font>> ];
 	"A"->"C"[ label=<<font color="blue">1</font>> ];
 	"E"->"B"[ label=<<font color="blue">0</font>> ];
 	"C"->"E"[ label=<<font color="blue">1</font>> ];
@@ -11,6 +6,11 @@ digraph G {
 	"G"->"F"[ label=<<font color="blue">0</font>> ];
 	"F"->"E"[ label=<<font color="blue">1</font>> ];
 	"G"->"D"[ label=<<font color="blue">1</font>> ];
+	"A"->"B"[ label=<<font color="blue">0</font>> ];
+	"B"->"D"[ label=<<font color="blue">1</font>> ];
+	"C"->"D"[ label=<<font color="blue">0</font>> ];
+	"D"->"E"[ label=<<font color="blue">1</font>> ];
+	"F"->"G"[ label=<<font color="blue">0</font>> ];
 	"A" [ label=<<font color="green">A</font>> ];
 	"B";
 	"C";

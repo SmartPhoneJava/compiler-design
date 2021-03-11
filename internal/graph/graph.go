@@ -30,12 +30,11 @@ type Graph struct {
 	Vertexes map[string]*Vertex
 	Edges    map[string]*Edge
 
+	// Истоки и стоки
+	First, Last []string
+
 	// счётчик для автоматического нумерования узлов
 	counter int
-	// первый узел графа
-	First []string
-	// первый узел графа
-	Last []string
 }
 
 // NewGraph - создать новый граф
