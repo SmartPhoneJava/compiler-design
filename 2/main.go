@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -63,12 +62,13 @@ func (rules Rules) Filter(
 	return append(alpha, beta...)
 }
 
-func (rules Rules) HasLeftRecursion(
+// HasDirectLeftRecursion - проверить, есть ли
+//  прямая левая рекурсия в наборе правил
+func (rules Rules) HasDirectLeftRecursion(
 	noneTerminal string,
 ) bool {
 	for _, r := range rules {
 		if r.From == noneTerminal && r.IsLeftRecursive() {
-			log.Println("recurse", r.From, r.To)
 			return true
 		}
 	}
@@ -104,7 +104,7 @@ func (rules Rules) AlphaBeta(symbol string) (Rules, Rules) {
 			beta = append(beta, rule)
 		}
 	}
-	return alpha, beta
+	return alpha.RemoveFirst(len(symbol)), beta
 }
 
 // MarkLeftRecursives - получить нетерминалы с левой
@@ -142,9 +142,6 @@ func (r Rule) NewMarked() string {
 
 // Append добавить правила переходов из from в каждый из to
 func (r *Rules) Append(from string, to ...string) {
-	for _, to := range to {
-		log.Printf("\n Want add %s -> %s", from, to)
-	}
 	var unique = make(map[string]bool)
 	for _, r := range *r {
 		unique[r.From+r.To] = true
@@ -161,22 +158,6 @@ func (r *Rules) Append(from string, to ...string) {
 		}
 		unique[from+to] = true
 		*r = append(*r, Rule{From: from, To: to})
-	}
-}
-
-func (r *Rules) AppendRules(b Rules) {
-	var unique = make(map[string]bool)
-	for _, r := range *r {
-		unique[r.From+r.To] = true
-	}
-
-	for _, b := range b {
-		_, ok := unique[b.From+b.To]
-		if ok { // боремся с дублями
-			continue
-		}
-		unique[b.From+b.To] = true
-		*r = append(*r, Rule{From: b.From, To: b.To})
 	}
 }
 
@@ -209,11 +190,12 @@ func (r Rules) RemoveFirst(n int) Rules {
 	return r
 }
 
-// RemoveRules удалить правила содержащие from
-func (r Rules) RemoveRules(from string) Rules {
+// RemoveRules удалить правила где в левой части стоит A
+// Например A->a, A->Be, A->e и т.д.
+func (r Rules) RemoveRules(A string) Rules {
 	var newRules Rules
 	for i := range r {
-		if r[i].From == from {
+		if r[i].From == A {
 			continue
 		}
 		newRules = append(newRules, r[i])
@@ -221,11 +203,27 @@ func (r Rules) RemoveRules(from string) Rules {
 	return newRules
 }
 
-func (r Rule) RemoveSymbol(s string) string {
-	return r.RemoveFirst(len(s))
+// RemoveRules удалить правила вида A -> Ba
+func (r Rules) RemoveRulesFT(A, B string) Rules {
+	var newRules Rules
+	for i := range r {
+		if r[i].From == A && r[i].RightBeginFrom(B) {
+			continue
+		}
+		newRules = append(newRules, r[i])
+	}
+	return newRules
 }
 
-func (r Rule) RemoveFirst(n int) string {
+// RemoveSymbol - удалить из правой части правила
+//  столько символов, сколько занимает строка s
+func (r Rule) RemoveSymbol(s string) string {
+	return r.RemoveFirstN(len(s))
+}
+
+// RemoveFirst - удалить из правой части правила
+//  первые n символов
+func (r Rule) RemoveFirstN(n int) string {
 	if len(r.To) >= n {
 		r.To = r.To[n:]
 	}
@@ -301,8 +299,6 @@ func (cfr CFR) EliminateLeftRecursion() CFR {
 				alpha, beta = cfr.P.Filter(r.From, LeftRecursion).AlphaBeta(r.From)
 				marked      = r.NewMarked()
 			)
-			alpha = alpha.RemoveFirst(len(r.From))
-
 			var (
 				betas          = beta.GetRPart()
 				betasWithNewA  = beta.Add(marked).GetRPart()
@@ -337,11 +333,12 @@ func (cfr CFR) EliminateLeftRecursion() CFR {
 //  4.8 и 4.10.
 func (cfr CFR) ElrWithE() CFR {
 	var (
-		newRules   Rules
+		newRules   = make(Rules, len(cfr.P))
 		newSymbols = make([]string, len(cfr.N))
 	)
 
 	copy(newSymbols, cfr.N)
+	copy(newRules, cfr.P)
 
 	for i := 0; i < len(cfr.N); i++ {
 		var (
@@ -353,41 +350,31 @@ func (cfr CFR) ElrWithE() CFR {
 				A𝚥 = cfr.N[j]
 				β  = cfr.P.Filter(A𝚥, NoSort)
 			)
-			(&newRules).Append(A𝚥, β.GetRPart()...)
 			for _, ruleA := range fromA {
 				if ruleA.RightBeginFrom(A𝚥) {
 					var (
 						α  = ruleA.RemoveSymbol(A𝚥)
 						αβ = β.Add(α).GetRPart()
 					)
+					newRules = newRules.RemoveRulesFT(Aᵢ, A𝚥)
 					(&newRules).Append(Aᵢ, αβ...)
-				} else {
-					(&newRules).Append(Aᵢ, ruleA.To)
 				}
-
 			}
 		}
 
-		if newRules.HasLeftRecursion(Aᵢ) {
+		if newRules.HasDirectLeftRecursion(Aᵢ) {
 			var (
-				alpha, beta = newRules.Filter(Aᵢ, LeftRecursion).AlphaBeta(Aᵢ)
-				marked      = Aᵢ + "'"
+				alpha, beta    = newRules.Filter(Aᵢ, LeftRecursion).AlphaBeta(Aᵢ)
+				marked         = Aᵢ + "'"
+				betasWithNewA  = beta.Add(marked).GetRPart()
+				alphasWithNewA = alpha.Add(marked).GetRPart()
 			)
-			if len(alpha)+len(beta) > 0 {
-				alpha = alpha.RemoveFirst(len(Aᵢ))
 
-				var (
-					betasWithNewA  = beta.Add(marked).GetRPart()
-					alphasWithNewA = alpha.Add(marked).GetRPart()
-				)
-
-				newRules = newRules.RemoveRules(Aᵢ)
-				(&newRules).Append(Aᵢ, betasWithNewA...)
-				(&newRules).Append(marked, append(alphasWithNewA, Epsilon)...)
-				newSymbols = append(newSymbols, marked)
-			}
+			newRules = newRules.RemoveRules(Aᵢ)
+			(&newRules).Append(Aᵢ, betasWithNewA...)
+			(&newRules).Append(marked, append(alphasWithNewA, Epsilon)...)
+			newSymbols = append(newSymbols, marked)
 		}
-
 	}
 	return CFR{
 		N: newSymbols,

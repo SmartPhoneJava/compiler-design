@@ -50,7 +50,6 @@ func TestExample2_27(t *testing.T) {
 
 // Пример 4.9 "Ахо, Сети, Ульман. Компиляторы. Принципы, технологии, инструменты, 2008, 2-ое издание", стр 277
 func TestExample4_9(t *testing.T) {
-	log.Println("!!!!!!!!!!!!!!!!!!")
 	var G = CFR{
 		N: []string{"S", "A"},
 		T: []string{"a", "b", "c", "d"},
