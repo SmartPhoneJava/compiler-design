@@ -36,7 +36,7 @@ func (str RW) Concatenations() []RW {
 			continue
 		case '(':
 			if bracketOn == 0 {
-				begin = i //+ 1
+				begin = i
 			}
 			bracketOn++
 		case ')':
