@@ -1,19 +1,11 @@
 package main
 
-import (
-	"gocompiler/internal/converter"
-	"gocompiler/internal/expressions"
-	"gocompiler/internal/fsm"
-	"gocompiler/internal/graph"
-	"gocompiler/internal/visualizer"
-	"testing"
-)
-
+/*
 // Пример из https://habr.com/ru/post/166777/
 func TestExpression1(t *testing.T) {
 	var (
 		rw     = expressions.NewRW("(xy* | ab | (x | a*)) (x | y*)")
-		kda    = converter.ExpressionToNKA(&rw)
+		kda    = rw.ToENKA()
 		folder = "assets/test/expressions/2"
 	)
 
@@ -123,3 +115,4 @@ func TestExpression1(t *testing.T) {
 		t.Fatalf("Графы не сошлись, см. картинки в /assets/test")
 	}
 }
+*/

@@ -40,7 +40,7 @@ func NewDRFromEdges(
 
 // D Детерминизировать КА
 func (A *DR) D() *DR {
-	v := &DR{FSM{A.ToDka().Beautify()}}
+	v := &DR{FSM{A.ToDFA().Beautify()}}
 	*A = *v
 	return A
 }

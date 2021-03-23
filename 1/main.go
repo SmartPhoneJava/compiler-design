@@ -2,7 +2,6 @@ package main
 
 import (
 	"gocompiler/internal/constants"
-	"gocompiler/internal/converter"
 	"gocompiler/internal/expressions"
 	"gocompiler/internal/fsm"
 	"gocompiler/internal/repository"
@@ -11,6 +10,8 @@ import (
 )
 
 func main() {
+
+	buildTheory()
 
 	var cache = repository.NewCache()
 
@@ -28,7 +29,7 @@ func main() {
 			var text string
 			repository.GetString(&text, `Введите регулярное выражение`)
 			var rw = expressions.NewRW(text)
-			kda := converter.ExpressionToNKA(&rw)
+			kda := rw.ToENKA()
 			kda.RemoveShortCircuits()
 			kda.ReplaceEpsilons()
 			kda.ReplaceEqualEdges()
@@ -45,7 +46,7 @@ func main() {
 				mainCode,
 				*cache,
 				func(graf *fsm.FSM) error {
-					graf = graf.ToDka().ReplaceEqualEdges()
+					graf = graf.ToDFA().ReplaceEqualEdges()
 					return nil
 				})
 		case constants.ActionMinimize:
@@ -61,6 +62,18 @@ func main() {
 		}
 
 	}
+}
+
+func buildTheory() {
+	var rw = expressions.NewRW("(a|b)*abb")
+	//var rw = expressions.NewRW("(00|01|10|11)*")
+	kda := rw.ToENKA()
+	visualizer.MustVisualizeFSM(kda, "./assets/theory", "nka_0.dot")
+	//kda.RemoveShortCircuits()
+	//kda.ReplaceEpsilons()
+	//kda.ReplaceEqualEdges()
+	kda.AutoDetectFirstLast()
+	visualizer.MustVisualizeFSM(kda, "./assets/theory", "nka_1.dot")
 }
 
 // xy* (x | y*) | ab (x | y*) | (x | a*) (x | y*)

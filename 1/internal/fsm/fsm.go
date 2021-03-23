@@ -13,6 +13,7 @@ type FSM struct {
 
 // RemoveShortCircuits убрать замыкания
 func (fsm *FSM) RemoveShortCircuits() *FSM {
+	return fsm
 	for _, e := range fsm.Edges {
 		if e.Weight == "*" {
 			vIn := fsm.Vertexes[e.From].In
@@ -137,7 +138,7 @@ func (fsm *FSM) ReplaceEqualEdges() *FSM {
 
 type DKAVertex struct {
 	From string
-	Olds []string
+	To   []string
 }
 
 // ToDka - построение эквивалентного ДКА к НКА
@@ -152,7 +153,7 @@ func (fsm *FSM) ToDka() *FSM {
 		newFSM              = &FSM{graph.NewGraph()}
 		queue               = []DKAVertex{
 			{
-				Olds: fsm.First,
+				To:   fsm.First,
 				From: fsm.First[0],
 			},
 		}
@@ -164,7 +165,7 @@ func (fsm *FSM) ToDka() *FSM {
 		// ключ - путь, значения - в каких узлы ведет
 		// вложенная мэпа, чтобы гарантировать уникальность узлов
 		var paths = make(map[string]map[string]bool, 0)
-		for _, old := range head.Olds {
+		for _, old := range head.To {
 			toWhom := fsm.Vertexes[old].Out
 			for _, e := range toWhom {
 				_, ok := paths[e.Weight]
@@ -207,12 +208,133 @@ func (fsm *FSM) ToDka() *FSM {
 			visitedCombinations[id] = true
 
 			queue = append(queue, DKAVertex{
-				Olds: ids,
+				To:   ids,
 				From: newVertex,
 			})
 		}
 
 		queue = queue[1:]
+	}
+	newFSM.SetFirstLast(fsm.First, lastVertexes)
+	//newFSM.ReplaceEqualEdges()
+	*fsm = *newFSM
+	return fsm
+}
+
+func (fsm FSM) AddEpsilons(vertexes ...string) []string {
+	var (
+		stack, visited []string
+		unique         = make(map[string]bool)
+	)
+	for _, v := range vertexes {
+		_, ok := unique[v]
+		if ok {
+			continue
+		}
+		unique[v] = true
+		visited = append(visited, v)
+		stack = append(stack, v)
+	}
+	for len(stack) > 0 {
+		var head = stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		for _, edge := range fsm.Edges {
+			if edge.From == head && edge.Weight == "e" {
+				_, ok := unique[edge.To]
+				if ok {
+					continue
+				}
+				unique[edge.To] = true
+				stack = append(stack, edge.To)
+				visited = append(visited, edge.To)
+			}
+		}
+	}
+	return visited
+}
+
+// ToDFA - построение эквивалентного ДКА к НКА
+// Алгоритм 3.20
+func (fsm *FSM) ToDFA() *FSM {
+	//log.Println("Построить ДКА, эквивалентное указанному НКА")
+	if len(fsm.Vertexes) == 0 {
+		return fsm
+	}
+	var (
+		visitedCombinations = make(map[string]bool, 0)
+		newFSM              = &FSM{graph.NewGraph()}
+		queue               = []DKAVertex{{
+			From: fsm.First[0],
+			To:   fsm.AddEpsilons(fsm.First...),
+		}}
+		lastVertexes []string
+	)
+	// наполняем олды проходом по всем ешкам
+	for len(queue) != 0 {
+		head := queue[0]
+		queue = queue[1:]
+
+		// ключ - путь, значения - в каких узлы ведет
+		// вложенная мэпа, чтобы гарантировать уникальность узлов
+		var paths = make(map[string]map[string]bool)
+		for _, old := range head.To {
+			toWhom := fsm.Vertexes[old].Out
+			for _, e := range toWhom {
+				_, ok := paths[e.Weight]
+				if !ok {
+					paths[e.Weight] = make(map[string]bool)
+				}
+				paths[e.Weight][e.To] = true
+			}
+		}
+		for path, _ := range paths {
+			if path == "e" {
+				continue
+			}
+			for vertex := range paths["e"] {
+				paths[path][vertex] = true
+			}
+		}
+		delete(paths, "e")
+		for path, vertexes := range paths {
+			var (
+				ids      = make([]string, 0)
+				withLast bool
+			)
+			for vertex := range vertexes {
+				ids = append(ids, vertex)
+				if !withLast {
+					withLast = fsm.FindInString(vertex, fsm.Last)
+				}
+			}
+			var id string
+
+			ids = fsm.AddEpsilons(ids...)
+
+			sort.Strings(ids)
+			id = strings.Join(ids, " ")
+			newVertex := newFSM.AddVertex(graph.VertexOptID(id))
+			newFSM.AddEdge(&graph.Edge{
+				From:   head.From,
+				To:     newVertex,
+				Weight: path,
+			})
+			if withLast {
+				lastVertexes = append(lastVertexes, newVertex)
+			}
+
+			_, ok := visitedCombinations[id]
+			if ok {
+				continue
+			}
+
+			visitedCombinations[id] = true
+
+			queue = append(queue, DKAVertex{
+				To:   ids,
+				From: newVertex,
+			})
+		}
 	}
 	newFSM.SetFirstLast(fsm.First, lastVertexes)
 	//newFSM.ReplaceEqualEdges()

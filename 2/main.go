@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -142,6 +143,9 @@ func (r Rule) NewMarked() string {
 
 // Append добавить правила переходов из from в каждый из to
 func (r *Rules) Append(from string, to ...string) {
+	for _, to := range to {
+		log.Printf("add %s -> %s", from, to)
+	}
 	var unique = make(map[string]bool)
 	for _, r := range *r {
 		unique[r.From+r.To] = true
@@ -370,6 +374,7 @@ func (cfr CFR) ElrWithE() CFR {
 				alphasWithNewA = alpha.Add(marked).GetRPart()
 			)
 
+			log.Println("marked", marked)
 			newRules = newRules.RemoveRules(Aᵢ)
 			(&newRules).Append(Aᵢ, betasWithNewA...)
 			(&newRules).Append(marked, append(alphasWithNewA, Epsilon)...)

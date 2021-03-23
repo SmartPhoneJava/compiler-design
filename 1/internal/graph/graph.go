@@ -171,6 +171,7 @@ func (g *Graph) SplitEdge(e *Edge, newWeights ...string) {
 		To: e.From,
 	}
 	for i, weight := range newWeights {
+
 		var newEdge = &Edge{
 			From:   prevEdge.To,
 			Weight: weight,
@@ -179,6 +180,7 @@ func (g *Graph) SplitEdge(e *Edge, newWeights ...string) {
 			newEdge.To = e.To
 		}
 		prevEdge = g.AddEdge(newEdge)
+
 	}
 	g.RemoveEdge(e)
 }
@@ -189,13 +191,52 @@ func (g *Graph) MultiplyEdge(e *Edge, newWeights ...string) {
 		return
 	}
 	for _, weight := range newWeights {
-		g.AddEdge(&Edge{
+		e1 := g.AddEdge(&Edge{
 			From:   e.From,
+			Weight: "e",
+		})
+		e2 := g.AddEdge(&Edge{
 			To:     e.To,
+			Weight: "e",
+		})
+		g.AddEdge(&Edge{
+			From:   e1.To,
+			To:     e2.From,
 			Weight: weight,
 		})
 	}
 	g.RemoveEdge(e)
+}
+
+// EpsilonEdge обработать *
+func (g *Graph) EpsilonEdge(e *Edge, weight string) *Edge {
+	e1 := g.AddEdge(&Edge{
+		From:   e.From,
+		Weight: "e",
+	})
+	e2 := g.AddEdge(&Edge{
+		To:     e.To,
+		Weight: "e",
+	})
+	g.AddEdge(&Edge{
+		To:     e1.To,
+		From:   e2.From,
+		Weight: "e",
+	})
+	g.AddEdge(&Edge{
+		From:   e.From,
+		To:     e.To,
+		Weight: "e",
+	})
+
+	g.RemoveEdge(e)
+
+	newEdge := g.AddEdge(&Edge{
+		From:   e1.To,
+		To:     e2.From,
+		Weight: weight,
+	})
+	return &newEdge
 }
 
 func (g *Graph) FindInString(find string, ids []string) bool {
@@ -213,7 +254,7 @@ func (g *Graph) fixFirstLast() {
 }
 
 func (g *Graph) fixArr(oldArr *[]string) {
-	var vertexes = make(map[string]bool, 0)
+	var vertexes = make(map[string]bool)
 	for _, v := range *oldArr {
 		_, ok := g.Vertexes[v]
 		if ok {
@@ -284,7 +325,7 @@ func (g *Graph) Beautify() *Graph {
 
 func (g *Graph) CompareMode() *Graph {
 	var (
-		namesReplacer = make(map[string]string, 0)
+		namesReplacer = make(map[string]string)
 		newFSM        = NewGraph()
 		i             int
 	)
@@ -310,7 +351,7 @@ func (g *Graph) CompareMode() *Graph {
 				if ok {
 					continue
 				}
-				namesReplacer[edge.To] = fmt.Sprintf("%s", namesReplacer[edge.From]+" "+edge.Weight)
+				namesReplacer[edge.To] = fmt.Sprintf("%d", i+1)
 				i++
 				newVertexes = append(newVertexes, edge.To)
 			}
@@ -332,3 +373,56 @@ func (g *Graph) CompareMode() *Graph {
 	}
 	return newFSM
 }
+
+/////////////
+
+// Дерево разбора
+/*
+type VertexTree struct {
+	Value               byte
+	Left, Middle, Right *VertexTree
+}
+
+func NewVertexTree(str string) *VertexTree {
+	v := newVertexTree(str, false)
+}
+
+// https://aliev.me/runestone/Trees/ParseTree.html
+func newVertexTree(str string, isRight bool) (*VertexTree, string) {
+	if len(str) == 0 {
+		return nil, str
+	}
+	var (
+		v = &VertexTree{}
+		symbol = str[len(str)-1]
+		nextString = str[:len(str)-1]
+	)
+
+	v.Right, str = newVertexTree(nextString, true)
+
+	if symbol == '*' {
+		v.Value = '*'
+		v.Left, str = newVertexTree(str, false)
+	} else if symbol == ')' {
+		v.Value = ')'
+		v.Middle, str = newVertexTree(str, false)
+	} else if symbol != '|' {
+		v.Value =
+		return v, str[:len(str)-1]
+	} else {
+		v.Value = '.' // умножение
+		v.Right, str = newVertexTree(str, true)
+		v.Left, str = newVertexTree(str, false)
+	}
+
+	if s == ')' {
+
+		v.Middle, str = newVertexTree(str[:len(str)-1])
+	} else {
+		v.Middle, str = newVertexTree(str[:len(str)-1])
+	}
+
+	//switch v.Value
+	v.Middle = newVertexTree(str[:len(str)-1])
+}
+*/

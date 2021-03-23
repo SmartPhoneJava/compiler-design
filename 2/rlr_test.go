@@ -84,5 +84,49 @@ func TestExample4_9(t *testing.T) {
 		log.Println("Получено:", real.P)
 		t.Fatalf("Ожидание и реальность не сошлись: %s", err)
 	}
+}
+
+// Пример 4.7, стр 276, "Ахо, Сети, Ульман. Компиляторы. Принципы, технологии, инструменты, 2008, 2-ое издание"
+// Выражение 4.2, стр 254
+func TestExample4_7(t *testing.T) {
+	var G = CFR{
+		N: []string{"E", "T", "F"},
+		T: []string{"+", "(", ")", "i", "d"},
+		S: []string{},
+		P: Rules{
+			{From: "E", To: "ET'"},
+			{From: "E'", To: "+TE'"},
+			{From: "E", To: "e"},
+			{From: "T", To: "FT'"},
+			{From: "T'", To: "*FT'"},
+			{From: "T'", To: "e'"},
+			{From: "F", To: "(E)"},
+			{From: "F", To: "(id)"},
+		},
+	}
+
+	var expected = CFR{
+		N: []string{"E", "T", "F", "E'", "T'"},
+		T: []string{"+", "(", ")", "i", "d"},
+		S: []string{},
+		P: Rules{
+			{From: "E", To: "TE'"},
+			{From: "E'", To: "+TE'"},
+			{From: "E'", To: "e"},
+			{From: "T", To: "FT'"},
+			{From: "T", To: "*FT'"},
+			{From: "T'", To: "e"},
+			{From: "F", To: "(E)"},
+			{From: "F", To: "id"},
+		},
+	}
+
+	log.Println("TEST3")
+	var real = G.ElrWithE()
+	if err := real.IsSame(expected); err != nil {
+		log.Println("Ожидалось:", expected.P)
+		log.Println("Получено:", real.P)
+		t.Fatalf("Ожидание и реальность не сошлись: %s", err)
+	}
 
 }

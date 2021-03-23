@@ -7,4 +7,5 @@ require (
 	github.com/go-echarts/go-echarts v1.0.0
 	github.com/gorilla/mux v1.8.0
 	github.com/kisielk/godepgraph v0.0.0-20190626013829-57a7e4a651a9 // indirect
+	gonum.org/v1/gonum v0.9.0
 )
