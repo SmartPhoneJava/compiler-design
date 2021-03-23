@@ -78,7 +78,7 @@ func TestMinimize1(t *testing.T) {
 	var folder = "assets/test/min/1"
 
 	if !expected.IsSame(*origin) {
-		visualizer.MustVisualizeFSM(&origin.FSM, "assets/test/min/1", "origin.dot")
+		visualizer.MustVisualizeFSM(&origin.FSM, folder, "origin.dot")
 		visualizer.MustVisualizeFSM(&expected.FSM, folder, "expected.dot")
 		visualizer.MustVisualizeFSM(&origin.FSM, folder, "real.dot")
 
@@ -231,7 +231,7 @@ func TestMinimize2(t *testing.T) {
 	real.R().D().R().D()
 
 	if !expected.IsSame(real) {
-		visualizer.MustVisualizeFSM(&origin.FSM, "assets/test/min/2", "origin.dot")
+		visualizer.MustVisualizeFSM(&origin.FSM, folder, "origin.dot")
 		visualizer.MustVisualizeDR(real.CompareMode(), folder, "real.dot")
 		visualizer.MustVisualizeDR(expected.CompareMode(), folder, "expected.dot")
 
@@ -241,7 +241,6 @@ func TestMinimize2(t *testing.T) {
 
 // https://lektsii.org/6-91118.html
 // второй пример
-/*
 func TestMinimize3(t *testing.T) {
 	var origin = fsm.NewDRFromEdges([]graph.Edge{
 		{
@@ -304,23 +303,41 @@ func TestMinimize3(t *testing.T) {
 			To:     "D",
 			Weight: "1",
 		},
-	}, []string{"A"}, []string{"D"})
-	log.Println("test3")
-	visualizer.MustVisualizeFSM(&origin.FSM, "assets/test/min/3", "origin.dot")
+	}, []string{"A"}, []string{"D", "E"})
 	var expected = fsm.NewDRFromEdges([]graph.Edge{
-		{
-			From:   "A",
-			To:     "B",
-			Weight: "1",
-		},
 		{
 			From:   "A",
 			To:     "B",
 			Weight: "0",
 		},
 		{
-			From:   "D",
+			From:   "A",
+			To:     "C",
+			Weight: "1",
+		},
+		{
+			From:   "C",
+			To:     "D",
+			Weight: "0",
+		},
+		{
+			From:   "E",
 			To:     "B",
+			Weight: "0",
+		},
+		{
+			From:   "C",
+			To:     "E",
+			Weight: "1",
+		},
+		{
+			From:   "D",
+			To:     "E",
+			Weight: "1",
+		},
+		{
+			From:   "E",
+			To:     "D",
 			Weight: "1",
 		},
 		{
@@ -328,30 +345,128 @@ func TestMinimize3(t *testing.T) {
 			To:     "D",
 			Weight: "1",
 		},
-		{
-			From:   "D",
-			To:     "D",
-			Weight: "1",
-		},
 	}, []string{"A"}, []string{"D"})
-	var real = *origin
+	var (
+		real   = *origin
+		folder = "assets/test/min/3"
+	)
 
-	visualizer.MustVisualizeFSM(&real.FSM, "assets/test/min/3", "real0.dot")
-	real.R()
-	visualizer.MustVisualizeFSM(&real.FSM, "assets/test/min/3", "real1.dot")
-	real.D()
-	visualizer.MustVisualizeFSM(&real.FSM, "assets/test/min/3", "real2.dot")
-	real.R()
-	visualizer.MustVisualizeFSM(&real.FSM, "assets/test/min/3", "real3.dot")
-	real.D()
-	visualizer.MustVisualizeFSM(&real.FSM, "assets/test/min/3", "real4.dot")
-
-	//real.Chain(real.D, real.R, real.D, real.R)
+	real.R().D().R().D()
 
 	if !expected.IsSame(real) {
-		visualizer.MustVisualizeFSM(&real.FSM, "assets/test/min/3", "real.dot")
-		visualizer.MustVisualizeFSM(&expected.FSM, "assets/test/min/3", "expected.dot")
-		t.Fatalf("Графы не сошлись, см. картинки в /assets/test")
+		visualizer.MustVisualizeFSM(&origin.FSM, folder, "origin.dot")
+		visualizer.MustVisualizeFSM(&real.FSM, folder, "real.dot")
+		visualizer.MustVisualizeFSM(&expected.FSM, folder, "expected.dot")
+		t.Fatalf("Графы не сошлись, см. картинки в %s", folder)
+	}
+}
+
+/*
+// https://lektsii.org/6-91118.html
+// первый пример
+func TestMinimize4(t *testing.T) {
+	var origin = fsm.NewDRFromEdges([]graph.Edge{
+		{
+			From:   "A",
+			To:     "C",
+			Weight: "b",
+		},
+		{
+			From:   "C",
+			To:     "C",
+			Weight: "b",
+		},
+		{
+			From:   "E",
+			To:     "C",
+			Weight: "b",
+		},
+		{
+			From:   "A",
+			To:     "B",
+			Weight: "a",
+		},
+		{
+			From:   "B",
+			To:     "B",
+			Weight: "a",
+		},
+		{
+			From:   "C",
+			To:     "B",
+			Weight: "a",
+		},
+		{
+			From:   "B",
+			To:     "D",
+			Weight: "b",
+		},
+		{
+			From:   "D",
+			To:     "B",
+			Weight: "b",
+		},
+		{
+			From:   "D",
+			To:     "E",
+			Weight: "b",
+		},
+		// {
+		// 	From:   "F",
+		// 	To:     "E",
+		// 	Weight: "a",
+		// },
+	}, []string{"A", "C", "B", "D"}, []string{"E"})
+	visualizer.MustVisualizeFSM(&origin.FSM, "assets/test/min/3", "origin.dot")
+	var expected = fsm.NewDRFromEdges([]graph.Edge{
+		{
+			From:   "C",
+			To:     "C",
+			Weight: "b",
+		},
+		{
+			From:   "C",
+			To:     "B",
+			Weight: "a",
+		},
+		{
+			From:   "B",
+			To:     "B",
+			Weight: "a",
+		},
+		{
+			From:   "D",
+			To:     "B",
+			Weight: "b",
+		},
+		{
+			From:   "D",
+			To:     "E",
+			Weight: "b",
+		},
+		{
+			From:   "E",
+			To:     "B",
+			Weight: "a",
+		},
+		{
+			From:   "E",
+			To:     "C",
+			Weight: "b",
+		},
+	}, []string{"C"}, []string{"D"})
+	var (
+		real   = *origin
+		folder = "assets/test/min/4"
+	)
+
+	real.R().D().R().D()
+
+	if !expected.IsSame(real) {
+		visualizer.MustVisualizeFSM(&origin.FSM, folder, "origin.dot")
+		visualizer.MustVisualizeFSM(&real.FSM, folder, "real.dot")
+		visualizer.MustVisualizeFSM(&expected.FSM, folder, "expected.dot")
+		t.Fatalf("Графы не сошлись, см. картинки в %s", folder)
 	}
 }
 */
