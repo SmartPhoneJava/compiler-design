@@ -1,17 +1,17 @@
 digraph G {
-	"7"->"8"[ label=<<font color="blue">a</font>> ];
-	"0"->"7"[ label=<<font color="blue">e</font>> ];
 	"0"->"1"[ label=<<font color="blue">e</font>> ];
+	"1"->"2"[ label=<<font color="blue">e</font>> ];
 	"1"->"4"[ label=<<font color="blue">e</font>> ];
-	"2"->"3"[ label=<<font color="blue">a</font>> ];
 	"5"->"6"[ label=<<font color="blue">e</font>> ];
 	"6"->"1"[ label=<<font color="blue">e</font>> ];
-	"1"->"2"[ label=<<font color="blue">e</font>> ];
+	"7"->"8"[ label=<<font color="blue">a</font>> ];
+	"8"->"9"[ label=<<font color="blue">b</font>> ];
+	"9"->"10"[ label=<<font color="blue">b</font>> ];
+	"0"->"7"[ label=<<font color="blue">e</font>> ];
+	"2"->"3"[ label=<<font color="blue">a</font>> ];
 	"4"->"5"[ label=<<font color="blue">b</font>> ];
 	"3"->"6"[ label=<<font color="blue">e</font>> ];
 	"6"->"7"[ label=<<font color="blue">e</font>> ];
-	"8"->"9"[ label=<<font color="blue">b</font>> ];
-	"9"->"10"[ label=<<font color="blue">b</font>> ];
 	"0" [ label=<<font color="green">0</font>> ];
 	"1";
 	"10" [ label=<<font color="red">10</font>> ];

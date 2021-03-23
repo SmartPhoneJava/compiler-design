@@ -2,6 +2,7 @@ package graph
 
 import (
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -164,14 +165,13 @@ func (g *Graph) RemoveEdge(e *Edge) {
 
 // SplitEdge - разбить ребро на несколько
 func (g *Graph) SplitEdge(e *Edge, newWeights ...string) {
-	if len(newWeights) == 0 {
+	if len(newWeights) < 2 {
 		return
 	}
 	var prevEdge = Edge{
 		To: e.From,
 	}
 	for i, weight := range newWeights {
-
 		var newEdge = &Edge{
 			From:   prevEdge.To,
 			Weight: weight,
@@ -231,6 +231,7 @@ func (g *Graph) EpsilonEdge(e *Edge, weight string) *Edge {
 
 	g.RemoveEdge(e)
 
+	log.Println("add", e1.To, e2.From, weight)
 	newEdge := g.AddEdge(&Edge{
 		From:   e1.To,
 		To:     e2.From,

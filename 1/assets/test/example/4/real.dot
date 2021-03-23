@@ -1,0 +1,8 @@
+digraph G {
+	"q0"->"s2"[ label=<<font color="blue">a</font>> ];
+	"s2"->"q1"[ label=<<font color="blue">b</font>> ];
+	"q0" [ label=<<font color="green">q0</font>> ];
+	"q1" [ label=<<font color="red">q1</font>> ];
+	"s2";
+
+}

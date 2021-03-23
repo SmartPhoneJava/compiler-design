@@ -11,88 +11,10 @@ type FSM struct {
 	*graph.Graph
 }
 
-type DKAVertex struct {
+// NewVertex - переход к новой вершине для построения ДКА из НКА
+type NewVertex struct {
 	From string
 	To   []string
-}
-
-// ToDka - построение эквивалентного ДКА к НКА
-// http://esyr.org/wiki/Конструирование_Компиляторов%2C_Алгоритмы_решения_задач#.D0.9F.D0.BE.D1.81.D1.82.D1.80.D0.BE.D0.B5.D0.BD.D0.B8.D0.B5_.D0.94.D0.9A.D0.90_.D0.BF.D0.BE_.D0.9D.D0.9A.D0.90
-func (fsm *FSM) ToDka() *FSM {
-	//log.Println("Построить ДКА, эквивалентное указанному НКА")
-	if len(fsm.Vertexes) == 0 {
-		return fsm
-	}
-	var (
-		visitedCombinations = make(map[string]bool, 0)
-		newFSM              = &FSM{graph.NewGraph()}
-		queue               = []DKAVertex{
-			{
-				To:   fsm.First,
-				From: fsm.First[0],
-			},
-		}
-		lastVertexes []string
-	)
-	for len(queue) != 0 {
-		head := queue[0]
-
-		// ключ - путь, значения - в каких узлы ведет
-		// вложенная мэпа, чтобы гарантировать уникальность узлов
-		var paths = make(map[string]map[string]bool, 0)
-		for _, old := range head.To {
-			toWhom := fsm.Vertexes[old].Out
-			for _, e := range toWhom {
-				_, ok := paths[e.Weight]
-				if !ok {
-					paths[e.Weight] = make(map[string]bool, 0)
-				}
-				paths[e.Weight][e.To] = true
-			}
-		}
-		for path, vertexes := range paths {
-			var (
-				ids      = make([]string, 0)
-				withLast bool
-			)
-			for vertex := range vertexes {
-				ids = append(ids, vertex)
-				if !withLast {
-					withLast = fsm.FindInString(vertex, fsm.Last)
-				}
-			}
-			var id string
-			sort.Strings(ids)
-			id = strings.Join(ids, " ")
-
-			newVertex := newFSM.AddVertex(graph.VertexOptID(id))
-			newFSM.AddEdge(&graph.Edge{
-				From:   head.From,
-				To:     newVertex,
-				Weight: path,
-			})
-			if withLast {
-				lastVertexes = append(lastVertexes, newVertex)
-			}
-
-			_, ok := visitedCombinations[id]
-			if ok {
-				continue
-			}
-
-			visitedCombinations[id] = true
-
-			queue = append(queue, DKAVertex{
-				To:   ids,
-				From: newVertex,
-			})
-		}
-
-		queue = queue[1:]
-	}
-	newFSM.SetFirstLast(fsm.First, lastVertexes)
-	*fsm = *newFSM
-	return fsm
 }
 
 // EClosure - возвращает все вершины, в которые можно попасть
@@ -132,14 +54,13 @@ func (fsm FSM) EClosure(vertexes ...string) []string {
 // ToDFA - построение эквивалентного ДКА к НКА
 // Алгоритм 3.20
 func (fsm *FSM) ToDFA() *FSM {
-	//log.Println("Построить ДКА, эквивалентное указанному НКА")
 	if len(fsm.Vertexes) == 0 {
 		return fsm
 	}
 	var (
 		visitedCombinations = make(map[string]bool, 0)
 		newFSM              = &FSM{graph.NewGraph()}
-		queue               = []DKAVertex{{
+		queue               = []NewVertex{{
 			From: fsm.First[0],
 			To:   fsm.EClosure(fsm.First...),
 		}}
@@ -194,13 +115,13 @@ func (fsm *FSM) ToDFA() *FSM {
 
 			visitedCombinations[id] = true
 
-			queue = append(queue, DKAVertex{
+			queue = append(queue, NewVertex{
 				To:   ids,
 				From: newVertex,
 			})
 		}
 	}
-	// устаналиваем начало и обновленный конец
+	// устаналиваем обновленные начало и конец
 	newFSM.SetFirstLast(fsm.First, lastVertexes)
 	*fsm = *newFSM
 	return fsm
@@ -212,7 +133,7 @@ func (fsm *FSM) ToDFA() *FSM {
 type Dtran map[string]map[string]bool
 
 // Получить пути из вершины head
-func (fsm *FSM) MoveTo(head DKAVertex) Dtran {
+func (fsm *FSM) MoveTo(head NewVertex) Dtran {
 	var paths = make(Dtran)
 	for _, old := range head.To {
 		toWhom := fsm.Vertexes[old].Out

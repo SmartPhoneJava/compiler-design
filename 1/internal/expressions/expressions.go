@@ -47,11 +47,9 @@ func (str RW) Concatenations() []RW {
 			}
 		case '*':
 			if i > 0 && str[i-1] == ')' && bracketOn == 0 {
-				lexemes[len(lexemes)-1] += "*"
 				begin = i + 1
-			} else {
-				lexemes = append(lexemes, RW(r))
 			}
+			lexemes[len(lexemes)-1] += "*"
 		case '|':
 			if bracketOn == 0 {
 				return nil
@@ -112,29 +110,39 @@ func removeBrackets(s string) string {
 	return s
 }
 
+const (
+	NoStar = iota
+	StarNoBrackets
+	StarBrackets
+)
+
 // RemoveZw убрать звездочку и вернуть флаг произошедшего события
-func removeZw(s string) (string, bool) {
-	s = removeBrackets(s)
+func removeZw(s string) (string, int) {
+	var oldS = ""
+	for len(s) != len(oldS) {
+		oldS = s
+		s = removeBrackets(s)
+	}
+	if len(s) == 0 || s[len(s)-1] != '*' {
+		return s, NoStar
+	}
 	var countBrackets int
 	for _, s := range s {
 		if s == '(' || s == ')' {
 			countBrackets++
 		}
 	}
-	if countBrackets > 2 {
-		return s, false
-	}
-	if len(s) > 2 && (s)[0] == '(' && s[len(s)-2] == ')' && s[len(s)-1] == '*' {
-		return s[1 : len(s)-2], true // убираем скобки и *
-	}
-	// if countBrackets > 0 {
-	// 	return s, false
-	// }
-	// if s[len(s)-1] == '*' {
-	// 	return s[:len(s)-1], true // Убираем *
-	// }
+	// скобок нет
+	if countBrackets == 0 {
+		if len(s) > 0 && s[len(s)-1] == '*' {
+			return s[:len(s)-1], StarNoBrackets // убираем *
+		}
+	} else if len(s)-len(removeBrackets(s[:len(s)-1])) == 3 {
+		// есть внешняя скобка
+		return s[1 : len(s)-2], StarBrackets // убираем скобки и *
 
-	return s, false
+	}
+	return s, NoStar
 }
 
 // ToGraph привести к НКА
@@ -159,7 +167,7 @@ func (str *RW) ToENKA() *fsm.FSM {
 				continue
 			}
 			weight, changed := removeZw(weight)
-			if changed {
+			if changed != 0 {
 				edge = kda.EpsilonEdge(edge, weight)
 			}
 
