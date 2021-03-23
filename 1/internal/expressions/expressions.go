@@ -1,9 +1,9 @@
 package expressions
 
 import (
+	"gocompiler/internal"
 	"gocompiler/internal/fsm"
 	"gocompiler/internal/graph"
-	"log"
 	"strings"
 )
 
@@ -88,28 +88,6 @@ func (str *RW) Unions() RWS {
 	return lexemes
 }
 
-func removeBrackets(s string) string {
-	if len(s) == 0 || s[0] != '(' {
-		return s
-	}
-	var countBrackets int
-	for i, symbol := range s {
-		if symbol == '(' {
-			countBrackets++
-		} else if symbol == ')' {
-			countBrackets--
-			if countBrackets == 0 {
-				if i == len(s)-1 { // последняя скобка первого уровня
-					return s[1 : len(s)-1]
-				}
-				return s
-			}
-		}
-	}
-
-	return s
-}
-
 const (
 	NoStar = iota
 	StarNoBrackets
@@ -121,7 +99,7 @@ func removeZw(s string) (string, int) {
 	var oldS = ""
 	for len(s) != len(oldS) {
 		oldS = s
-		s = removeBrackets(s)
+		s = internal.RemoveBrackets(s)
 	}
 	if len(s) == 0 || s[len(s)-1] != '*' {
 		return s, NoStar
@@ -137,7 +115,7 @@ func removeZw(s string) (string, int) {
 		if len(s) > 0 && s[len(s)-1] == '*' {
 			return s[:len(s)-1], StarNoBrackets // убираем *
 		}
-	} else if len(s)-len(removeBrackets(s[:len(s)-1])) == 3 {
+	} else if len(s)-len(internal.RemoveBrackets(s[:len(s)-1])) == 3 {
 		// есть внешняя скобка
 		return s[1 : len(s)-2], StarBrackets // убираем скобки и *
 
@@ -150,45 +128,38 @@ func removeZw(s string) (string, int) {
 // Алгоритм 3.23 Алгоритм Мак-Нотона-Ямады-Томпсона, стр. 213
 func (str *RW) ToENKA() *fsm.FSM {
 	var kda = &fsm.FSM{Graph: graph.NewGraph()}
-	kda.AddEdge(&graph.Edge{
+	firstEdge := kda.AddEdge(&graph.Edge{
 		From:   "q0",
 		To:     "q1",
 		Weight: string(*str),
 	})
-	var maxTry = 100
-	var changes = 1
-	for changes > 0 && maxTry > 0 {
-		arr := kda.Edges
-		changes = 0
+	var queue = []graph.Edge{firstEdge}
+	for len(queue) > 0 {
 
-		for _, edge := range arr {
-			weight := strings.TrimSpace(edge.Weight)
-			if len(weight) == 1 {
-				continue
-			}
-			weight, changed := removeZw(weight)
-			if changed != 0 {
-				edge = kda.EpsilonEdge(edge, weight)
-			}
+		head := queue[0]
+		queue = queue[1:]
 
-			ew := RW(weight)
-			rws := (&ew).Unions()
-			kda.MultiplyEdge(edge, rws.toString()...)
-			changes += len(rws)
-
-			rws = (&ew).Concatenations()
-			kda.SplitEdge(edge, rws.toString()...)
-
-			changes += len(rws)
+		weight := strings.TrimSpace(head.Weight)
+		if len(weight) == 1 {
+			continue
 		}
 
-		if changes == 0 {
-			break
+		weight, changed := removeZw(weight)
+		if changed != 0 {
+			head = *kda.EpsilonEdge(&head, weight)
 		}
-		maxTry--
-	}
-	if maxTry == 0 {
-		log.Println("error happened")
+
+		ew := RW(weight)
+		rws := (&ew).Unions()
+		edges := kda.MultiplyEdge(&head, rws.toString()...)
+		queue = append(queue, edges...)
+		if len(edges) != 0 {
+			continue
+		}
+
+		rws = (&ew).Concatenations()
+		edges = kda.SplitEdge(&head, rws.toString()...)
+		queue = append(queue, edges...)
 	}
 	kda.SetFirstLast([]string{"q0"}, []string{"q1"})
 	return kda

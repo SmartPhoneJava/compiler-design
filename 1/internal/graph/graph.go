@@ -2,7 +2,7 @@ package graph
 
 import (
 	"fmt"
-	"log"
+	"gocompiler/internal"
 	"strings"
 )
 
@@ -130,10 +130,19 @@ func (g *Graph) VertexesArr() []*Vertex {
 
 // AddEdge - добавить ребро
 func (g *Graph) AddEdge(ce *Edge, opts ...VertexOpt) Edge {
+	var (
+		weight    = strings.TrimSpace(ce.Weight)
+		oldWeight = ""
+	)
+	for len(weight) != len(oldWeight) {
+		oldWeight = weight
+		weight = internal.RemoveBrackets(weight)
+	}
+
 	var e = &Edge{
 		From:   ce.From,
 		To:     ce.To,
-		Weight: strings.TrimSpace(ce.Weight),
+		Weight: weight,
 	}
 	e.From = g.AddVertex(append(opts, VertexOptID(e.From))...)
 	e.To = g.AddVertex(append(opts, VertexOptID(e.To))...)
@@ -164,13 +173,16 @@ func (g *Graph) RemoveEdge(e *Edge) {
 }
 
 // SplitEdge - разбить ребро на несколько
-func (g *Graph) SplitEdge(e *Edge, newWeights ...string) {
+func (g *Graph) SplitEdge(e *Edge, newWeights ...string) []Edge {
 	if len(newWeights) < 2 {
-		return
+		return nil
 	}
-	var prevEdge = Edge{
-		To: e.From,
-	}
+	var (
+		edges    = make([]Edge, 0)
+		prevEdge = Edge{
+			To: e.From,
+		}
+	)
 	for i, weight := range newWeights {
 		var newEdge = &Edge{
 			From:   prevEdge.To,
@@ -180,16 +192,18 @@ func (g *Graph) SplitEdge(e *Edge, newWeights ...string) {
 			newEdge.To = e.To
 		}
 		prevEdge = g.AddEdge(newEdge)
-
+		edges = append(edges, prevEdge)
 	}
 	g.RemoveEdge(e)
+	return edges
 }
 
 // MultiplyEdge создать несколько ребер вместо одного
-func (g *Graph) MultiplyEdge(e *Edge, newWeights ...string) {
+func (g *Graph) MultiplyEdge(e *Edge, newWeights ...string) []Edge {
 	if len(newWeights) < 2 {
-		return
+		return nil
 	}
+	var edges = make([]Edge, 0)
 	for _, weight := range newWeights {
 		e1 := g.AddEdge(&Edge{
 			From:   e.From,
@@ -199,13 +213,16 @@ func (g *Graph) MultiplyEdge(e *Edge, newWeights ...string) {
 			To:     e.To,
 			Weight: "e",
 		})
-		g.AddEdge(&Edge{
+		newEdge := g.AddEdge(&Edge{
 			From:   e1.To,
 			To:     e2.From,
 			Weight: weight,
 		})
+		edges = append(edges, newEdge)
 	}
 	g.RemoveEdge(e)
+
+	return edges
 }
 
 // EpsilonEdge обработать *
@@ -231,7 +248,6 @@ func (g *Graph) EpsilonEdge(e *Edge, weight string) *Edge {
 
 	g.RemoveEdge(e)
 
-	log.Println("add", e1.To, e2.From, weight)
 	newEdge := g.AddEdge(&Edge{
 		From:   e1.To,
 		To:     e2.From,
