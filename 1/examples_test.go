@@ -452,15 +452,39 @@ func TestExampleMy5(t *testing.T) {
 		{
 			From:   "1",
 			To:     "2",
-			Weight: "b",
+			Weight: "e",
 		},
-
 		{
 			From:   "1",
-			To:     "1",
+			To:     "3",
+			Weight: "e",
+		},
+		{
+			From:   "2",
+			To:     "4",
 			Weight: "a",
 		},
-	}, []string{"1"}, []string{"2"})
+		{
+			From:   "3",
+			To:     "5",
+			Weight: "b",
+		},
+		{
+			From:   "4",
+			To:     "6",
+			Weight: "e",
+		},
+		{
+			From:   "5",
+			To:     "6",
+			Weight: "e",
+		},
+		{
+			From:   "6",
+			To:     "7",
+			Weight: "b",
+		},
+	}, []string{"1"}, []string{"7"})
 	var (
 		real   = fsm.DR{*origin.ToENKA()}
 		folder = "assets/test/example/7"
@@ -478,15 +502,60 @@ func TestExampleMy6(t *testing.T) {
 		{
 			From:   "1",
 			To:     "2",
-			Weight: "b",
+			Weight: "e",
 		},
 
 		{
 			From:   "1",
-			To:     "1",
+			To:     "3",
+			Weight: "e",
+		},
+		{
+			From:   "2",
+			To:     "4",
 			Weight: "a",
 		},
-	}, []string{"1"}, []string{"2"})
+		{
+			From:   "3",
+			To:     "5",
+			Weight: "b",
+		},
+		{
+			From:   "4",
+			To:     "6",
+			Weight: "e",
+		},
+		{
+			From:   "5",
+			To:     "6",
+			Weight: "e",
+		},
+		{
+			From:   "6",
+			To:     "7",
+			Weight: "e",
+		},
+		{
+			From:   "7",
+			To:     "8",
+			Weight: "b",
+		},
+		{
+			From:   "8",
+			To:     "7",
+			Weight: "e",
+		},
+		{
+			From:   "6",
+			To:     "9",
+			Weight: "e",
+		},
+		{
+			From:   "8",
+			To:     "9",
+			Weight: "e",
+		},
+	}, []string{"1"}, []string{"9"})
 	var (
 		real   = fsm.DR{*origin.ToENKA()}
 		folder = "assets/test/example/8"
@@ -499,18 +568,52 @@ func TestExampleMy6(t *testing.T) {
 }
 
 func TestExampleMy7(t *testing.T) {
-	var origin expressions.RW = "((((a))*))"
+	var origin expressions.RW = "((((a))*)*)"
 	var expected = fsm.NewDRFromEdges([]graph.Edge{
 		{
 			From:   "1",
 			To:     "2",
-			Weight: "b",
+			Weight: "e",
 		},
-
 		{
 			From:   "1",
-			To:     "1",
+			To:     "3",
+			Weight: "e",
+		},
+		{
+			From:   "3",
+			To:     "4",
+			Weight: "e",
+		},
+		{
+			From:   "4",
+			To:     "3",
+			Weight: "e",
+		},
+		{
+			From:   "3",
+			To:     "5",
+			Weight: "e",
+		},
+		{
+			From:   "5",
+			To:     "6",
 			Weight: "a",
+		},
+		{
+			From:   "6",
+			To:     "5",
+			Weight: "e",
+		},
+		{
+			From:   "6",
+			To:     "4",
+			Weight: "e",
+		},
+		{
+			From:   "4",
+			To:     "2",
+			Weight: "e",
 		},
 	}, []string{"1"}, []string{"2"})
 	var (

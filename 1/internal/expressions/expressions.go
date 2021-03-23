@@ -147,6 +147,8 @@ func (str *RW) ToENKA() *fsm.FSM {
 		weight, changed := removeZw(weight)
 		if changed != 0 {
 			head = *kda.EpsilonEdge(&head, weight)
+			queue = append(queue, head)
+			continue
 		}
 
 		ew := RW(weight)
@@ -164,7 +166,3 @@ func (str *RW) ToENKA() *fsm.FSM {
 	kda.SetFirstLast([]string{"q0"}, []string{"q1"})
 	return kda
 }
-
-// xy* (x | y*) | ab (x | y*) | (x | a*) (x | y*)
-// xy* | ab (x | y*) | (x | a*) (x | y*)
-// (xy* | ab | (x | a*)) (x | y*)

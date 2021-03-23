@@ -51,7 +51,6 @@ func TestMinimize1(t *testing.T) {
 			Weight: "b",
 		},
 	}, []string{"0"}, []string{"3"})
-	visualizer.MustVisualizeFSM(&origin.FSM, "assets/test/min/1", "origin.dot")
 	var expected = fsm.NewDRFromEdges([]graph.Edge{
 		{
 			From:   "0",
@@ -76,11 +75,14 @@ func TestMinimize1(t *testing.T) {
 	}, []string{"0"}, []string{"2"})
 	origin.R().D().R().D()
 
-	visualizer.MustVisualizeFSM(&origin.FSM, "assets/test/min/1", "real.dot")
+	var folder = "assets/test/min/1"
 
 	if !expected.IsSame(*origin) {
-		visualizer.MustVisualizeFSM(&expected.FSM, "assets/test/min/1", "expected.dot")
-		t.Fatalf("Графы не сошлись, см. картинки в /assets/test")
+		visualizer.MustVisualizeFSM(&origin.FSM, "assets/test/min/1", "origin.dot")
+		visualizer.MustVisualizeFSM(&expected.FSM, folder, "expected.dot")
+		visualizer.MustVisualizeFSM(&origin.FSM, folder, "real.dot")
+
+		t.Fatalf("Графы не сошлись, см. картинки в %s", folder)
 	}
 }
 
@@ -168,7 +170,7 @@ func TestMinimize2(t *testing.T) {
 			Weight: "0",
 		},
 	}, []string{"A"}, []string{"G", "F"})
-	visualizer.MustVisualizeFSM(&origin.FSM, "assets/test/min/2", "origin.dot")
+
 	var expected = fsm.NewDRFromEdges([]graph.Edge{
 		{
 			From:   "A",
@@ -221,15 +223,19 @@ func TestMinimize2(t *testing.T) {
 			Weight: "1",
 		},
 	}, []string{"A"}, []string{"F"})
-	var real = *origin
+	var (
+		real   = *origin
+		folder = "assets/test/min/2"
+	)
 
 	real.R().D().R().D()
 
-	visualizer.MustVisualizeDR(real.CompareMode(), "assets/test/min/2", "real.dot")
-	visualizer.MustVisualizeDR(expected.CompareMode(), "assets/test/min/2", "expected.dot")
-
 	if !expected.IsSame(real) {
-		t.Fatalf("Графы не сошлись, см. картинки в /assets/test")
+		visualizer.MustVisualizeFSM(&origin.FSM, "assets/test/min/2", "origin.dot")
+		visualizer.MustVisualizeDR(real.CompareMode(), folder, "real.dot")
+		visualizer.MustVisualizeDR(expected.CompareMode(), folder, "expected.dot")
+
+		t.Fatalf("Графы не сошлись, см. картинки в %s", folder)
 	}
 }
 
