@@ -131,7 +131,7 @@ func LoadGraf(
 	}
 	err = visualizer.VisualizeFSM(graf, "assets", "main.dot")
 	if err != nil {
-		log.Printf("Не удалось визуализировтаь граф: %s", err)
+		log.Printf("Не удалось визуализировать граф: %s", err)
 		return
 	}
 	cache.Put(newCode, graf)

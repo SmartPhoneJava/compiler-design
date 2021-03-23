@@ -75,6 +75,8 @@ func (A DR) IsSame(B DR) bool {
 	return A.isSame(B)
 }
 
+// CompareMode привести КА к стандартному виду, переименовав
+//  его узлы
 func (A DR) CompareMode() *DR {
 	return &DR{FSM: FSM{A.Graph.CompareMode()}}
 }
@@ -126,8 +128,5 @@ func (A DR) isSame(B DR) bool {
 		}
 		delete(copyB.Edges, vA.ID())
 	}
-	if len(copyB.Edges) != 0 {
-		return false
-	}
-	return true
+	return len(copyB.Edges) == 0
 }

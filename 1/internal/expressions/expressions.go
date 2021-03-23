@@ -1,10 +1,8 @@
 package expressions
 
 import (
-	"fmt"
 	"gocompiler/internal/fsm"
 	"gocompiler/internal/graph"
-	"gocompiler/internal/visualizer"
 	"log"
 	"strings"
 )
@@ -149,7 +147,6 @@ func (str *RW) ToENKA() *fsm.FSM {
 		To:     "q1",
 		Weight: string(*str),
 	})
-	visualizer.VisualizeFSM(kda, "assets/debug", fmt.Sprint("aaa.dot"))
 	var maxTry = 100
 	var changes = 1
 	for changes > 0 && maxTry > 0 {

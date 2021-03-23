@@ -200,8 +200,6 @@ func TestExample3_21(t *testing.T) {
 			Weight: "a",
 		},
 	}, []string{"A"}, []string{"E"})
-	expected = expected.CompareMode()
-	origin = origin.CompareMode()
 	visualizer.MustVisualizeFSM(&expected.FSM, "assets/test/example/2", "expected.dot")
 	visualizer.MustVisualizeFSM(&origin.FSM, "assets/test/example/2", "origin.dot")
 	real := fsm.DR{*origin.ToDFA()}

@@ -1,6 +1,0 @@
-digraph G {
-	"q0"->"q1"[ label=<<font color="blue">(a|b)*a</font>> ];
-	"q0";
-	"q1";
-
-}

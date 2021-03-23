@@ -11,131 +11,6 @@ type FSM struct {
 	*graph.Graph
 }
 
-// RemoveShortCircuits убрать замыкания
-func (fsm *FSM) RemoveShortCircuits() *FSM {
-	return fsm
-	for _, e := range fsm.Edges {
-		if e.Weight == "*" {
-			vIn := fsm.Vertexes[e.From].In
-			for _, ei := range vIn {
-				var newEdge = graph.Edge{
-					From:   ei.From,
-					To:     ei.To,
-					Weight: "e",
-				}
-				fsm.RemoveEdge(ei)
-				fsm.AddEdge(&newEdge)
-				fsm.AddEdge(&graph.Edge{
-					From:   ei.To,
-					To:     ei.To,
-					Weight: ei.Weight,
-				})
-				break
-			}
-			e.Weight = "e"
-		}
-	}
-	for _, v := range fsm.Vertexes {
-		if len(v.In)+len(v.Out) == 0 {
-			fsm.RemoveVertex(v.ID)
-		}
-	}
-	return fsm
-}
-
-// ReplaceEpsilons заменить епсилон-переходы
-func (fsm *FSM) ReplaceEpsilons() *FSM {
-	//log.Println("Заменить епсилон-переходы")
-	var newFSM = &FSM{graph.NewGraph()}
-	for _, v := range fsm.Vertexes {
-		m := fsm.replaceEpsilons(v, "e", false)
-
-		for k, val := range m {
-			if k == v.ID {
-				continue
-			}
-			newFSM.AddEdge(&graph.Edge{
-				From:   v.ID,
-				To:     k,
-				Weight: val,
-			})
-		}
-
-		// Добавляем в новый граф завихренные ребра(на самого себя)
-		for _, edge := range v.Out {
-			if edge.From == edge.To {
-				newFSM.AddEdge(&graph.Edge{
-					From:   edge.From,
-					To:     edge.To,
-					Weight: edge.Weight,
-				})
-			}
-		}
-	}
-
-	*fsm = *newFSM
-	return fsm
-}
-
-// ReplaceEqualEdges - убрать ребра-дубли
-func (fsm *FSM) ReplaceEqualEdges() *FSM {
-	//log.Println("Убрать ребра дубли")
-	var (
-		removeVertexes = make([]*graph.Vertex, 0)
-		vertexCount    = len(fsm.Vertexes)
-		vertexes       = fsm.VertexesArr()
-	)
-	for i := 0; i < vertexCount; i++ {
-		for j := i + 1; j < vertexCount; j++ {
-			var (
-				v1 = vertexes[i]
-				v2 = vertexes[j]
-			)
-			if len(v1.Out) != len(v2.Out) {
-				continue
-			}
-			var m = make(map[string]bool, 0)
-
-			for _, edge := range v1.Out {
-				m[edge.To] = true
-			}
-			for _, edge := range v2.Out {
-				delete(m, edge.To)
-			}
-			// Полное совпадение исходящих дуг!
-			if len(m) == 0 {
-				// Добавляем к одной из вершин входящие дуги второй
-
-				var m = make(map[string]*graph.Edge, 0)
-
-				for _, edge := range v1.In {
-					m[edge.From] = edge
-				}
-				for _, edge := range v2.In {
-					delete(m, edge.From)
-				}
-				for k, v := range m {
-					fsm.AddEdge(&graph.Edge{
-						From:   k,
-						To:     v2.ID,
-						Weight: v.Weight,
-					})
-				}
-
-				//  Первая вершина нам больше не нужна, но мы
-				// не можем ее сразу удалить поскольку итерируемся
-				// по списку вершин, поэтому удалим ее попозже
-				removeVertexes = append(removeVertexes, v1)
-			}
-		}
-	}
-
-	for _, v := range removeVertexes {
-		fsm.RemoveVertex(v.ID)
-	}
-	return fsm
-}
-
 type DKAVertex struct {
 	From string
 	To   []string
@@ -216,12 +91,13 @@ func (fsm *FSM) ToDka() *FSM {
 		queue = queue[1:]
 	}
 	newFSM.SetFirstLast(fsm.First, lastVertexes)
-	//newFSM.ReplaceEqualEdges()
 	*fsm = *newFSM
 	return fsm
 }
 
-func (fsm FSM) AddEpsilons(vertexes ...string) []string {
+// EClosure - возвращает все вершины, в которые можно попасть
+// по епсилон переходам стартовав из  vertexes
+func (fsm FSM) EClosure(vertexes ...string) []string {
 	var (
 		stack, visited []string
 		unique         = make(map[string]bool)
@@ -265,40 +141,25 @@ func (fsm *FSM) ToDFA() *FSM {
 		newFSM              = &FSM{graph.NewGraph()}
 		queue               = []DKAVertex{{
 			From: fsm.First[0],
-			To:   fsm.AddEpsilons(fsm.First...),
+			To:   fsm.EClosure(fsm.First...),
 		}}
 		lastVertexes []string
 	)
-	// наполняем олды проходом по всем ешкам
+	// Пока очередь не пуста
 	for len(queue) != 0 {
+		// Итерируемся по очереди
 		head := queue[0]
 		queue = queue[1:]
 
-		// ключ - путь, значения - в каких узлы ведет
-		// вложенная мэпа, чтобы гарантировать уникальность узлов
-		var paths = make(map[string]map[string]bool)
-		for _, old := range head.To {
-			toWhom := fsm.Vertexes[old].Out
-			for _, e := range toWhom {
-				_, ok := paths[e.Weight]
-				if !ok {
-					paths[e.Weight] = make(map[string]bool)
-				}
-				paths[e.Weight][e.To] = true
-			}
-		}
-		for path, _ := range paths {
-			if path == "e" {
-				continue
-			}
-			for vertex := range paths["e"] {
-				paths[path][vertex] = true
-			}
-		}
-		delete(paths, "e")
+		// Определяем куда и по каким путям можно прийти отсюда
+		var paths = fsm.MoveTo(head)
+
+		// Проход по каждому направлению
 		for path, vertexes := range paths {
 			var (
-				ids      = make([]string, 0)
+				ids = make([]string, 0)
+				// следим за тем, чтобы не потерять, какая
+				// вершина была замыкающей
 				withLast bool
 			)
 			for vertex := range vertexes {
@@ -309,8 +170,10 @@ func (fsm *FSM) ToDFA() *FSM {
 			}
 			var id string
 
-			ids = fsm.AddEpsilons(ids...)
+			ids = fsm.EClosure(ids...)
 
+			// Сортируем, чтобы потом можно было пометить пройденный путь
+			// "1,3,5" и "3,1,5" - одна и та же комбинация для нас
 			sort.Strings(ids)
 			id = strings.Join(ids, " ")
 			newVertex := newFSM.AddVertex(graph.VertexOptID(id))
@@ -323,6 +186,7 @@ func (fsm *FSM) ToDFA() *FSM {
 				lastVertexes = append(lastVertexes, newVertex)
 			}
 
+			// Помечаем пройденную комбинацию вершин
 			_, ok := visitedCombinations[id]
 			if ok {
 				continue
@@ -336,65 +200,38 @@ func (fsm *FSM) ToDFA() *FSM {
 			})
 		}
 	}
+	// устаналиваем начало и обновленный конец
 	newFSM.SetFirstLast(fsm.First, lastVertexes)
-	//newFSM.ReplaceEqualEdges()
 	*fsm = *newFSM
 	return fsm
 }
 
-func (fsm *FSM) AutoDetectFirstLast() {
-	for _, v := range fsm.Vertexes {
-		if len(v.Out) == 0 {
-			fsm.Last = append(fsm.Last, v.ID)
-		}
-		if len(v.In) == 0 {
-			fsm.First = append(fsm.First, v.ID)
-		}
-	}
-}
+// Пути, куда можно попасть из текущей вершины
+// Ключ - путь, значения - в каких узлы ведет
+// вложенная мэпа гарантирует уникальность узлов
+type Dtran map[string]map[string]bool
 
-func (fsm *FSM) replaceEpsilons(
-	v *graph.Vertex,
-	path string,
-	fromE bool,
-) map[string]string {
-	var (
-		m    = make(map[string]string, 0)
-		vOut = v.Out
-	)
-	for _, ei := range vOut {
-		var kr map[string]string
-		if path == "e" {
-			if ei.Weight != "e" {
-				// если раньше были только епсилоны и тут появилс
-				// обычный символ
-				m[ei.To] = ei.Weight
-				// при вызове рекурсии необходимо пометить, что путь
-				// создан из епсилона
+// Получить пути из вершины head
+func (fsm *FSM) MoveTo(head DKAVertex) Dtran {
+	var paths = make(Dtran)
+	for _, old := range head.To {
+		toWhom := fsm.Vertexes[old].Out
+		for _, e := range toWhom {
+			_, ok := paths[e.Weight]
+			if !ok {
+				paths[e.Weight] = make(map[string]bool)
 			}
-			kr = fsm.replaceEpsilons(fsm.Vertexes[ei.To], ei.Weight, ei.Weight != path)
-			for k, r := range kr {
-				m[k] = r
-			}
-		} else if ei.Weight == "e" || ei.Weight == path {
-			// Если путь не состоит из епсилонов, то не стоит
-			// заходить в самого себя, ведь это вызовет бесконечный
-			// цикл
-			// Если путь создан из епсилона, то мы больше не можем
-			// ходить по ребрам с епсилонами
-			if ei.From == ei.To || (fromE && ei.Weight == "e") {
-				continue
-			}
-			m[ei.To] = path
-			kr = fsm.replaceEpsilons(fsm.Vertexes[ei.To], path, fromE)
-			for k, r := range kr {
-				m[k] = r
-			}
+			paths[e.Weight][e.To] = true
 		}
 	}
-	// Раз мы добрались до этой вершины, пометим как мы это сделали
-	if path != "e" {
-		m[v.ID] = path
+	for path, _ := range paths {
+		if path == "e" {
+			continue
+		}
+		for vertex := range paths["e"] {
+			paths[path][vertex] = true
+		}
 	}
-	return m
+	delete(paths, "e")
+	return paths
 }

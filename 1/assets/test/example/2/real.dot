@@ -1,18 +1,18 @@
 digraph G {
-	"11 2 3 5 6 9"->"11 2 3 5 6 9"[ label=<<font color="blue">b</font>> ];
-	"11 2 3 5 6 7 9"->"11 2 3 4 5 6 8"[ label=<<font color="blue">a</font>> ];
-	"11 2 3 5 6 7 9"->"10 11 2 3 5 6 9"[ label=<<font color="blue">b</font>> ];
-	"10 11 2 3 5 6 9"->"11 2 3 4 5 6 8"[ label=<<font color="blue">a</font>> ];
-	"1"->"11 2 3 4 5 6 8"[ label=<<font color="blue">a</font>> ];
-	"1"->"11 2 3 5 6 9"[ label=<<font color="blue">b</font>> ];
-	"11 2 3 4 5 6 8"->"11 2 3 4 5 6 8"[ label=<<font color="blue">a</font>> ];
-	"11 2 3 4 5 6 8"->"11 2 3 5 6 7 9"[ label=<<font color="blue">b</font>> ];
-	"10 11 2 3 5 6 9"->"11 2 3 5 6 9"[ label=<<font color="blue">b</font>> ];
-	"11 2 3 5 6 9"->"11 2 3 4 5 6 8"[ label=<<font color="blue">a</font>> ];
-	"1" [ label=<<font color="green">1</font>> ];
-	"10 11 2 3 5 6 9" [ label=<<font color="red">10 11 2 3 5 6 9</font>> ];
-	"11 2 3 4 5 6 8";
-	"11 2 3 5 6 7 9";
-	"11 2 3 5 6 9";
+	"0"->"1 2 3 4 6 7 8"[ label=<<font color="blue">a</font>> ];
+	"1 2 4 5 6 7"->"1 2 3 4 6 7 8"[ label=<<font color="blue">a</font>> ];
+	"1 2 4 5 6 7"->"1 2 4 5 6 7"[ label=<<font color="blue">b</font>> ];
+	"1 10 2 4 5 6 7"->"1 2 3 4 6 7 8"[ label=<<font color="blue">a</font>> ];
+	"1 10 2 4 5 6 7"->"1 2 4 5 6 7"[ label=<<font color="blue">b</font>> ];
+	"0"->"1 2 4 5 6 7"[ label=<<font color="blue">b</font>> ];
+	"1 2 3 4 6 7 8"->"1 2 3 4 6 7 8"[ label=<<font color="blue">a</font>> ];
+	"1 2 3 4 6 7 8"->"1 2 4 5 6 7 9"[ label=<<font color="blue">b</font>> ];
+	"1 2 4 5 6 7 9"->"1 2 3 4 6 7 8"[ label=<<font color="blue">a</font>> ];
+	"1 2 4 5 6 7 9"->"1 10 2 4 5 6 7"[ label=<<font color="blue">b</font>> ];
+	"0" [ label=<<font color="green">0</font>> ];
+	"1 10 2 4 5 6 7" [ label=<<font color="red">1 10 2 4 5 6 7</font>> ];
+	"1 2 3 4 6 7 8";
+	"1 2 4 5 6 7 9";
+	"1 2 4 5 6 7";
 
 }
