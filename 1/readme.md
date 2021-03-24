@@ -235,7 +235,7 @@ func (g *Graph) SplitEdge(e *Edge, newWeights ...string) []Edge {
 
 ```
 
-Исходный код функции `EpsilonEdge`, отвечающей за создание дуг в случае обнаружения замыкания: 
+Исходный код функции `EpsilonEdge`, отвечающей за создание дуг в случае обнаружения замыкания:
 
 ```go
 func (g *Graph) EpsilonEdge(e *Edge, weight string) *Edge {
@@ -271,46 +271,49 @@ func (g *Graph) EpsilonEdge(e *Edge, weight string) *Edge {
 
 Описанные выше методы являются частью алгоритма перевода РВ в НКА. Исходный код соответствующего метода приведен ниже.
 
+```go
+
 func (str *RW) ToENKA() *fsm.FSM {
-var kda = &fsm.FSM{Graph: graph.NewGraph()}
-firstEdge := kda.AddEdge(&graph.Edge{
-From:   "q0",
-To:     "q1",
-Weight: string(*str),
-})
-var queue = []graph.Edge{firstEdge}
-for len(queue) > 0 {
+	var kda = &fsm.FSM{Graph: graph.NewGraph()}
+	firstEdge := kda.AddEdge(&graph.Edge{
+		From:   "q0",
+		To:     "q1",
+		Weight: string(*str),
+	})
+	var queue = []graph.Edge{firstEdge}
+	for len(queue) > 0 {
 
-	head := queue[0]
-	queue = queue[1:]
+		head := queue[0]
+		queue = queue[1:]
 
-	weight := strings.TrimSpace(head.Weight)
-	if len(weight) == 1 {
-		continue
+		weight := strings.TrimSpace(head.Weight)
+		if len(weight) == 1 {
+			continue
+		}
+
+		weight, changed := removeZw(weight)
+		if changed != 0 {
+			head = *kda.EpsilonEdge(&head, weight)
+			queue = append(queue, head)
+			continue
+		}
+
+		ew := RW(weight)
+		rws := (&ew).Unions()
+		edges := kda.MultiplyEdge(&head, rws.toString()...)
+		queue = append(queue, edges...)
+		if len(edges) != 0 {
+			continue
+		}
+
+		rws = (&ew).Concatenations()
+		edges = kda.SplitEdge(&head, rws.toString()...)
+		queue = append(queue, edges...)
 	}
-
-	weight, changed := removeZw(weight)
-	if changed != 0 {
-		head = *kda.EpsilonEdge(&head, weight)
-		queue = append(queue, head)
-		continue
-	}
-
-	ew := RW(weight)
-	rws := (&ew).Unions()
-	edges := kda.MultiplyEdge(&head, rws.toString()...)
-	queue = append(queue, edges...)
-	if len(edges) != 0 {
-		continue
-	}
-
-	rws = (&ew).Concatenations()
-	edges = kda.SplitEdge(&head, rws.toString()...)
-	queue = append(queue, edges...)
+	kda.SetFirstLast([]string{"q0"}, []string{"q1"})
+	return kda
 }
-kda.SetFirstLast([]string{"q0"}, []string{"q1"})
-return kda
-}
+```
 
 ### Строительство эквивалентного ДКА по НКА
 
@@ -431,6 +434,7 @@ func (fsm *FSM) MoveTo(head NewVertex) Dtran {
 	return paths
 }
 ```
+
 ### Минимизация с помошью алгоритма Бржозовского
 
 Введём следующие обозначения:
@@ -469,356 +473,24 @@ func (A *DR) R() *DR {
 	return A
 }
 ```
+
 С учетом этих функций алгоритм минимизации выглядит следующим образом: `A.R().D().R().D()`, где `A` - КА
 
 ## 4. Набор тестов
 
-Для тестирования был написан ряд тестов:
+Для тестирования использовались примеры 3.21, 3.24 из [3] а также был написан ряд тестов, проверяющих корректное создание НКА по следующим регулярным выражениям:
 
-```go
-// Пример из https://habr.com/ru/post/166777/
-func TestExpression1(t *testing.T) {
-	var (
-		rw     = expressions.NewRW("(xy* | ab | (x | a*)) (x | y*)")
-		kda    = converter.ExpressionToNKA(&rw)
-		folder = "assets/test/expressions/2"
-	)
+- `a*|b`
+- `((((ab))))`
+- `((a|b)*b)`
+- `((a|b)b*)`
+- `((a|b)(b))`
+- `((a|b)(b)*)`
+- `((((a))*)*)`
 
-	visualizer.MustVisualizeFSM(kda, folder, "v1.dot")
+Примеры для проверки минимизации были взяты из [4], [5], [6]
 
-	kda.RemoveShortCircuits()
-	visualizer.MustVisualizeFSM(kda, folder, "v2.dot")
-
-	kda.ReplaceEpsilons()
-	visualizer.MustVisualizeFSM(kda, folder, "v3.dot")
-
-	kda.ReplaceEqualEdges()
-	visualizer.MustVisualizeFSM(kda, folder, "v4.dot")
-
-	kda.AutoDetectFirstLast()
-
-	kda.ToDka()
-	visualizer.MustVisualizeFSM(kda, folder, "v5.dot")
-
-	kda.ReplaceEqualEdges()
-	visualizer.MustVisualizeFSM(kda, folder, "v6.dot")
-
-	var expected = fsm.NewDRFromEdges([]graph.Edge{
-		{
-			From:   "p0",
-			To:     "p1",
-			Weight: "x",
-		},
-		{
-			From:   "p1",
-			To:     "p1",
-			Weight: "y",
-		},
-		{
-			From:   "p1",
-			To:     "p4",
-			Weight: "x",
-		},
-		{
-			From:   "p0",
-			To:     "p2",
-			Weight: "y",
-		},
-		{
-			From:   "p2",
-			To:     "p2",
-			Weight: "y",
-		},
-		{
-			From:   "p0",
-			To:     "p3",
-			Weight: "a",
-		},
-		{
-			From:   "p3",
-			To:     "p2",
-			Weight: "y",
-		},
-		{
-			From:   "p3",
-			To:     "p5",
-			Weight: "a",
-		},
-		{
-			From:   "p3",
-			To:     "p6",
-			Weight: "b",
-		},
-		{
-			From:   "p5",
-			To:     "p5",
-			Weight: "a",
-		},
-		{
-			From:   "p5",
-			To:     "p2",
-			Weight: "y",
-		},
-		{
-			From:   "p5",
-			To:     "p4",
-			Weight: "x",
-		},
-		{
-			From:   "p6",
-			To:     "p2",
-			Weight: "y",
-		},
-		{
-			From:   "p6",
-			To:     "p4",
-			Weight: "x",
-		},
-		{
-			From:   "p3",
-			To:     "p4",
-			Weight: "x",
-		},
-	}, []string{"p0"}, []string{"p4"})
-
-	origin := fsm.NewDRFromFS(*kda)
-
-	visualizer.MustVisualizeDR(origin.CompareMode(), folder, "real.dot")
-	visualizer.MustVisualizeDR(expected.CompareMode(), folder, "expected.dot")
-
-	if !expected.IsSame(*origin) {
-		t.Fatalf("Графы не сошлись, см. картинки в /assets/test")
-	}
-}
-```
-```go
-// Пример из http://neerc.ifmo.ru/wiki/index.php?title=Алгоритм_Бржозовского
-func TestMinimize1(t *testing.T) {
-	var origin = fsm.NewDRFromEdges([]graph.Edge{
-		{
-			From:   "0",
-			To:     "1",
-			Weight: "a",
-		},
-		{
-			From:   "0",
-			To:     "2",
-			Weight: "a",
-		},
-		{
-			From:   "0",
-			To:     "2",
-			Weight: "b",
-		},
-		{
-			From:   "1",
-			To:     "2",
-			Weight: "a",
-		},
-		{
-			From:   "2",
-			To:     "1",
-			Weight: "a",
-		},
-		{
-			From:   "2",
-			To:     "2",
-			Weight: "a",
-		},
-		{
-			From:   "2",
-			To:     "3",
-			Weight: "b",
-		},
-		{
-			From:   "1",
-			To:     "3",
-			Weight: "b",
-		},
-	}, []string{"0"}, []string{"3"})
-	visualizer.MustVisualizeFSM(&origin.FSM, "assets/test/min/1", "origin.dot")
-	var expected = fsm.NewDRFromEdges([]graph.Edge{
-		{
-			From:   "0",
-			To:     "1",
-			Weight: "a",
-		},
-		{
-			From:   "0",
-			To:     "1",
-			Weight: "b",
-		},
-		{
-			From:   "1",
-			To:     "1",
-			Weight: "a",
-		},
-		{
-			From:   "1",
-			To:     "2",
-			Weight: "b",
-		},
-	}, []string{"0"}, []string{"2"})
-	origin.R().D().R().D()
-
-	visualizer.MustVisualizeFSM(&origin.FSM, "assets/test/min/1", "real.dot")
-
-	if !expected.IsSame(*origin) {
-		visualizer.MustVisualizeFSM(&expected.FSM, "assets/test/min/1", "expected.dot")
-		t.Fatalf("Графы не сошлись, см. картинки в /assets/test")
-	}
-}
-
-// Пример из http://neerc.ifmo.ru/wiki/index.php?title=Минимизация_ДКА,_алгоритм_за_O(n%5E2)_с_построением_пар_различимых_состояний
-func TestMinimize2(t *testing.T) {
-	var origin = fsm.NewDRFromEdges([]graph.Edge{
-		{
-			From:   "A",
-			To:     "B",
-			Weight: "1",
-		},
-		{
-			From:   "B",
-			To:     "A",
-			Weight: "1",
-		},
-		{
-			From:   "B",
-			To:     "H",
-			Weight: "0",
-		},
-		{
-			From:   "A",
-			To:     "H",
-			Weight: "0",
-		},
-		{
-			From:   "H",
-			To:     "C",
-			Weight: "0",
-		},
-		{
-			From:   "H",
-			To:     "C",
-			Weight: "1",
-		},
-		{
-			From:   "C",
-			To:     "E",
-			Weight: "0",
-		},
-		{
-			From:   "C",
-			To:     "F",
-			Weight: "1",
-		},
-		{
-			From:   "E",
-			To:     "F",
-			Weight: "0",
-		},
-		{
-			From:   "D",
-			To:     "E",
-			Weight: "0",
-		},
-		{
-			From:   "D",
-			To:     "F",
-			Weight: "1",
-		},
-		{
-			From:   "E",
-			To:     "G",
-			Weight: "1",
-		},
-		{
-			From:   "G",
-			To:     "F",
-			Weight: "1",
-		},
-		{
-			From:   "G",
-			To:     "G",
-			Weight: "0",
-		},
-		{
-			From:   "F",
-			To:     "F",
-			Weight: "1",
-		},
-		{
-			From:   "F",
-			To:     "F",
-			Weight: "0",
-		},
-	}, []string{"A"}, []string{"G", "F"})
-	visualizer.MustVisualizeFSM(&origin.FSM, "assets/test/min/2", "origin.dot")
-	var expected = fsm.NewDRFromEdges([]graph.Edge{
-		{
-			From:   "A",
-			To:     "A",
-			Weight: "1",
-		},
-		{
-			From:   "A",
-			To:     "H",
-			Weight: "0",
-		},
-		{
-			From:   "H",
-			To:     "C",
-			Weight: "0",
-		},
-		{
-			From:   "H",
-			To:     "C",
-			Weight: "1",
-		},
-		{
-			From:   "C",
-			To:     "E",
-			Weight: "0",
-		},
-		{
-			From:   "C",
-			To:     "F",
-			Weight: "1",
-		},
-		{
-			From:   "E",
-			To:     "F",
-			Weight: "1",
-		},
-		{
-			From:   "E",
-			To:     "F",
-			Weight: "0",
-		},
-		{
-			From:   "F",
-			To:     "F",
-			Weight: "0",
-		},
-		{
-			From:   "F",
-			To:     "F",
-			Weight: "1",
-		},
-	}, []string{"A"}, []string{"F"})
-	var real = *origin
-
-	real.R().D().R().D()
-
-	visualizer.MustVisualizeDR(real.CompareMode(), "assets/test/min/2", "real.dot")
-	visualizer.MustVisualizeDR(expected.CompareMode(), "assets/test/min/2", "expected.dot")
-
-	if !expected.IsSame(real) {
-		t.Fatalf("Графы не сошлись, см. картинки в /assets/test")
-	}
-}
-```
-Для запуска тестов введите команду `go test`. Результаты отобразятся в консоли:
+ Для запуска тестов введите команду `go test`. Результаты отобразятся в консоли:
 
 ![alt text](assets/reports/1.png)
 
@@ -838,7 +510,7 @@ func TestMinimize2(t *testing.T) {
 2) Проведен анализ связи между регулярным множеством, регулярным выражением, праволинейным языком, конечно - автоматным языком и недетерминированным конечно-автоматным языком.
 3) Разработана, протестирована и отлажена программа распознавания цепочек регулярного или праволинейного языка в соответствии с предложенным вариантом грамматики.
 
-## Список дополнительной использованной литературыСписок дополнительной использованной литературы
+## Список дополнительной использованной литературы
 
 1. БЕЛОУСОВ А.И., ТКАЧЕВ С.Б. Дискретная математика: Учеб. Для вузов / Под ред. В.С. Зарубина, А.П.
    Крищенко. – М.: Изд-во МГТУ им. Н.Э. Баумана, 2001.
@@ -846,3 +518,6 @@ func TestMinimize2(t *testing.T) {
    Синтаксичечкий анализ. - М.: Мир, 1978.
 3. АХО А.В, ЛАМ М.С., СЕТИ Р., УЛЬМАН Дж.Д. Компиляторы: принципы, технологии и инструменты. – М.:
    Вильямс, 2008.
+4. "Алгоритм Бржзовского", университет ИТМО, URL: http://neerc.ifmo.ru/wiki/index.php?title=Алгоритм_Бржозовского
+5. "Минимизация ДКА, алгоритм за O(n^2) с построением пар различимых состояний", университет ИТМО, URL:университет ИТМО, URL: http://neerc.ifmo.ru/wiki/index.php?title=Минимизация_ДКА,_алгоритм_за_O(n%5E2)_с_построением_пар_различимых_состояний
+6. "Скорость переработки и передачи данных", стр.2, URL:университет ИТМО, URL: https://lektsii.org/6-91118.html

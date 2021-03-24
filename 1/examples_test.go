@@ -79,7 +79,7 @@ func TestExample3_24(t *testing.T) {
 	}
 }
 
-// Пример 3.24
+// Пример 3.21
 func TestExample3_21(t *testing.T) {
 	var origin = fsm.NewDRFromEdges([]graph.Edge{
 		{
@@ -497,7 +497,7 @@ func TestExampleMy5(t *testing.T) {
 }
 
 func TestExampleMy6(t *testing.T) {
-	var origin expressions.RW = " ((a|b)(b)*)"
+	var origin expressions.RW = "((a|b)(b)*)"
 	var expected = fsm.NewDRFromEdges([]graph.Edge{
 		{
 			From:   "1",
