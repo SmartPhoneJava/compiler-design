@@ -12,4 +12,5 @@ const (
 		http://neerc.ifmo.ru/wiki/index.php?title=Алгоритм_Бржозовского
 	*/
 	ActionMinimize
+	ActionModel
 )

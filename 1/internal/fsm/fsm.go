@@ -17,9 +17,24 @@ type NewVertex struct {
 	To   []string
 }
 
+// IsInLast проверить, что данная вершина является терминальной
+func (fsm FSM) IsInLast(v string) bool {
+	for _, l := range fsm.Last {
+		if v == l {
+			return true
+		}
+	}
+	return false
+}
+
 // EClosure - возвращает все вершины, в которые можно попасть
 // по епсилон переходам стартовав из  vertexes
-func (fsm FSM) EClosure(vertexes ...string) []string {
+// Если переход ведет в терминальную вершину, она добавляется
+// в массив терминальных вершин
+func (fsm FSM) EClosure(
+	addToLast func(),
+	vertexes ...string,
+) []string {
 	var (
 		stack, visited []string
 		unique         = make(map[string]bool)
@@ -42,6 +57,10 @@ func (fsm FSM) EClosure(vertexes ...string) []string {
 				if ok {
 					continue
 				}
+				if fsm.IsInLast(edge.To) {
+					addToLast()
+				}
+
 				unique[edge.To] = true
 				stack = append(stack, edge.To)
 				visited = append(visited, edge.To)
@@ -49,6 +68,33 @@ func (fsm FSM) EClosure(vertexes ...string) []string {
 		}
 	}
 	return visited
+}
+
+// ContainString - содержит ли строку
+func (fsm *FSM) ContainString(str string) bool {
+	str = strings.TrimSpace(str)
+	var vertex = fsm.First[0]
+
+	for len(str) > 0 {
+		var found bool
+		for _, edge := range fsm.Edges {
+			if edge.From == vertex && edge.Weight == string(str[0]) {
+				vertex = edge.To
+				found = true
+				break
+			}
+		}
+		str = str[1:]
+		if !found {
+			return false
+		}
+	}
+	for _, l := range fsm.Last {
+		if l == vertex {
+			return true
+		}
+	}
+	return false
 }
 
 // ToDFA - построение эквивалентного ДКА к НКА
@@ -62,7 +108,7 @@ func (fsm *FSM) ToDFA() *FSM {
 		newFSM              = &FSM{graph.NewGraph()}
 		queue               = []NewVertex{{
 			From: fsm.First[0],
-			To:   fsm.EClosure(fsm.First...),
+			To:   fsm.First,
 		}}
 		lastVertexes []string
 	)
@@ -70,10 +116,15 @@ func (fsm *FSM) ToDFA() *FSM {
 	for len(queue) != 0 {
 		// Итерируемся по очереди
 		head := queue[0]
+		head.To = fsm.EClosure(func() { lastVertexes = append(lastVertexes, head.From) }, head.To...)
 		queue = queue[1:]
 
 		// Определяем куда и по каким путям можно прийти отсюда
 		var paths = fsm.MoveTo(head)
+
+		if len(paths) == 0 {
+			lastVertexes = append(lastVertexes, head.From)
+		}
 
 		// Проход по каждому направлению
 		for path, vertexes := range paths {
@@ -90,8 +141,7 @@ func (fsm *FSM) ToDFA() *FSM {
 				}
 			}
 			var id string
-
-			ids = fsm.EClosure(ids...)
+			ids = fsm.EClosure(func() { withLast = true }, ids...)
 
 			// Сортируем, чтобы потом можно было пометить пройденный путь
 			// "1,3,5" и "3,1,5" - одна и та же комбинация для нас
@@ -114,7 +164,6 @@ func (fsm *FSM) ToDFA() *FSM {
 			}
 
 			visitedCombinations[id] = true
-
 			queue = append(queue, NewVertex{
 				To:   ids,
 				From: newVertex,
@@ -145,14 +194,7 @@ func (fsm *FSM) MoveTo(head NewVertex) Dtran {
 			paths[e.Weight][e.To] = true
 		}
 	}
-	for path, _ := range paths {
-		if path == "e" {
-			continue
-		}
-		for vertex := range paths["e"] {
-			paths[path][vertex] = true
-		}
-	}
+
 	delete(paths, "e")
 	return paths
 }

@@ -126,12 +126,12 @@ func removeZw(s string) (string, int) {
 // ToGraph привести к НКА
 // АХО А.В, ЛАМ М.С., СЕТИ Р., УЛЬМАН Дж.Д. Компиляторы: принципы, технологии и инструменты. – М.:Вильямс, 2008.
 // Алгоритм 3.23 Алгоритм Мак-Нотона-Ямады-Томпсона, стр. 213
-func (str *RW) ToENKA() *fsm.FSM {
+func (str RW) ToENKA() *fsm.FSM {
 	var kda = &fsm.FSM{Graph: graph.NewGraph()}
 	firstEdge := kda.AddEdge(&graph.Edge{
 		From:   "q0",
 		To:     "q1",
-		Weight: string(*str),
+		Weight: string(str),
 	})
 	var queue = []graph.Edge{firstEdge}
 	for len(queue) > 0 {

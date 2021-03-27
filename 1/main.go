@@ -19,6 +19,7 @@ func main() {
 	log.Println("1. Построить НКА по регулярному выражению")
 	log.Println("2. Построить ДКА по НКА")
 	log.Println("3. Минимизировать КА")
+	log.Println("4. Моделировать КА")
 	log.Println("0. Выйти")
 	var mainCode = -1
 
@@ -45,16 +46,18 @@ func main() {
 					*graf = *graf.ToDFA()
 					return nil
 				})
-		case constants.ActionMinimize:
-			repository.LoadGraf(
-				constants.Action2DKA,
-				mainCode,
-				*cache,
-				func(graf *fsm.FSM) error {
-					f := fsm.NewDRFromFS(*graf).R().D().R().D()
-					*graf = f.FSM
-					return nil
-				})
+		case constants.ActionModel:
+			var text, example string
+			repository.GetString(&text, `Введите регулярку:`)
+			repository.GetString(&example, `Введите пример:`)
+			var rw = expressions.NewRW(text)
+			kda := rw.ToENKA().ToDFA()
+			found := kda.ContainString(example)
+			if found {
+				log.Println("Да")
+			} else {
+				log.Println("Нет")
+			}
 		}
 
 	}
