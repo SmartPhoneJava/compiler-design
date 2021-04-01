@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"log"
 	"unicode"
 )
 
@@ -126,17 +127,24 @@ func (cfr CFR) ElrWithE() CFR {
 				A𝚥    = cfr.N[j]
 				fromA = cfr.P.FilterByTwo(Aᵢ, A𝚥, newSymbols)
 				β     = cfr.P.Filter(A𝚥, NoSort)
+				// fromA = newRules.FilterByTwo(Aᵢ, A𝚥, newSymbols)
+				// β     = newR
 			)
-			for _, ruleA := range fromA {
 
+			// Починить багу
+			log.Println("add", Aᵢ, A𝚥, len(fromA))
+			for _, ruleA := range fromA {
 				var (
 					α  = ruleA.RemoveSymbol(A𝚥)
 					αβ = β.Add(α).GetRPart()
 				)
+				log.Println("add1", Aᵢ, len(fromA))
 				(&newRules).Append(Aᵢ, αβ...)
 
 			}
+			log.Println("Remove1", len(newRules))
 			newRules = newRules.RemoveRulesFT(Aᵢ, A𝚥)
+			log.Println("Remove2", len(newRules))
 		}
 
 		if newRules.HasDirectLeftRecursion(Aᵢ) {
@@ -474,37 +482,31 @@ func (cfr CFR) RemoveLambda() CFR {
 		copy(localQueue, queue)
 		queue = []string{}
 
-		var newRules Rules
+		for _, lq := range localQueue {
+			for _, r := range mapNewRules {
+				strs := r.ApplyEpsilon(lq)
+				for _, str := range strs {
+					if str == r.From || str == "" {
+						if str == "" {
+							_, ok := mapVisited[r.From]
+							if !ok {
+								queue = append(queue, r.From)
+								mapVisited[r.From] = nil
+							}
+						}
+						continue
+					}
+					_, ok := mapNewRules[str+r.From]
+					if ok {
+						continue
+					}
 
-		for _, r := range mapNewRules {
-			for _, lq := range localQueue {
-				strs, done := r.ApplyEpsilon(lq)
-				if done {
-					newRules.Append(r.From, strs...)
-				}
-			}
-		}
-
-		for k, r := range newRules {
-			_, ok := mapNewRules[r.From+r.To]
-			if ok {
-				continue
-			}
-
-			// проверить эту штуку
-			r.To = deleteEduplicates(r.To)
-			if r.To == r.From || r.To == "e" {
-				if r.To == "e" {
-					_, ok := mapVisited[r.From]
-					if !ok {
-						queue = append(queue, r.From)
-						mapVisited[r.From] = nil
+					mapNewRules[str+r.From] = &Rule{
+						From: r.From,
+						To:   str,
 					}
 				}
-				continue
 			}
-
-			mapNewRules[r.From+r.To] = &newRules[k]
 		}
 	}
 
@@ -512,7 +514,7 @@ func (cfr CFR) RemoveLambda() CFR {
 
 	// Добавляем обновленные правила
 	for _, rc := range mapNewRules {
-		newRules = append(newRules, *rc)
+		newRules.Append(rc.From, rc.To)
 	}
 
 	newCfr := &CFR{

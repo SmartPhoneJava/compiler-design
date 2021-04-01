@@ -74,7 +74,56 @@ func Test_RemoveUnreachableNonterminal(t *testing.T) {
 	}
 }
 
-func Test_RemoveLambda(t *testing.T) {
+// // https://studizba.com/files/show/djvu/3050-1-tom-1.html
+// // Пример 2.22
+// func Test_RemoveUnreachableNonterminal2(t *testing.T) {
+// 	var G = internal.CFR{
+// 		N: []string{"I", "A", "B", "C", "R"},
+// 		T: []string{"int", "char", ",", ";"},
+// 		S: []string{"I"},
+// 		P: internal.Rules{
+// 			{From: "I", To: "ABC"},
+// 			{From: "A", To: "int"},
+// 			{From: "A", To: "char"},
+// 			{From: "B", To: "IR"},
+// 			{From: "R", To: ",IR"},
+// 			{From: "R", To: "I"},
+// 			{From: "C", To: ";"},
+// 		},
+// 	}
+
+// 	var expected = internal.CFR{
+// 		N: []string{"I", "A", "B", "C", "R"},
+// 		T: []string{"int", "char", ",", ";"},
+// 		S: []string{"I"},
+// 		P: internal.Rules{
+// 			{From: "I", To: "ABC"},
+// 			{From: "A", To: "int"},
+// 			{From: "A", To: "char"},
+// 			{From: "B", To: "IR"},
+// 			{From: "R", To: ",IR"},
+// 			{From: "R", To: "I"},
+// 			{From: "C", To: ";"},
+// 		},
+// 	}
+
+// 	log.Println("aaaa:", G.P)
+// 	G = G.ElrWithE()
+// 	log.Println("dddddd:", G.P)
+// 	var real = G.RemoveNongeneratingNonterminal()
+
+// 	if err := real.IsSame(expected); err != nil {
+
+// 		log.Println("Ожидалось:", expected.N)
+// 		log.Println("Получено:", real.N)
+// 		log.Println("Ожидалось:", expected.P)
+// 		log.Println("Получено:", real.P)
+// 		t.Fatalf("Ожидание и реальность не сошлись: %s", err)
+// 	}
+// }
+
+// file:///home/artyom/labs/bauman/10/compiler-design/2/formal.languages.theory.3.pdf
+func Test_RemoveLambda1(t *testing.T) {
 	var G = internal.CFR{
 		N: []string{"S", "A", "B", "C"},
 		T: []string{"a", "b", "c", "e"},
@@ -106,6 +155,100 @@ func Test_RemoveLambda(t *testing.T) {
 	var real = G.RemoveLambda().RemoveNongeneratingNonterminal() //.RemoveNongeneratingNonterminal().RemoveUnreachableNonterminal()
 
 	if err := real.IsSame(expected); err != nil {
+		log.Println("Ожидалось:", expected.N)
+		log.Println("Получено:", real.N)
+		log.Println("Ожидалось:", expected.P)
+		log.Println("Получено:", real.P)
+		t.Fatalf("Ожидание и реальность не сошлись: %s", err)
+	}
+}
+
+// http://mathhelpplanet.com/static.php?p=privedennaya-forma-ks-grammatiki
+func Test_RemoveLambda2(t *testing.T) {
+	var G = internal.CFR{
+		N: []string{"S", "T"},
+		T: []string{"a", "b", "e"},
+		S: []string{"S"},
+		P: internal.Rules{
+			{From: "S", To: "aSbT"},
+			{From: "S", To: "bTaT"},
+			{From: "S", To: "ab"},
+			{From: "T", To: "baaST"},
+			{From: "T", To: "TT"},
+			{From: "T", To: "e"},
+		},
+	}
+
+	var expected = internal.CFR{
+		N: []string{"S", "T"},
+		T: []string{"a", "b", "e"},
+		S: []string{"S"},
+		P: internal.Rules{
+			{From: "S", To: "aSbT"},
+			{From: "S", To: "aSb"},
+			{From: "S", To: "bTaT"},
+			{From: "S", To: "bTa"},
+			{From: "S", To: "baT"},
+			{From: "S", To: "ba"},
+			{From: "S", To: "ab"},
+			{From: "T", To: "baaST"},
+			{From: "T", To: "TT"},
+			{From: "T", To: "baaS"},
+		},
+	}
+
+	var real = G.RemoveLambda()
+
+	if err := real.IsSame(expected); err != nil {
+		log.Println("Ожидалось:", expected.N)
+		log.Println("Получено:", real.N)
+		log.Println("Ожидалось:", expected.P)
+		log.Println("Получено:", real.P)
+		t.Fatalf("Ожидание и реальность не сошлись: %s", err)
+	}
+}
+
+// http://mathhelpplanet.com/static.php?p=privedennaya-forma-ks-grammatiki
+func Test_RemoveLambda3(t *testing.T) {
+	var G = internal.CFR{
+		N: []string{"S", "B", "C", "A"},
+		T: []string{"a", "c", "e"},
+		S: []string{"S"},
+		P: internal.Rules{
+			{From: "S", To: "ABCd"},
+			{From: "A", To: "a"},
+			{From: "A", To: "e"},
+			{From: "B", To: "AC"},
+			{From: "C", To: "c"},
+			{From: "C", To: "e"},
+		},
+	}
+
+	var expected = internal.CFR{
+		N: []string{"S", "B", "C", "A"},
+		T: []string{"a", "c", "e"},
+		S: []string{"S"},
+		P: internal.Rules{
+			{From: "S", To: "Ad"},
+			{From: "S", To: "ABd"},
+			{From: "S", To: "ACd"},
+			{From: "S", To: "ABCd"},
+			{From: "S", To: "Bd"},
+			{From: "S", To: "BCd"},
+			{From: "S", To: "Cd"},
+			{From: "S", To: "d"},
+			{From: "B", To: "A"},
+			{From: "B", To: "C"},
+			{From: "B", To: "AC"},
+			{From: "A", To: "a"},
+			{From: "C", To: "c"},
+		},
+	}
+
+	log.Println("++++++++++++++++++++++++++++++++++")
+	var real = G.RemoveLambda()
+
+	if err := expected.IsSame(real); err != nil {
 		log.Println("Ожидалось:", expected.N)
 		log.Println("Получено:", real.N)
 		log.Println("Ожидалось:", expected.P)

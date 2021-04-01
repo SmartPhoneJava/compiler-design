@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -209,6 +210,7 @@ func (r Rules) RemoveRulesFT(A, B string) Rules {
 	var newRules Rules
 	for i := range r {
 		if r[i].From == A && r[i].RightBeginFrom(B) {
+			log.Println("remove", A, B, r[i].To)
 			continue
 		}
 		newRules = append(newRules, r[i])
@@ -320,13 +322,13 @@ func (a Rules) IsSame(b Rules) error {
 //  из данного если вместо каждого нетерма nt подставить епсилон
 //  Возвращает всевозможные правые части и флаг было ли совершено
 //  преобразование
-func (a Rule) ApplyEpsilon(nt string) ([]string, bool) {
+func (a Rule) ApplyEpsilon(nt string) []string {
 	m := ToNoneTerminalsMap(a.To)
 	_, ok := m[nt]
 	if !ok {
-		return nil, false
+		return nil
 	}
-	return applyEpsilon(0, "", a.To, nt), true
+	return applyEpsilon(0, "", a.To, nt)
 }
 
 func applyEpsilon(index int, start, word string, nt string) []string {
