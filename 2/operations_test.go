@@ -122,7 +122,7 @@ func Test_RemoveUnreachableNonterminal(t *testing.T) {
 // 	}
 // }
 
-// file:///home/artyom/labs/bauman/10/compiler-design/2/formal.languages.theory.3.pdf
+//file:///home/artyom/labs/bauman/10/compiler-design/2/formal.languages.theory.3.pdf
 func Test_RemoveLambda1(t *testing.T) {
 	var G = internal.CFR{
 		N: []string{"S", "A", "B", "C"},
@@ -152,7 +152,7 @@ func Test_RemoveLambda1(t *testing.T) {
 		},
 	}
 
-	var real = G.RemoveLambda().RemoveNongeneratingNonterminal() //.RemoveNongeneratingNonterminal().RemoveUnreachableNonterminal()
+	var real = G.RemoveLambda() //.RemoveNongeneratingNonterminal() //.RemoveNongeneratingNonterminal().RemoveUnreachableNonterminal()
 
 	if err := real.IsSame(expected); err != nil {
 		log.Println("Ожидалось:", expected.N)
@@ -245,7 +245,6 @@ func Test_RemoveLambda3(t *testing.T) {
 		},
 	}
 
-	log.Println("++++++++++++++++++++++++++++++++++")
 	var real = G.RemoveLambda()
 
 	if err := expected.IsSame(real); err != nil {

@@ -79,7 +79,7 @@ func TestExample4_9(t *testing.T) {
 		},
 	}
 
-	var real = G.ElrWithE()
+	var real = G.ElrWithE2(true)
 	if err := real.IsSame(expected); err != nil {
 		log.Println("Ожидалось:", expected.P)
 		log.Println("Получено:", real.P)
@@ -120,7 +120,7 @@ func TestExample4_7(t *testing.T) {
 		},
 	}
 
-	var real = G.ElrWithE()
+	var real = G.ElrWithE2(true)
 	if err := real.IsSame(expected); err != nil {
 		log.Println("Ожидалось:", expected.P)
 		log.Println("Получено:", real.P)
@@ -198,6 +198,127 @@ func TestExample4_11(t *testing.T) {
 	}
 
 	var real = G.LeftFactorization()
+	if err := expected.IsSame(real); err != nil {
+		log.Println("Ожидалось:", expected.P)
+		log.Println("Получено:", real.P)
+		t.Fatalf("Ожидание и реальность не сошлись: %s", err)
+	}
+}
+
+// // Удаление левой рекурсии
+// // https://neerc.ifmo.ru/wiki/index.php?title=Устранение_левой_рекурсии
+// func TestExampleMy1(t *testing.T) {
+// 	var G = internal.CFR{
+// 		N: []string{"A", "S"},
+// 		T: []string{"a", "b", "c"},
+// 		S: []string{},
+// 		P: internal.Rules{
+// 			{From: "A", To: "Sa"},
+// 			{From: "S", To: "Sb"},
+// 			{From: "S", To: "SAc"},
+// 			{From: "S", To: "b"},
+// 		},
+// 	}
+
+// 	var expected = internal.CFR{
+// 		N: []string{"A", "S", "S'"},
+// 		T: []string{"a", "b", "c"},
+// 		S: []string{"A"},
+// 		P: internal.Rules{
+// 			{From: "A", To: "Sa"},
+// 			{From: "S", To: "bS'"},
+// 			{From: "S'", To: "bS'"},
+// 			{From: "S'", To: "acS'"},
+// 			{From: "S'", To: "b"},
+// 			{From: "S'", To: "ac"},
+// 		},
+// 	}
+
+// 	log.Println("++++++++++++++++++++++++++++++++++")
+// 	log.Println("Оригинал:", G.P)
+// 	var real = G.ElrWithE2()
+// 	if err := expected.IsSame(real); err != nil {
+// 		log.Println("Ожидалось:", expected.P)
+// 		log.Println("Получено:", real.P)
+// 		t.Fatalf("Ожидание и реальность не сошлись: %s", err)
+// 	}
+
+// }
+
+// // Удаление левой рекурсии
+// // https://neerc.ifmo.ru/wiki/index.php?title=Устранение_левой_рекурсии
+// func TestExampleMy2(t *testing.T) {
+// 	var G = internal.CFR{
+// 		N: []string{"A", "S"},
+// 		T: []string{"a", "b"},
+// 		S: []string{"S"},
+// 		P: internal.Rules{
+// 			{From: "A", To: "Sa"},
+// 			{From: "A", To: "Aa"},
+// 			{From: "S", To: "Ab"},
+// 		},
+// 	}
+
+// 	var expected = internal.CFR{
+// 		N: []string{"A", "S"},
+// 		T: []string{"a", "b"},
+// 		S: []string{"S"},
+// 		P: internal.Rules{
+// 			{From: "A", To: "SaA'"},
+// 			{From: "A", To: "Sa"},
+// 			{From: "A'", To: "a"},
+// 			{From: "A'", To: "aA'"},
+// 			{From: "S", To: "Ab"},
+// 		},
+// 	}
+
+// 	log.Println("========================")
+// 	log.Println("Оригинал:", G.P)
+// 	var real = G.ElrWithE()
+// 	if err := expected.IsSame(real); err != nil {
+// 		log.Println("Ожидалось:", expected.P)
+// 		log.Println("Получено:", real.P)
+// 		t.Fatalf("Ожидание и реальность не сошлись: %s", err)
+// 	}
+
+// }
+
+// Удаление левой рекурсии
+// http://espressocode.top/removing-direct-and-indirect-left-recursion-in-a-grammar/
+func TestExampleMy3(t *testing.T) {
+	var G = internal.CFR{
+		N: []string{"A1", "A2", "A3"},
+		T: []string{"a", "b"},
+		S: []string{"A1"},
+		P: internal.Rules{
+			{From: "A1", To: "A2A3"},
+			{From: "A2", To: "A3A1"},
+			{From: "A2", To: "b"},
+			{From: "A3", To: "A1A1"},
+			{From: "A3", To: "a"},
+		},
+	}
+
+	var expected = internal.CFR{
+		N: []string{"A1", "A2", "A3", "A3'"},
+		T: []string{"a", "b"},
+		S: []string{"A1"},
+		P: internal.Rules{
+			{From: "A1", To: "A2A3"},
+			{From: "A2", To: "A3A1"},
+			{From: "A2", To: "b"},
+			{From: "A3", To: "a"},
+			{From: "A3", To: "bA3A1"},
+			{From: "A3", To: "aA3'"},
+			{From: "A3", To: "bA3A1A3'"},
+			{From: "A3'", To: "A1A3A1"},
+			{From: "A3'", To: "A1A3A1A3'"},
+		},
+	}
+
+	log.Println("++++++++++++++++++++++++++++++++++")
+	log.Println("Оригинал:", G.P)
+	var real = G.ElrWithE2(false)
 	if err := expected.IsSame(real); err != nil {
 		log.Println("Ожидалось:", expected.P)
 		log.Println("Получено:", real.P)

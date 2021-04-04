@@ -2,7 +2,6 @@ package internal
 
 import (
 	"fmt"
-	"log"
 	"unicode"
 )
 
@@ -45,7 +44,7 @@ func (a *CFR) UpdateN() {
 	)
 	for _, r := range a.P {
 		mapVisited[r.From] = nil
-		noneTerms := ToNoneTerminals(r.To)
+		noneTerms := a.ToNoneTerminals(r.To)
 		for _, nt := range noneTerms {
 			mapVisited[nt] = nil
 		}
@@ -103,14 +102,14 @@ func (cfr CFR) EliminateLeftRecursion() CFR {
 	}
 }
 
-// ElrWithE - Устранить левую рекурсию, оставив e-продукцию
+// ElrWithE2 - Устранить левую рекурсию, оставив e-продукцию
 /*
 Алгоритм 4.8 из "Ахо, Сети, Ульман. Компиляторы. Принципы, технологии, инструменты, 2008, 2-ое издание", стр 277
 Гарантированно работает с грамматиками, не имеющими:
 - циклов(порождений A -> A)
 - e-продукций(продукций вида A -> e)
 */
-func (cfr CFR) ElrWithE() CFR {
+func (cfr CFR) ElrWithE2(isBook bool) CFR {
 	var (
 		newRules   = make(Rules, len(cfr.P))
 		newSymbols = make([]string, len(cfr.N))
@@ -126,38 +125,37 @@ func (cfr CFR) ElrWithE() CFR {
 			var (
 				A𝚥    = cfr.N[j]
 				fromA = cfr.P.FilterByTwo(Aᵢ, A𝚥, newSymbols)
-				β     = cfr.P.Filter(A𝚥, NoSort)
-				// fromA = newRules.FilterByTwo(Aᵢ, A𝚥, newSymbols)
-				// β     = newR
 			)
 
-			// Починить багу
-			log.Println("add", Aᵢ, A𝚥, len(fromA))
-			for _, ruleA := range fromA {
-				var (
-					α  = ruleA.RemoveSymbol(A𝚥)
-					αβ = β.Add(α).GetRPart()
-				)
-				log.Println("add1", Aᵢ, len(fromA))
-				(&newRules).Append(Aᵢ, αβ...)
-
-			}
-			log.Println("Remove1", len(newRules))
 			newRules = newRules.RemoveRulesFT(Aᵢ, A𝚥)
-			log.Println("Remove2", len(newRules))
+			r := cfr.replaceRule(fromA, newRules, Aᵢ).GetRPart()
+			newRules.Append(Aᵢ, r...)
 		}
 
 		if newRules.HasDirectLeftRecursion(Aᵢ) {
 			var (
-				alpha, beta    = newRules.Filter(Aᵢ, LeftRecursion).AlphaBeta(Aᵢ)
-				marked         = Aᵢ + "'"
+				alpha, beta = newRules.Filter(Aᵢ, LeftRecursion).AlphaBeta(Aᵢ)
+				marked      = Aᵢ + "'"
+			)
+			var (
+				alphaR         = alpha.GetRPart()
+				betaR          = beta.GetRPart()
 				betasWithNewA  = beta.Add(marked).GetRPart()
 				alphasWithNewA = alpha.Add(marked).GetRPart()
 			)
 
 			newRules = newRules.RemoveRules(Aᵢ)
 			(&newRules).Append(Aᵢ, betasWithNewA...)
-			(&newRules).Append(marked, append(alphasWithNewA, Epsilon)...)
+
+			if isBook {
+				(&newRules).Append(marked, Epsilon)
+			} else {
+				(&newRules).Append(Aᵢ, betaR...)
+				(&newRules).Append(marked, alphaR...)
+			}
+
+			(&newRules).Append(marked, alphasWithNewA...)
+
 			newSymbols = append(newSymbols, marked)
 		}
 	}
@@ -168,6 +166,71 @@ func (cfr CFR) ElrWithE() CFR {
 		P: newRules.DeleteE(),
 		S: cfr.S,
 	}
+}
+
+// replaceRules - заменить правило на множество
+func (cfr CFR) replaceRule(
+	rules, updated Rules,
+	Ai string,
+) Rules {
+	if len(rules) == 0 {
+		return rules
+	}
+	var symbolsNum = make(map[string]int)
+	for _, n := range cfr.N {
+		_, ok := symbolsNum[n]
+		if ok {
+			continue
+		}
+		symbolsNum[n] = len(symbolsNum)
+	}
+
+	var newRules = make(Rules, len(rules))
+	copy(newRules, rules)
+	var changed = true
+	var returnRules Rules
+	for changed {
+		changed = false
+		var newRulesAgain Rules
+		for _, a := range newRules {
+			arr := cfr.ToNoneTerminals(a.To)
+			// Если правило теперь ведет только в терминальное состояние
+			if len(arr) == 0 {
+				returnRules.Append(a.From, a.To)
+				continue
+			}
+			var isLower bool
+			for _, r := range a.To {
+				isLower = unicode.IsLower(r)
+				break
+			}
+			// Нет левой рекурсии
+			if isLower {
+				returnRules.Append(a.From, a.To)
+				continue
+			}
+			Aj := arr[0]
+			// Если нетерм дальше или равен по нумерации
+			if symbolsNum[Ai] <= symbolsNum[Aj] {
+				returnRules.Append(a.From, a.To)
+				continue
+			}
+			changed = true
+			a.To = a.RemoveSymbol(Aj)
+			fromAj := updated.Filter(Aj, NoSort)
+
+			rpart := fromAj.Add(a.To).GetRPart()
+
+			// Подставляем новые правила
+			newRulesAgain.Append(a.From, rpart...)
+		}
+		if len(newRulesAgain) == 0 {
+			break
+		}
+		newRules = make(Rules, len(newRulesAgain))
+		copy(newRules, newRulesAgain)
+	}
+	return returnRules
 }
 
 /*
@@ -205,7 +268,6 @@ func (cfr CFR) LeftFactorization() CFR {
 		newRules = append(newRules, rulesGet...)
 	}
 
-	// log.Println("newSymbols", newSymbols)
 	return CFR{
 		N: newSymbols,
 		T: cfr.T,
@@ -260,9 +322,9 @@ func (cfr CFR) RemoveUnreachableNonterminal() CFR {
 	for _, q := range cfr.P {
 		goTo, ok := fromTo[q.From]
 		if !ok {
-			goTo = ToNoneTerminals(q.To)
+			goTo = cfr.ToNoneTerminals(q.To)
 		} else {
-			goTo = append(goTo, ToNoneTerminals(q.To)...)
+			goTo = append(goTo, cfr.ToNoneTerminals(q.To)...)
 		}
 		fromTo[q.From] = goTo
 	}
@@ -341,7 +403,7 @@ func (cfr CFR) RemoveNongeneratingNonterminal() CFR {
 
 	for i, q := range cfr.P {
 		var (
-			noneTerms = ToNoneTerminalsMap(q.To)
+			noneTerms = cfr.ToNoneTerminalsMap(q.To)
 			rterms    = RuleWithTerms{
 				r:         &cfr.P[i],
 				noneTerms: noneTerms,
@@ -417,22 +479,43 @@ type RuleWithTerms struct {
 }
 
 // ToNoneTerminals Получить массив нетерминалов из строки
-func ToNoneTerminals(str string) []string {
-	var noneTerminals = []string{}
+func (cfr CFR) ToNoneTerminals(str string) []string {
+	var (
+		noneTerminals = []string{}
+		searchStr     string
+	)
 	for _, r := range str {
-		if unicode.IsUpper(r) {
-			noneTerminals = append(noneTerminals, string(r))
+		if unicode.IsLower(r) {
+			continue
 		}
+		searchStr += string(r)
+		if r == '\'' {
+			if len(noneTerminals) > 0 {
+				noneTerminals[len(noneTerminals)-1] += "'"
+			}
+			continue
+		}
+
+		for _, v := range cfr.N {
+			if searchStr == v {
+				searchStr = ""
+				noneTerminals = append(noneTerminals, v)
+				break
+			}
+		}
+
 	}
 	return noneTerminals
 }
 
-func ToNoneTerminalsMap(str string) map[string]interface{} {
-	var noneTerminals = make(map[string]interface{})
-	for _, r := range str {
-		if unicode.IsUpper(r) {
-			noneTerminals[string(r)] = nil
-		}
+// ToNoneTerminals Получить мапу нетерминалов из строки
+func (cfr CFR) ToNoneTerminalsMap(str string) map[string]interface{} {
+	var (
+		found         = cfr.ToNoneTerminals(str)
+		noneTerminals = make(map[string]interface{})
+	)
+	for _, str := range found {
+		noneTerminals[str] = nil
 	}
 	return noneTerminals
 }
@@ -447,6 +530,7 @@ func (cfr CFR) RemoveLambda() CFR {
 	var (
 		// Обновленные правила
 		mapNewRules = make(map[string]*Rule)
+
 		// Посещенные вершины
 		mapVisited = make(map[string]interface{})
 		// Очередь нетермов, которые имеют пустой переход
@@ -484,7 +568,7 @@ func (cfr CFR) RemoveLambda() CFR {
 
 		for _, lq := range localQueue {
 			for _, r := range mapNewRules {
-				strs := r.ApplyEpsilon(lq)
+				strs := r.ApplyEpsilon(cfr, lq)
 				for _, str := range strs {
 					if str == r.From || str == "" {
 						if str == "" {
@@ -523,7 +607,28 @@ func (cfr CFR) RemoveLambda() CFR {
 		S: cfr.S,
 	}
 
+	var countNT = make(map[string]int)
+	for _, r := range newCfr.P {
+		countNT[r.From]++
+	}
 	newCfr.UpdateN()
+
+	newRules = Rules{}
+	for _, r := range newCfr.P {
+		m := cfr.ToNoneTerminalsMap(r.To)
+		var canAdd = true
+		for nt := range m {
+			if countNT[nt] == 0 {
+				canAdd = false
+				break
+			}
+		}
+		if canAdd {
+			newRules = append(newRules, r)
+		}
+	}
+	newCfr.P = newRules
+
 	return *newCfr
 }
 

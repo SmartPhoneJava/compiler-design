@@ -2,7 +2,6 @@ package internal
 
 import (
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -24,6 +23,10 @@ const (
 	NoSort
 )
 
+func (rule Rule) ID() string {
+	return rule.To + rule.From
+}
+
 // rules - получить правила, связанные с нетерминалом
 // 	в порядке, заданным кодом sortType
 func (rules Rules) Filter(
@@ -43,7 +46,6 @@ func (rules Rules) Filter(
 			} else if sortType == NoSort {
 				alpha = append(alpha, rule)
 			}
-
 		}
 	}
 	return append(alpha, beta...)
@@ -101,6 +103,7 @@ func (rules Rules) AlphaBeta(symbol string) (Rules, Rules) {
 	)
 	for _, rule := range rules {
 		if rule.RightBeginFrom(symbol) {
+
 			alpha = append(alpha, rule)
 		} else {
 			beta = append(beta, rule)
@@ -176,6 +179,13 @@ func (r Rules) DeleteE() Rules {
 
 // Add добавить цепочку к правой части всех правил
 func (r Rules) Add(addMe string) Rules {
+	// var newR = make(Rules, len(r))
+	// copy(newR, r)
+	// for i := range r {
+	// 	newR[i].To = newR[i].To + addMe
+	// }
+	// return newR
+
 	for i := range r {
 		r[i].To = r[i].To + addMe
 	}
@@ -210,7 +220,6 @@ func (r Rules) RemoveRulesFT(A, B string) Rules {
 	var newRules Rules
 	for i := range r {
 		if r[i].From == A && r[i].RightBeginFrom(B) {
-			log.Println("remove", A, B, r[i].To)
 			continue
 		}
 		newRules = append(newRules, r[i])
@@ -265,8 +274,12 @@ func (rule Rule) IsItFirstNoneTerminal(
 func (rule Rule) FirstNoneTerminal(
 	noneTerms []string,
 ) string {
-	var found string
+	var (
+		found     string
+		searchStr string
+	)
 	for _, r := range rule.To {
+		searchStr += string(r)
 		if len(found) != 0 {
 			if r == '\'' {
 				found += "'"
@@ -275,7 +288,7 @@ func (rule Rule) FirstNoneTerminal(
 			return found
 		} else {
 			for _, v := range noneTerms {
-				if string(r) == v {
+				if searchStr == v {
 					found = v
 					break
 				}
@@ -322,26 +335,54 @@ func (a Rules) IsSame(b Rules) error {
 //  из данного если вместо каждого нетерма nt подставить епсилон
 //  Возвращает всевозможные правые части и флаг было ли совершено
 //  преобразование
-func (a Rule) ApplyEpsilon(nt string) []string {
-	m := ToNoneTerminalsMap(a.To)
+func (a Rule) ApplyEpsilon(cfr CFR, nt string) []string {
+	m := cfr.ToNoneTerminalsMap(a.To)
 	_, ok := m[nt]
 	if !ok {
 		return nil
 	}
-	return applyEpsilon(0, "", a.To, nt)
+	return applyEpsilon(0, "", a.To, nt, cfr.CountOfNoneE(nt) == 0)
 }
 
-func applyEpsilon(index int, start, word string, nt string) []string {
+func applyEpsilon(
+	index int,
+	start, word, nt string,
+	noOriginNT bool) []string {
 	if len(word) == index {
 		return []string{start}
 	}
 	var strs []string
 	s := word[index]
 	if string(s) == nt {
-		strs = append(strs, applyEpsilon(index+1, start, word, nt)...)
+		strs = append(strs, applyEpsilon(
+			index+1, start, word,
+			nt, noOriginNT,
+		)...)
+		if !noOriginNT {
+			strs = append(strs, applyEpsilon(
+				index+1, start+string(word[index]),
+				word, nt, noOriginNT,
+			)...)
+
+		}
+	} else {
+		strs = append(strs, applyEpsilon(
+			index+1, start+string(word[index]),
+			word, nt, noOriginNT,
+		)...)
 	}
-	strs = append(strs, applyEpsilon(index+1, start+string(word[index]), word, nt)...)
+
 	return strs
+}
+
+func (cfr *CFR) CountOfNoneE(nt string) int {
+	var count int
+	for _, r := range cfr.P {
+		if r.From == nt && r.To != "e" {
+			count++
+		}
+	}
+	return count
 }
 
 // Убрать повторяющиеся e, примеры
