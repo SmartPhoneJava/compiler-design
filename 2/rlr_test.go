@@ -316,8 +316,6 @@ func TestExampleMy3(t *testing.T) {
 		},
 	}
 
-	log.Println("++++++++++++++++++++++++++++++++++")
-	log.Println("Оригинал:", G.P)
 	var real = G.ElrWithE2(false)
 	if err := expected.IsSame(real); err != nil {
 		log.Println("Ожидалось:", expected.P)

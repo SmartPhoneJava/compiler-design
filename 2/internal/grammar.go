@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"log"
+	"strings"
 	"unicode"
 )
 
@@ -38,14 +39,14 @@ func (a CFR) IsSame(b CFR) error {
 	return nil
 }
 
-func (a *CFR) UpdateN() {
+func (a *CFR) updateN() {
 	var (
 		mapVisited = make(map[string]interface{})
 		newN       = make([]string, 0)
 	)
 	for _, r := range a.P {
 		mapVisited[r.From] = nil
-		noneTerms := a.ToNoneTerminals(r.To)
+		noneTerms := a.toNoneTerminals(r.To)
 		for _, nt := range noneTerms {
 			mapVisited[nt] = nil
 		}
@@ -289,7 +290,7 @@ func (cfr CFR) RemoveUnreachableNonterminal() CFR {
 		S: cfr.S,
 	}
 
-	newCfr.UpdateN()
+	newCfr.updateN()
 	return *newCfr
 }
 
@@ -328,7 +329,7 @@ func (cfr CFR) RemoveNongeneratingNonterminal() CFR {
 
 	for i, q := range cfr.P {
 		var (
-			noneTerms = cfr.ToNoneTerminalsMap(q.To)
+			noneTerms = cfr.toNoneTerminalsMap(q.To)
 			rterms    = RuleWithTerms{
 				r:         &cfr.P[i],
 				noneTerms: noneTerms,
@@ -392,8 +393,14 @@ func (cfr CFR) RemoveNongeneratingNonterminal() CFR {
 		S: cfr.S,
 	}
 
-	newCfr.UpdateN()
+	newCfr.updateN()
 	return *newCfr
+}
+
+// RemoveUselessNonterms удалить бесполезные нетермы
+func (cfr CFR) RemoveUselessNonterms() CFR {
+	return cfr.RemoveNongeneratingNonterminal().
+		RemoveUnreachableNonterminal()
 }
 
 // RuleWithTerms - правило с неподходящими вершинами -
@@ -404,7 +411,7 @@ type RuleWithTerms struct {
 }
 
 // ToNoneTerminals Получить массив нетерминалов из строки
-func (cfr CFR) ToNoneTerminals(str string) []string {
+func (cfr CFR) toNoneTerminals(str string) []string {
 	var (
 		noneTerminals = []string{}
 		searchStr     string
@@ -434,15 +441,64 @@ func (cfr CFR) ToNoneTerminals(str string) []string {
 }
 
 // ToNoneTerminals Получить мапу нетерминалов из строки
-func (cfr CFR) ToNoneTerminalsMap(str string) map[string]interface{} {
+func (cfr CFR) toNoneTerminalsMap(str string) map[string]interface{} {
 	var (
-		found         = cfr.ToNoneTerminals(str)
+		found         = cfr.toNoneTerminals(str)
 		noneTerminals = make(map[string]interface{})
 	)
 	for _, str := range found {
 		noneTerminals[str] = nil
 	}
 	return noneTerminals
+}
+
+type Symbol struct {
+	Spell string
+	Type  string // "term" или "nonterm"
+}
+
+// TermsAndNonTerms обозначить какие значения являются термами
+// а какие нетермами
+func (cfr CFR) TermsAndNonTerms(str string) []Symbol {
+	var (
+		symbols   = []Symbol{}
+		searchStr string
+	)
+	for _, r := range str {
+		searchStr += string(r)
+		if unicode.IsLower(r) {
+			for _, v := range cfr.T {
+				if searchStr == v {
+					searchStr = ""
+					symbols = append(symbols, Symbol{
+						Spell: v,
+						Type:  "term",
+					})
+					break
+				}
+			}
+			continue
+		}
+		if r == '\'' {
+			if len(symbols) > 0 {
+				symbols[len(symbols)-1].Spell += "'"
+			}
+			continue
+		}
+
+		for _, v := range cfr.N {
+			if searchStr == v {
+				searchStr = ""
+				symbols = append(symbols, Symbol{
+					Spell: v,
+					Type:  "nonterm",
+				})
+				break
+			}
+		}
+
+	}
+	return symbols
 }
 
 // http://mathhelpplanet.com/static.php?p=privedennaya-forma-ks-grammatiki
@@ -536,11 +592,11 @@ func (cfr CFR) RemoveLambda() CFR {
 	for _, r := range newCfr.P {
 		countNT[r.From]++
 	}
-	newCfr.UpdateN()
+	newCfr.updateN()
 
 	newRules = Rules{}
 	for _, r := range newCfr.P {
-		m := cfr.ToNoneTerminalsMap(r.To)
+		m := cfr.toNoneTerminalsMap(r.To)
 		var canAdd = true
 		for nt := range m {
 			if countNT[nt] == 0 {
@@ -576,7 +632,7 @@ func (cfr CFR) RemoveChains() CFR {
 
 	// O(P)
 	for _, rule := range cfr.P {
-		if cfr.IsChainRule(rule) {
+		if cfr.isChainRule(rule) {
 			// Помещаем все цепные правила в очередь обработки
 			_, ok := mapVisited[rule.ID()]
 			if ok {
@@ -595,7 +651,7 @@ func (cfr CFR) RemoveChains() CFR {
 
 	var (
 		// O(P)
-		withChains, noChains = cfr.GroupByChains()
+		withChains, noChains = cfr.groupByChains()
 		// На случай, если передана рекурсивная грамматика
 		// нельзя дать циклу ниже уйти в бесконечное исполнение
 		repeater = 100000
@@ -639,9 +695,31 @@ func (cfr CFR) RemoveChains() CFR {
 		S: cfr.S,
 	}
 
-	newCfr.UpdateN()
+	newCfr.updateN()
 
 	return *newCfr
 }
 
-// 551
+// Bring - привести грамматику
+func (cfr CFR) Bring() CFR {
+	return cfr.RemoveLambda().
+		RemoveChains().
+		RemoveNongeneratingNonterminal().
+		RemoveUnreachableNonterminal()
+}
+
+// Print - распечатать грамматику
+func (cfr CFR) Print(text string) {
+	log.Println(text)
+	log.Printf("Набор нетермов: \n%s", strings.Join(cfr.N, " "))
+	log.Printf("Набор термов: \n%s", strings.Join(cfr.T, " "))
+	log.Printf("Стартовый нетерм: \n%s", cfr.S[0])
+
+	var rules = make([]string, len(cfr.P))
+	for i, r := range cfr.P {
+		rules[i] = r.From + " -> " + r.To
+	}
+	log.Printf("Набор правил: \n%s", strings.Join(rules, "\n"))
+}
+
+// 551 -> 725

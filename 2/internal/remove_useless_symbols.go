@@ -12,9 +12,9 @@ func (cfr CFR) buildDistMap() map[string][]string {
 	for _, q := range cfr.P {
 		goTo, ok := fromTo[q.From]
 		if !ok {
-			goTo = cfr.ToNoneTerminals(q.To)
+			goTo = cfr.toNoneTerminals(q.To)
 		} else {
-			goTo = append(goTo, cfr.ToNoneTerminals(q.To)...)
+			goTo = append(goTo, cfr.toNoneTerminals(q.To)...)
 		}
 		fromTo[q.From] = goTo
 	}

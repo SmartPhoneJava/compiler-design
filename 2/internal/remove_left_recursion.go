@@ -86,7 +86,7 @@ func (cfr CFR) replaceRule(
 		changed = false
 		var newRulesAgain Rules
 		for _, a := range newRules {
-			arr := cfr.ToNoneTerminals(a.To)
+			arr := cfr.toNoneTerminals(a.To)
 			// Если правило теперь ведет только в терминальное состояние
 			if len(arr) == 0 {
 				returnRules.Append(a.From, a.To)

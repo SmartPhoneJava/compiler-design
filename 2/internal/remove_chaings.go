@@ -9,11 +9,11 @@ package internal
 
 O(P)
 */
-func (cfr CFR) GroupByChains() (map[string][]string, map[string][]string) {
+func (cfr CFR) groupByChains() (map[string][]string, map[string][]string) {
 	var withChains = make(map[string][]string, 0)
 	var noChains = make(map[string][]string, 0)
 	for _, rule := range cfr.P {
-		if cfr.IsChainRule(rule) {
+		if cfr.isChainRule(rule) {
 			withChains[rule.From] = append(withChains[rule.From], rule.To)
 		} else {
 			noChains[rule.From] = append(noChains[rule.From], rule.To)
@@ -24,7 +24,7 @@ func (cfr CFR) GroupByChains() (map[string][]string, map[string][]string) {
 }
 
 // IsChainRule является ли правило цепным
-func (cfr CFR) IsChainRule(r Rule) bool {
-	nt := cfr.ToNoneTerminals(r.To)
+func (cfr CFR) isChainRule(r Rule) bool {
+	nt := cfr.toNoneTerminals(r.To)
 	return len(nt) == 1 && len(r.To) == len(nt[0])
 }

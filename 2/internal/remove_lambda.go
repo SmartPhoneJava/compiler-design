@@ -5,12 +5,12 @@ package internal
 //  Возвращает всевозможные правые части и флаг было ли совершено
 //  преобразование
 func (a Rule) ApplyEpsilon(cfr CFR, nt string) []string {
-	m := cfr.ToNoneTerminalsMap(a.To)
+	m := cfr.toNoneTerminalsMap(a.To)
 	_, ok := m[nt]
 	if !ok {
 		return nil
 	}
-	return applyEpsilon(0, "", a.To, nt, cfr.CountOfNoneE(nt) == 0)
+	return applyEpsilon(0, "", a.To, nt, cfr.countOfNoneE(nt) == 0)
 }
 
 func applyEpsilon(
@@ -45,7 +45,7 @@ func applyEpsilon(
 }
 
 // Посчитать не епсилон символы
-func (cfr *CFR) CountOfNoneE(nt string) int {
+func (cfr *CFR) countOfNoneE(nt string) int {
 	var count int
 	for _, r := range cfr.P {
 		if r.From == nt && r.To != "e" {
