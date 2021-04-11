@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"log"
 	"unicode"
 )
 
@@ -168,71 +169,6 @@ func (cfr CFR) ElrWithE2(isBook bool) CFR {
 	}
 }
 
-// replaceRules - заменить правило на множество
-func (cfr CFR) replaceRule(
-	rules, updated Rules,
-	Ai string,
-) Rules {
-	if len(rules) == 0 {
-		return rules
-	}
-	var symbolsNum = make(map[string]int)
-	for _, n := range cfr.N {
-		_, ok := symbolsNum[n]
-		if ok {
-			continue
-		}
-		symbolsNum[n] = len(symbolsNum)
-	}
-
-	var newRules = make(Rules, len(rules))
-	copy(newRules, rules)
-	var changed = true
-	var returnRules Rules
-	for changed {
-		changed = false
-		var newRulesAgain Rules
-		for _, a := range newRules {
-			arr := cfr.ToNoneTerminals(a.To)
-			// Если правило теперь ведет только в терминальное состояние
-			if len(arr) == 0 {
-				returnRules.Append(a.From, a.To)
-				continue
-			}
-			var isLower bool
-			for _, r := range a.To {
-				isLower = unicode.IsLower(r)
-				break
-			}
-			// Нет левой рекурсии
-			if isLower {
-				returnRules.Append(a.From, a.To)
-				continue
-			}
-			Aj := arr[0]
-			// Если нетерм дальше или равен по нумерации
-			if symbolsNum[Ai] <= symbolsNum[Aj] {
-				returnRules.Append(a.From, a.To)
-				continue
-			}
-			changed = true
-			a.To = a.RemoveSymbol(Aj)
-			fromAj := updated.Filter(Aj, NoSort)
-
-			rpart := fromAj.Add(a.To).GetRPart()
-
-			// Подставляем новые правила
-			newRulesAgain.Append(a.From, rpart...)
-		}
-		if len(newRulesAgain) == 0 {
-			break
-		}
-		newRules = make(Rules, len(newRulesAgain))
-		copy(newRules, newRulesAgain)
-	}
-	return returnRules
-}
-
 /*
 Алгоритм 4.10 из "Ахо, Сети, Ульман. Компиляторы. Принципы, технологии, инструменты, 2008, 2-ое издание", стр 278
 
@@ -305,7 +241,7 @@ https://uz.denemetr.com/docs/294/index-20812-1.html?page=7
 	Получаем множество всех достижимых нетерминалов, а нетерминалы, не попавшие в него,
 	являются недостижимыми.
 
-	// Сложность O(P)
+	O(P+N)
 */
 func (cfr CFR) RemoveUnreachableNonterminal() CFR {
 	if len(cfr.N) == 0 {
@@ -313,21 +249,10 @@ func (cfr CFR) RemoveUnreachableNonterminal() CFR {
 	}
 	var (
 		mapVisited = make(map[string]interface{})
-		fromTo     = make(map[string][]string)
+		fromTo     = cfr.buildDistMap()
 		queue      = make([]string, len(cfr.S))
 	)
 	copy(queue, cfr.S)
-
-	// O(P)
-	for _, q := range cfr.P {
-		goTo, ok := fromTo[q.From]
-		if !ok {
-			goTo = cfr.ToNoneTerminals(q.To)
-		} else {
-			goTo = append(goTo, cfr.ToNoneTerminals(q.To)...)
-		}
-		fromTo[q.From] = goTo
-	}
 
 	// O(N)
 	for len(queue) > 0 {
@@ -410,7 +335,7 @@ func (cfr CFR) RemoveNongeneratingNonterminal() CFR {
 			}
 		)
 
-		ruleCounter[&rterms] = len(noneTerms)
+		ruleCounter[&rterms] = nil //len(noneTerms)
 		if len(noneTerms) == 0 {
 			_, ok := mapVisited[q.From]
 			if ok {
@@ -628,6 +553,93 @@ func (cfr CFR) RemoveLambda() CFR {
 		}
 	}
 	newCfr.P = newRules
+
+	return *newCfr
+}
+
+// RemoveChains - удалить цепные правила
+/*
+Правила вида A -> B, где A и B нетермы одной
+ грамматики, будем называть цепными.
+
+ Не работает с грамматикой, содержащей левую рекурсию
+*/
+func (cfr CFR) RemoveChains() CFR {
+	var (
+		// Обновленные правила
+		mapNewRules = make(map[string]Rule)
+
+		// Посещенные цепные правила
+		mapVisited = make(map[string]interface{})
+		queue      = []Rule{}
+	)
+
+	// O(P)
+	for _, rule := range cfr.P {
+		if cfr.IsChainRule(rule) {
+			// Помещаем все цепные правила в очередь обработки
+			_, ok := mapVisited[rule.ID()]
+			if ok {
+				continue
+			}
+			mapVisited[rule.ID()] = true
+			queue = append(queue, rule)
+		} else {
+			// Помещаем все нецепные правила в новый список правил
+			mapNewRules[rule.ID()] = Rule{
+				From: rule.From,
+				To:   rule.To,
+			}
+		}
+	}
+
+	var (
+		// O(P)
+		withChains, noChains = cfr.GroupByChains()
+		// На случай, если передана рекурсивная грамматика
+		// нельзя дать циклу ниже уйти в бесконечное исполнение
+		repeater = 100000
+		i        = 0
+	)
+
+	// Обработка цепных правил
+	for len(queue) > 0 {
+		i++
+		if i > repeater {
+			log.Fatal("Не удалось досчитать")
+		}
+
+		head := queue[0]
+		queue = queue[1:]
+
+		for _, to := range noChains[head.To] {
+			mapNewRules[head.From+to] = Rule{
+				From: head.From,
+				To:   to,
+			}
+		}
+		for _, to := range withChains[head.To] {
+			queue = append(queue, Rule{
+				From: head.From,
+				To:   to,
+			})
+		}
+	}
+
+	var newRules Rules
+
+	// Добавляем обновленные правила
+	for _, rc := range mapNewRules {
+		newRules.Append(rc.From, rc.To)
+	}
+
+	newCfr := &CFR{
+		T: cfr.T,
+		P: newRules,
+		S: cfr.S,
+	}
+
+	newCfr.UpdateN()
 
 	return *newCfr
 }

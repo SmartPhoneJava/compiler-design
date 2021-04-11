@@ -51,6 +51,15 @@ func (rules Rules) Filter(
 	return append(alpha, beta...)
 }
 
+// Group - сгруппировать правила по левой части
+func (rules Rules) Group() map[string]Rules {
+	var m = make(map[string]Rules, 0)
+	for _, rule := range rules {
+		m[rule.From] = append(m[rule.From], rule)
+	}
+	return m
+}
+
 // FilterByTwo - отфильтровать правила так, чтобы в левой части был
 // left, а правая начиналась с right
 func (rules Rules) FilterByTwo(
@@ -64,19 +73,6 @@ func (rules Rules) FilterByTwo(
 		}
 	}
 	return filtered
-}
-
-// HasDirectLeftRecursion - проверить, есть ли
-//  прямая левая рекурсия в наборе правил
-func (rules Rules) HasDirectLeftRecursion(
-	noneTerminal string,
-) bool {
-	for _, r := range rules {
-		if r.From == noneTerminal && r.IsLeftRecursive() {
-			return true
-		}
-	}
-	return false
 }
 
 // ConnectedPair - вернуть правила, у которых левая часть
@@ -112,34 +108,6 @@ func (rules Rules) AlphaBeta(symbol string) (Rules, Rules) {
 	return alpha.RemoveFirst(len(symbol)), beta
 }
 
-// MarkLeftRecursives - получить нетерминалы с левой
-//  рекурсией
-func (rules Rules) MarkLeftRecursives() map[string]bool {
-	var (
-		noneTerminalsMap = make(map[string]bool, 0)
-	)
-	for _, rule := range rules {
-		if rule.IsLeftRecursive() {
-			_, ok := noneTerminalsMap[rule.From]
-			if !ok {
-				noneTerminalsMap[rule.From] = true
-			}
-		}
-	}
-	return noneTerminalsMap
-}
-
-// Пример 1: A' -> AV
-// первое условие позволяет убедиться, что A' != A, недостаточно проверять
-// первый символ обоих частей, надо смотреть то же число символов
-// Пример 2: A -> A'V
-// Недостаточно смотреть только на 1-ый символ, надо убедиться
-// что нет символа ', поэтому проверяем что помеченный A не будет равен
-// обнаруженному A'
-func (r Rule) IsLeftRecursive() bool {
-	return r.RightBeginFrom(r.From) && !r.RightBeginFrom(r.NewMarked())
-}
-
 // NewMarked вернуть помеченный нетерминал
 func (r Rule) NewMarked() string {
 	return r.From + "'"
@@ -166,26 +134,8 @@ func (r *Rules) Append(from string, to ...string) {
 	}
 }
 
-// DeleteE удалить пустые порождения
-func (r Rules) DeleteE() Rules {
-	for i, rule := range r {
-		if r[i].To == "e" {
-			continue
-		}
-		r[i].To = strings.ReplaceAll(rule.To, "e", "")
-	}
-	return r
-}
-
 // Add добавить цепочку к правой части всех правил
 func (r Rules) Add(addMe string) Rules {
-	// var newR = make(Rules, len(r))
-	// copy(newR, r)
-	// for i := range r {
-	// 	newR[i].To = newR[i].To + addMe
-	// }
-	// return newR
-
 	for i := range r {
 		r[i].To = r[i].To + addMe
 	}
@@ -329,79 +279,4 @@ func (a Rules) IsSame(b Rules) error {
 		}
 	}
 	return err
-}
-
-// ApplyEpsilon Получить все правила, которые могут получиться
-//  из данного если вместо каждого нетерма nt подставить епсилон
-//  Возвращает всевозможные правые части и флаг было ли совершено
-//  преобразование
-func (a Rule) ApplyEpsilon(cfr CFR, nt string) []string {
-	m := cfr.ToNoneTerminalsMap(a.To)
-	_, ok := m[nt]
-	if !ok {
-		return nil
-	}
-	return applyEpsilon(0, "", a.To, nt, cfr.CountOfNoneE(nt) == 0)
-}
-
-func applyEpsilon(
-	index int,
-	start, word, nt string,
-	noOriginNT bool) []string {
-	if len(word) == index {
-		return []string{start}
-	}
-	var strs []string
-	s := word[index]
-	if string(s) == nt {
-		strs = append(strs, applyEpsilon(
-			index+1, start, word,
-			nt, noOriginNT,
-		)...)
-		if !noOriginNT {
-			strs = append(strs, applyEpsilon(
-				index+1, start+string(word[index]),
-				word, nt, noOriginNT,
-			)...)
-
-		}
-	} else {
-		strs = append(strs, applyEpsilon(
-			index+1, start+string(word[index]),
-			word, nt, noOriginNT,
-		)...)
-	}
-
-	return strs
-}
-
-func (cfr *CFR) CountOfNoneE(nt string) int {
-	var count int
-	for _, r := range cfr.P {
-		if r.From == nt && r.To != "e" {
-			count++
-		}
-	}
-	return count
-}
-
-// Убрать повторяющиеся e, примеры
-// AAeeAeA -> AAeAeA
-// eeee -> e
-// eeeeAeee -> eAe
-func deleteEduplicates(str string) string {
-	var newStr []rune
-	var foundE bool
-	for _, r := range str {
-		if r == 'e' {
-			if foundE {
-				continue
-			}
-			foundE = true
-		} else {
-			foundE = false
-		}
-		newStr = append(newStr, r)
-	}
-	return string(newStr)
 }
