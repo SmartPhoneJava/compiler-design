@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"unicode"
 )
@@ -190,27 +191,79 @@ A'-> B|C
 https://intuit.ru/studies/courses/1157/173/lecture/4697?page=7
 */
 func (cfr CFR) LeftFactorization() CFR {
-	var (
-		newRules   Rules
-		newSymbols = make([]string, len(cfr.N))
-	)
-	copy(newSymbols, cfr.N)
+	var mNewRules = make(map[string]Rule, 0)
+	groups := cfr.P.Group()
 
-	for _, n := range cfr.N {
-		rulesGet, done := cfr.P.ToLFS(n)
-		if done {
-			newSymbols = append(newSymbols, n+"'")
+	for from, toAll := range groups {
+		newFrom := from
+		for len(toAll) > 0 {
+			var longPrefix = ""
+			prevR := Rule{}
+			sort.Sort(toAll)
+			// ищем самый длинный префикс
+			for _, r := range toAll {
+				if prevR.From != "" {
+					var counter int
+					for i := range prevR.To {
+						if i >= len(r.To) || r.To[i] != prevR.To[i] {
+							break
+						}
+						counter++
+					}
+					if len(longPrefix) < counter {
+						longPrefix = prevR.To[:counter]
+					}
+				}
+				prevR = r
+			}
+
+			if longPrefix == "" {
+				for _, r := range toAll {
+					r := Rule{From: from, To: r.To}
+					mNewRules[r.ID()] = r
+					//newRules = append(newRules, Rule{From: from, To: r.To})
+				}
+				toAll = nil
+				break
+			}
+
+			newFrom += "'"
+			var updateCopyRules = make(Rules, 0)
+			// перебираем записи с самым длинным префиксом
+			for _, r := range toAll {
+				ln := len(longPrefix)
+				if len(r.To) >= ln && r.To[:ln] == longPrefix {
+					newTo := r.To[ln:]
+					if newTo == "" {
+						newTo = Epsilon
+					}
+					var (
+						a = Rule{From: newFrom, To: newTo}
+						b = Rule{From: from, To: longPrefix + newFrom}
+					)
+					mNewRules[a.ID()] = a
+					mNewRules[b.ID()] = b
+				} else {
+					updateCopyRules = append(updateCopyRules, r)
+				}
+			}
+			toAll = updateCopyRules
 		}
-
-		newRules = append(newRules, rulesGet...)
 	}
 
-	return CFR{
-		N: newSymbols,
+	var newRules []Rule
+
+	for _, r := range mNewRules {
+		newRules = append(newRules, r)
+	}
+
+	newCfr := CFR{
 		T: cfr.T,
 		P: newRules,
 		S: cfr.S,
 	}
+	newCfr.updateN()
+	return newCfr
 }
 
 /*
@@ -503,6 +556,9 @@ func (cfr CFR) TermsAndNonTerms(str string) []Symbol {
 
 // http://mathhelpplanet.com/static.php?p=privedennaya-forma-ks-grammatiki
 // file:///home/artyom/Загрузки/formal.languages.theory.3.pdf
+/*
+
+ */
 func (cfr CFR) RemoveLambda() CFR {
 	if len(cfr.N) == 0 {
 		return cfr
@@ -518,35 +574,24 @@ func (cfr CFR) RemoveLambda() CFR {
 		queue = []string{}
 	)
 	// Определяем нетермы с пустыми переходами
-	for _, q := range cfr.P {
-		if q.To == "e" {
+	for i, q := range cfr.P {
+		if q.To == Epsilon {
 			_, ok := mapVisited[q.From]
 			if ok {
 				continue
 			}
 			queue = append(queue, q.From)
 			mapVisited[q.From] = nil
+		} else {
+			// Помещаем все непустые правила в mapNewRules
+			mapNewRules[q.From+q.To] = &cfr.P[i]
 		}
-	}
-
-	// Помещаем все правила в mapNewRules
-	for i, q := range cfr.P {
-		if q.To == "e" {
-			continue
-		}
-		_, ok := mapNewRules[q.To+q.From]
-		if ok {
-			continue
-		}
-
-		mapNewRules[q.From+q.To] = &cfr.P[i]
 	}
 
 	for len(queue) > 0 {
 		var localQueue = make([]string, len(queue))
 		copy(localQueue, queue)
 		queue = []string{}
-
 		for _, lq := range localQueue {
 			for _, r := range mapNewRules {
 				strs := r.ApplyEpsilon(cfr, lq)
@@ -617,6 +662,14 @@ func (cfr CFR) RemoveLambda() CFR {
 /*
 Правила вида A -> B, где A и B нетермы одной
  грамматики, будем называть цепными.
+
+
+ l - длина правой части правила
+ P - число правил
+ N - число нетерминалов
+ C - число цепных правил
+
+ O(P*l) + O(N*С*(P-L))
 */
 func (cfr CFR) RemoveChains() CFR {
 	var (
@@ -676,11 +729,20 @@ func (cfr CFR) Print(text string) {
 	log.Printf("Набор термов: \n%s", strings.Join(cfr.T, " "))
 	log.Printf("Стартовый нетерм: \n%s", cfr.S[0])
 
+	sort.Sort(cfr.P)
+
 	var rules = make([]string, len(cfr.P))
 	for i, r := range cfr.P {
 		rules[i] = r.From + " -> " + r.To
 	}
 	log.Printf("Набор правил: \n%s", strings.Join(rules, "\n"))
 }
+
+func (r Rules) Len() int { return len(r) }
+func (r Rules) Less(i, j int) bool {
+	return r[i].From < r[j].From ||
+		(r[i].From == r[j].From && r[i].To < r[j].To)
+}
+func (r Rules) Swap(i, j int) { r[i], r[j] = r[j], r[i] }
 
 // 551 -> 725

@@ -324,3 +324,53 @@ func TestExampleMy3(t *testing.T) {
 	}
 
 }
+
+func TestExample5(t *testing.T) {
+	var G = internal.CFR{
+		N: []string{"A", "B", "C", "D"},
+		T: []string{"a", "b", "c", "d"},
+		S: []string{"A"},
+		P: internal.Rules{
+			{From: "A", To: "bAaBCA"},
+			{From: "A", To: "bABD"},
+			{From: "A", To: "cBBa"},
+			{From: "A", To: "cBaa"},
+			{From: "A", To: "dCnBa"},
+			{From: "A", To: "dCnaa"},
+			{From: "B", To: "BcA"},
+			{From: "B", To: "BcD"},
+			{From: "C", To: "ab"},
+			{From: "C", To: "abc"},
+		},
+	}
+	var expected = internal.CFR{
+		N: []string{"A", "B", "C", "A'", "A''", "A'''", "B'", "C'"},
+		T: []string{"a", "b", "c", "d"},
+		S: []string{"A"},
+		P: internal.Rules{
+			{From: "A", To: `bAA''`},
+			{From: "A", To: `cBA'''`},
+			{From: "A", To: `dCnA'`},
+			{From: "A'", To: "Ba"},
+			{From: "A'", To: "aa"},
+			{From: "A''", To: "BD"},
+			{From: "A''", To: "aBCA"},
+			{From: "A'''", To: "Ba"},
+			{From: "A'''", To: "aa"},
+			{From: "B", To: `BcB'`},
+			{From: "B'", To: "A"},
+			{From: "B'", To: "D"},
+			{From: "C", To: `abC'`},
+			{From: "C'", To: "c"},
+			{From: "C'", To: "e"},
+		},
+	}
+
+	var real = G.LeftFactorization()
+	//real.Print("Привет")
+	if err := real.IsSame(expected); err != nil {
+		log.Println("Ожидалось:", expected.P)
+		log.Println("Получено:", real.P)
+		t.Fatalf("Ожидание и реальность не сошлись: %s", err)
+	}
+}

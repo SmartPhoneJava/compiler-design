@@ -2,7 +2,6 @@ package parsing
 
 import (
 	"lab2/internal"
-	"log"
 )
 
 //грамматика это четверка
@@ -52,11 +51,9 @@ func (cg ContextGrammar) ToInternal() internal.CFR {
 	for _, nonterm := range cg.Nonterms {
 		n = append(n, nonterm.Name)
 	}
-	log.Println("n", n)
 	for _, term := range cg.Terms {
 		t = append(t, term.Name)
 	}
-	log.Println("t", t)
 	for _, start := range cg.Start {
 		s = append(s, start.Name)
 	}
