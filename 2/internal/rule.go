@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -121,6 +122,10 @@ func (r *Rules) Append(from string, to ...string) {
 	}
 
 	for _, to := range to {
+		if from == to {
+			log.Println("from to", from, to)
+			//continue
+		}
 		// не добавляем пустые
 		if len(strings.TrimSpace(to)) == 0 {
 			continue

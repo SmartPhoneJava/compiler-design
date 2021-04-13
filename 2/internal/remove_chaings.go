@@ -9,14 +9,25 @@ package internal
 
 O(P)
 */
-func (cfr CFR) groupByChains() (map[string][]string, map[string][]string) {
-	var withChains = make(map[string][]string, 0)
-	var noChains = make(map[string][]string, 0)
+func (cfr CFR) groupByChains() (
+	map[string]map[string]interface{},
+	map[string]map[string]interface{},
+) {
+	var withChains = make(map[string]map[string]interface{}, 0)
+	var noChains = make(map[string]map[string]interface{}, 0)
 	for _, rule := range cfr.P {
 		if cfr.isChainRule(rule) {
-			withChains[rule.From] = append(withChains[rule.From], rule.To)
+			_, ok := withChains[rule.From]
+			if !ok {
+				withChains[rule.From] = make(map[string]interface{}, 0)
+			}
+			withChains[rule.From][rule.To] = nil
 		} else {
-			noChains[rule.From] = append(noChains[rule.From], rule.To)
+			_, ok := noChains[rule.From]
+			if !ok {
+				noChains[rule.From] = make(map[string]interface{}, 0)
+			}
+			noChains[rule.From][rule.To] = nil
 		}
 	}
 

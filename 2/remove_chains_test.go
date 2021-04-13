@@ -51,3 +51,46 @@ func Test_RemoveChains1(t *testing.T) {
 		t.Fatalf("Ожидание и реальность не сошлись: %s", err)
 	}
 }
+
+func Test_RemoveChains2(t *testing.T) {
+	var G = internal.CFR{
+		N: []string{"A", "B", "C", "D"},
+		T: []string{"a", "b"},
+		S: []string{"A"},
+		P: internal.Rules{
+			{From: "A", To: "bab"},
+			{From: "A", To: "aba"},
+			{From: "A", To: "B"},
+			{From: "B", To: "A"},
+			{From: "B", To: "C"},
+			{From: "B", To: "D"},
+			{From: "D", To: "a"},
+		},
+	}
+
+	var expected = internal.CFR{
+		N: []string{"A", "B", "D"},
+		T: []string{"a", "b"},
+		S: []string{"A"},
+		P: internal.Rules{
+			{From: "A", To: "bab"},
+			{From: "A", To: "aba"},
+			{From: "B", To: "bab"},
+			{From: "B", To: "aba"},
+			{From: "B", To: "a"},
+			{From: "D", To: "a"},
+		},
+	}
+
+	var real = G.RemoveChains()
+
+	if err := expected.IsSame(real); err != nil {
+		log.Println("Ожидалось:", expected.N)
+		log.Println("Получено:", real.N)
+		log.Println("Ожидалось:", expected.P)
+		log.Println("Получено:", real.P)
+		t.Fatalf("Ожидание и реальность не сошлись: %s", err)
+	}
+}
+
+//!!!!!!!!!!!!!!! устранение цепных правил не есть устранение циклов

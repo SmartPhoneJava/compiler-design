@@ -44,6 +44,18 @@ func (r Rules) DeleteE() Rules {
 	return r
 }
 
+// DeleteItSelf - удалить ведущие сами на себя вершины
+func (r Rules) DeleteItSelf() Rules {
+	var rr Rules
+	for _, rule := range r {
+		if rule.From == rule.To {
+			continue
+		}
+		rr = append(rr, rule)
+	}
+	return rr
+}
+
 // HasDirectLeftRecursion - проверить, есть ли
 //  прямая левая рекурсия в наборе правил
 func (rules Rules) HasDirectLeftRecursion(

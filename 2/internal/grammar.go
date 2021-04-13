@@ -165,7 +165,7 @@ func (cfr CFR) ElrWithE2(isBook bool) CFR {
 	return CFR{
 		N: newSymbols,
 		T: cfr.T,
-		P: newRules.DeleteE(),
+		P: newRules.DeleteE().DeleteItSelf(),
 		S: cfr.S,
 	}
 }
@@ -617,68 +617,29 @@ func (cfr CFR) RemoveLambda() CFR {
 /*
 Правила вида A -> B, где A и B нетермы одной
  грамматики, будем называть цепными.
-
- Не работает с грамматикой, содержащей левую рекурсию
 */
 func (cfr CFR) RemoveChains() CFR {
 	var (
 		// Обновленные правила
 		mapNewRules = make(map[string]Rule)
-
-		// Посещенные цепные правила
-		mapVisited = make(map[string]interface{})
-		queue      = []Rule{}
-	)
-
-	// O(P)
-	for _, rule := range cfr.P {
-		if cfr.isChainRule(rule) {
-			// Помещаем все цепные правила в очередь обработки
-			_, ok := mapVisited[rule.ID()]
-			if ok {
-				continue
-			}
-			mapVisited[rule.ID()] = true
-			queue = append(queue, rule)
-		} else {
-			// Помещаем все нецепные правила в новый список правил
-			mapNewRules[rule.ID()] = Rule{
-				From: rule.From,
-				To:   rule.To,
-			}
-		}
-	}
-
-	var (
-		// O(P)
+		// цепные правила и остальные
 		withChains, noChains = cfr.groupByChains()
-		// На случай, если передана рекурсивная грамматика
-		// нельзя дать циклу ниже уйти в бесконечное исполнение
-		repeater = 100000
-		i        = 0
 	)
 
-	// Обработка цепных правил
-	for len(queue) > 0 {
-		i++
-		if i > repeater {
-			log.Fatal("Не удалось досчитать")
+	for _, originFrom := range cfr.N {
+		ntGroup, ok := withChains[originFrom]
+		if !ok {
+			ntGroup = make(map[string]interface{})
 		}
-
-		head := queue[0]
-		queue = queue[1:]
-
-		for _, to := range noChains[head.To] {
-			mapNewRules[head.From+to] = Rule{
-				From: head.From,
-				To:   to,
+		ntGroup[originFrom] = nil
+		for from, allTo := range noChains {
+			_, found := ntGroup[from]
+			for to := range allTo {
+				if found {
+					r := Rule{From: originFrom, To: to}
+					mapNewRules[r.ID()] = r
+				}
 			}
-		}
-		for _, to := range withChains[head.To] {
-			queue = append(queue, Rule{
-				From: head.From,
-				To:   to,
-			})
 		}
 	}
 
