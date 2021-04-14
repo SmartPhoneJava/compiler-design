@@ -13,10 +13,8 @@ func (rules Rules) MarkLeftRecursives() map[string]bool {
 	)
 	for _, rule := range rules {
 		if rule.IsLeftRecursive() {
-			_, ok := noneTerminalsMap[rule.From]
-			if !ok {
-				noneTerminalsMap[rule.From] = true
-			}
+			noneTerminalsMap[rule.From] = true
+
 		}
 	}
 	return noneTerminalsMap

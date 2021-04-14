@@ -81,6 +81,10 @@ func (cfr CFR) EliminateLeftRecursion() CFR {
 				alpha, beta = cfr.P.Filter(r.From, LeftRecursion).AlphaBeta(r.From)
 				marked      = r.NewMarked()
 			)
+
+			if len(beta) == 0 {
+				beta = append(beta, Rule{To: " "})
+			}
 			var (
 				betas          = beta.GetRPart()
 				betasWithNewA  = beta.Add(marked).GetRPart()
@@ -123,7 +127,6 @@ func (cfr CFR) ElrWithE2(isBook bool) CFR {
 
 	for i := 0; i < len(cfr.N); i++ {
 		var Aᵢ = cfr.N[i]
-
 		for j := 0; j < i; j++ {
 			var (
 				A𝚥    = cfr.N[j]
@@ -303,8 +306,10 @@ func (cfr CFR) RemoveUnreachableNonterminal() CFR {
 	}
 	var (
 		mapVisited = make(map[string]interface{})
-		fromTo     = cfr.buildDistMap()
-		queue      = make([]string, len(cfr.S))
+		// делаем матрицу перемещений первого уровня, куда можно попасть
+		// из текущего нетерма
+		fromTo = cfr.buildDistMap()
+		queue  = make([]string, len(cfr.S))
 	)
 	copy(queue, cfr.S)
 
@@ -312,7 +317,8 @@ func (cfr CFR) RemoveUnreachableNonterminal() CFR {
 	for len(queue) > 0 {
 		head := queue[0]
 		queue = queue[1:]
-		// O(1)
+		// Проход по всем нетермам, в которые можно попасть из
+		// текущего нетерма
 		for _, to := range fromTo[head] {
 			_, ok := mapVisited[to]
 			if ok {
@@ -380,6 +386,7 @@ func (cfr CFR) RemoveNongeneratingNonterminal() CFR {
 		queue = []string{}
 	)
 
+	// найдем порождающие нетермы
 	for i, q := range cfr.P {
 		var (
 			noneTerms = cfr.toNoneTerminalsMap(q.To)
@@ -389,12 +396,14 @@ func (cfr CFR) RemoveNongeneratingNonterminal() CFR {
 			}
 		)
 
-		ruleCounter[&rterms] = nil //len(noneTerms)
+		ruleCounter[&rterms] = nil
+		// нетерм является порождающим
 		if len(noneTerms) == 0 {
 			_, ok := mapVisited[q.From]
 			if ok {
 				continue
 			}
+			// занесем его в очередь
 			queue = append(queue, q.From)
 			mapVisited[q.From] = nil
 		}
