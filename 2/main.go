@@ -6,6 +6,10 @@ import (
 	"lab2/parsing"
 	"log"
 	"os"
+	"strings"
+	"time"
+
+	"github.com/buger/goterm"
 )
 
 const (
@@ -21,6 +25,53 @@ const (
 )
 
 func main() {
+	goterm.Clear() // Clear current screen
+
+	// for {
+	// 	// By moving cursor to top-left position we ensure that console output
+	// 	// will be overwritten each time, instead of adding new.
+	// 	goterm.MoveCursor(1, 1)
+
+	// 	goterm.Println("Current Time:", time.Now().Format(time.RFC1123))
+
+	// 	goterm.Flush() // Call it every time at the end of rendering
+
+	// 	time.Sleep(time.Second)
+	// }
+	// goterm.Clear()
+	mainLab3()
+}
+
+func mainLab3() {
+	var inputPath = "g5.json"
+	//log.Println("Введите название файла, откуда будет загружена грамматика:")
+	//fmt.Scanf("%s\n", &inputPath)
+
+	// var outputPath string
+	// log.Println("Введите название файла, куда будет записана новая грамматика:")
+	// fmt.Scanf("%s\n", &outputPath)
+
+	c, err := parsing.MakeGrammar(inputPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	lexer, err := c.ToLexer()
+	if err != nil {
+		log.Fatalf("%s", err.Error())
+	}
+	lexer.Print("Грамматика загружена:")
+	time.Sleep(time.Second)
+	var text = "{ }"
+	_, err = lexer.Start.GoTo(strings.Split(text, " "), 0)
+	if err != nil {
+		goterm.Println("Произошла ошибка", err)
+	} else {
+		goterm.Println("Успех")
+	}
+	goterm.Flush()
+}
+
+func mainLab2() {
 
 	var inputPath string
 	log.Println("Введите название файла, откуда будет загружена грамматика:")

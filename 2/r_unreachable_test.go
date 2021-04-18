@@ -115,3 +115,76 @@ func Test_RemoveUnreachableNonterminal2(t *testing.T) {
 		t.Fatalf("Ожидание и реальность не сошлись: %s", err)
 	}
 }
+
+// func Test_RemoveNoneGerenerating(t *testing.T) {
+// 	var G = internal.CFR{
+// 		N: []string{"S"},
+// 		T: []string{"a", "b"},
+// 		S: []string{"S"},
+// 		P: internal.Rules{
+// 			{From: "S", To: "A"},
+// 			{From: "B", To: "a"},
+// 		},
+// 	}
+
+// 	var expectedNoneGenerating = internal.CFR{
+// 		N: []string{"S", "B"},
+// 		T: []string{"a", "b"},
+// 		S: []string{"S"},
+// 		P: internal.Rules{
+// 			{From: "S", To: "bB"},
+// 			{From: "B", To: "aB"},
+// 			{From: "B", To: "bS"},
+// 			{From: "B", To: "a"},
+// 			{From: "B", To: "b"},
+// 		},
+// 	}
+
+// 	var realNoneGenerating = G.RemoveNongeneratingNonterminal()
+
+// 	if err := expectedNoneGenerating.IsSame(realNoneGenerating); err != nil {
+// 		log.Println("1.Ожидалось:", expectedNoneGenerating.N)
+// 		log.Println("1. Получено:", realNoneGenerating.N)
+// 		log.Println("1. Ожидалось:", expectedNoneGenerating.P)
+// 		log.Println("1. Получено:", realNoneGenerating.P)
+// 		t.Fatalf("Ожидание и реальность не сошлись: %s", err)
+// 	}
+// }
+
+// // http://mathhelpplanet.com/static.php?p=privedennaya-forma-ks-grammatiki
+// func Test_RemoveUnreachableNonterminal1(t *testing.T) {
+// 	var G = internal.CFR{
+// 		N: []string{"S"},
+// 		T: []string{"a"},
+// 		S: []string{"S"},
+// 		P: internal.Rules{
+// 			{From: "S", To: "SS"},
+// 			//{From: "S", To: "a"},
+// 		},
+// 	}
+
+// 	var expectedNoneGenerating = internal.CFR{
+// 		N: []string{"S", "B"},
+// 		T: []string{"a", "b"},
+// 		S: []string{"S"},
+// 		P: internal.Rules{
+// 			{From: "S", To: "bB"},
+// 			{From: "B", To: "aB"},
+// 			{From: "B", To: "bS"},
+// 			{From: "B", To: "a"},
+// 			{From: "B", To: "b"},
+// 		},
+// 	}
+
+// 	var realNoneGenerating = G.EliminateLeftRecursion()
+
+// 	realNoneGenerating.Print("Тест:")
+
+// 	if err := expectedNoneGenerating.IsSame(realNoneGenerating); err != nil {
+// 		log.Println("1.Ожидалось:", expectedNoneGenerating.N)
+// 		log.Println("1. Получено:", realNoneGenerating.N)
+// 		log.Println("1. Ожидалось:", expectedNoneGenerating.P)
+// 		log.Println("1. Получено:", realNoneGenerating.P)
+// 		t.Fatalf("Ожидание и реальность не сошлись: %s", err)
+// 	}
+// }

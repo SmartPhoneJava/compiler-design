@@ -1,7 +1,11 @@
 package parsing
 
 import (
+	"errors"
+	"fmt"
 	"lab2/internal"
+	"lab2/internal/g5"
+	"log"
 )
 
 //грамматика это четверка
@@ -74,6 +78,50 @@ func (cg ContextGrammar) ToInternal() internal.CFR {
 		P: p,
 		T: t,
 	}
+}
+
+func (cg ContextGrammar) ToLexer() (g5.Lexer, error) {
+	var lexer = &g5.Lexer{
+		NonTerms: make(map[string]*g5.Resolver, 0),
+		Terms:    make(map[string]bool, 0),
+	}
+
+	for _, nonterm := range cg.Nonterms {
+		lexer.NonTerms[nonterm.Name] = &g5.Resolver{
+			Symbol: nonterm.Name,
+			Lexer:  lexer,
+		}
+
+	}
+	for _, term := range cg.Terms {
+		lexer.Terms[term.Name] = true
+	}
+	log.Println("sg.Start", cg.Start)
+	for _, start := range cg.Start {
+		var ok bool
+		lexer.Start, ok = lexer.NonTerms[start.Name]
+		if !ok {
+			return *lexer, errors.New("Не найден стартовый нетерм")
+		}
+	}
+	for _, rule := range cg.Rules {
+		resolver, ok := lexer.NonTerms[rule.LeftSide.Name]
+		if !ok {
+			return *lexer, fmt.Errorf("Не найден нетерм правила %s", rule.LeftSide.Name)
+		}
+		var rightPart []g5.Symbol
+		for _, right := range rule.RightSide {
+			rightPart = append(rightPart, g5.Symbol{
+				Value:  right.Name,
+				IsTerm: right.Type == "term",
+			})
+		}
+		resolver.Rules = append(resolver.Rules, g5.Rule{
+			Symbols: rightPart,
+		})
+		lexer.NonTerms[rule.LeftSide.Name] = resolver
+	}
+	return *lexer, nil
 }
 
 func (cg *ContextGrammar) FromInternal(cfr internal.CFR) {
