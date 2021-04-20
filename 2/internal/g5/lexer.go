@@ -3,7 +3,7 @@ package g5
 import (
 	"fmt"
 	"log"
-	"time"
+	"strings"
 
 	"github.com/buger/goterm"
 	"github.com/fatih/color"
@@ -76,6 +76,22 @@ type Symbols []Symbol
 // 	}
 // }
 
+func (lexer Lexer) Validate(text string, isDebug bool) error {
+	var (
+		rows         = strings.Split(strings.Replace(text, "\n", "", 0), " ")
+		comprassions int
+		success      bool
+	)
+	_, err := lexer.Start.GoTo(rows, 0, isDebug, &success, &comprassions)
+	if isDebug {
+		goterm.Println("Comprassions: ", comprassions)
+		goterm.Flush()
+	}
+	return err
+
+}
+
+// !! вынести в отдельный тип __IDENT и иже с ними
 // Print - распечатать грамматику
 func (lexer Lexer) Print(text string) {
 	log.Println(text)
@@ -127,6 +143,7 @@ func (lexer Lexer) PrintState(
 	currentResolverSymbol string,
 	currentTextIndex, currentRuleI, currentSymbolI int,
 ) {
+	goterm.Clear()
 	goterm.MoveCursor(1, 1)
 
 	goterm.Println("Рассматриваемые индексы:")
@@ -146,6 +163,7 @@ func (lexer Lexer) PrintState(
 
 	goterm.Println("Рассматриваемый код:")
 	for i, row := range text {
+		//goterm.Println("currentTextIndex", i, row, currentTextIndex)
 		if i == currentTextIndex {
 			row = color.CyanString(row)
 		}
@@ -154,7 +172,7 @@ func (lexer Lexer) PrintState(
 
 	//sort.Sort(cfr.P)
 
-	goterm.Println("Разбор:")
+	goterm.Println("Разбор:", currentResolverSymbol)
 	for nt, res := range lexer.NonTerms {
 		for i, rule := range res.Rules {
 			var right string
@@ -167,16 +185,21 @@ func (lexer Lexer) PrintState(
 					right += " <" + color.YellowString(s.Value) + "> "
 				}
 			}
-			if i == currentRuleI && res.Symbol == currentResolverSymbol {
-				nt = color.RedString(nt)
+			if i == currentRuleI {
+				if res.Symbol == currentResolverSymbol {
+					nt = color.RedString(nt)
+					goterm.Printf("%s → %s\n", nt, right)
+				} else {
+					nt = color.YellowString(nt)
+				}
+
 			} else {
 				nt = color.YellowString(nt)
 			}
-			goterm.Printf("%s → %s\n", nt, right)
+
 		}
 	}
 
 	goterm.Flush()
-	goterm.Clear()
-	time.Sleep(time.Second)
+	//time.Sleep(time.Second / 5)
 }

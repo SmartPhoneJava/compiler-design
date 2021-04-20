@@ -6,8 +6,6 @@ import (
 	"lab2/parsing"
 	"log"
 	"os"
-	"strings"
-	"time"
 
 	"github.com/buger/goterm"
 )
@@ -60,9 +58,8 @@ func mainLab3() {
 		log.Fatalf("%s", err.Error())
 	}
 	lexer.Print("Грамматика загружена:")
-	time.Sleep(time.Second)
-	var text = "{ }"
-	_, err = lexer.Start.GoTo(strings.Split(text, " "), 0)
+	err = lexer.Validate(`{ a = 5 ; }`, true)
+	//_, err = lexer.Start.GoTo(strings.Split(text, " "), 0, true)
 	if err != nil {
 		goterm.Println("Произошла ошибка", err)
 	} else {

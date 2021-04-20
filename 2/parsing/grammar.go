@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"lab2/internal"
 	"lab2/internal/g5"
-	"log"
 )
 
 //грамматика это четверка
@@ -96,7 +95,6 @@ func (cg ContextGrammar) ToLexer() (g5.Lexer, error) {
 	for _, term := range cg.Terms {
 		lexer.Terms[term.Name] = true
 	}
-	log.Println("sg.Start", cg.Start)
 	for _, start := range cg.Start {
 		var ok bool
 		lexer.Start, ok = lexer.NonTerms[start.Name]

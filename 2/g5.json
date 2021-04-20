@@ -125,6 +125,7 @@
         { "-name": "блок"},
         { "-name": "список операторов"},
         { "-name": "оператор"},
+        { "-name": "идентификатор"},
         { "-name": "хвост"}
       ]
     },
@@ -137,10 +138,17 @@
               {
                 "-type": "nonterm",
                 "-name": "отношение"
-              },
+              }
+            ]
+          }
+        },
+        {
+          "lhs": { "-name": "выражение" },
+          "rhs": {
+            "symbol": [
               {
-                "-type": "term",
-                "-name": "{"
+                "-type": "nonterm",
+                "-name": "отношение"
               },
               {
                 "-type": "nonterm",
@@ -149,10 +157,17 @@
               {
                 "-type": "nonterm",
                 "-name": "отношение"
-              },
+              }
+            ]
+          }
+        },
+        {
+          "lhs": { "-name": "отношение" },
+          "rhs": {
+            "symbol": [
               {
-                "-type": "term",
-                "-name": "}"
+                "-type": "nonterm",
+                "-name": "простое выражение"
               }
             ]
           }
@@ -166,20 +181,12 @@
                 "-name": "простое выражение"
               },
               {
-                "-type": "term",
-                "-name": "["
-              },
-              {
                 "-type": "nonterm",
                 "-name": "операция отношения"
               },
               {
                 "-type": "nonterm",
                 "-name": "простое выражение"
-              },
-              {
-                "-type": "term",
-                "-name": "]"
               }
             ]
           }
@@ -189,24 +196,34 @@
           "rhs": {
             "symbol": [
               {
-                "-type": "term",
-                "-name": "["
-              },
-              {
                 "-type": "nonterm",
                 "-name": "унарная аддитивная операция"
               },
               {
-                "-type": "term",
-                "-name": "]"
-              },
+                "-type": "nonterm",
+                "-name": "слагаемое"
+              }
+            ]
+          }
+        },
+        {
+          "lhs": { "-name": "простое выражение" },
+          "rhs": {
+            "symbol": [
               {
                 "-type": "nonterm",
                 "-name": "слагаемое"
-              },
+              }
+            ]
+          }
+        },
+        {
+          "lhs": { "-name": "простое выражение" },
+          "rhs": {
+            "symbol": [
               {
-                "-type": "term",
-                "-name": "{"
+                "-type": "nonterm",
+                "-name": "слагаемое"
               },
               {
                 "-type": "nonterm",
@@ -215,10 +232,29 @@
               {
                 "-type": "nonterm",
                 "-name": "слагаемое"
+              }
+            ]
+          }
+        },
+        {
+          "lhs": { "-name": "простое выражение" },
+          "rhs": {
+            "symbol": [
+              {
+                "-type": "nonterm",
+                "-name": "унарная аддитивная операция"
               },
               {
-                "-type": "term",
-                "-name": "}"
+                "-type": "nonterm",
+                "-name": "слагаемое"
+              },
+              {
+                "-type": "nonterm",
+                "-name": "бинарная аддитивная операция"
+              },
+              {
+                "-type": "nonterm",
+                "-name": "слагаемое"
               }
             ]
           }
@@ -232,20 +268,23 @@
                 "-name": "множитель"
               },
               {
-                "-type": "term",
-                "-name": "{"
-              },
-              {
                 "-type": "nonterm",
                 "-name": "мультипликативная операция"
               },
               {
                 "-type": "nonterm",
                 "-name": "множитель"
-              },
+              }
+            ]
+          }
+        },
+        {
+          "lhs": { "-name": "слагаемое" },
+          "rhs": {
+            "symbol": [
               {
-                "-type": "term",
-                "-name": "}"
+                "-type": "nonterm",
+                "-name": "множитель"
               }
             ]
           }
@@ -260,19 +299,22 @@
               },
               {
                 "-type": "term",
-                "-name": "{"
-              },
-              {
-                "-type": "term",
                 "-name": "**"
               },
               {
                 "-type": "nonterm",
                 "-name": "первичное"
-              },
+              }
+            ]
+          }
+        },
+        {
+          "lhs": { "-name": "множитель" },
+          "rhs": {
+            "symbol": [
               {
-                "-type": "term",
-                "-name": "}"
+                "-type": "nonterm",
+                "-name": "первичное"
               }
             ]
           }
@@ -312,8 +354,8 @@
           "rhs": {
             "symbol": [
               {
-                "-type": "nonterm",
-                "-name": "числовой литерал"
+                "-type": "term",
+                "-name": "__NUMBER"
               }
             ]
           }
@@ -323,8 +365,8 @@
           "rhs": {
             "symbol": [
               {
-                "-type": "nonterm",
-                "-name": "имя"
+                "-type": "term",
+                "-name": "__IDENT"
               }
             ]
           }
@@ -604,11 +646,52 @@
             "symbol": [
               {
                 "-type": "nonterm",
-                "-name": "выражение"
+                "-name": "оператор"
               }, 
               {
                 "-type": "nonterm",
                 "-name": "хвост"
+              }
+            ]
+          }
+        }, 
+        {
+          "lhs": { "-name": "оператор" },
+          "rhs": {
+            "symbol": [
+              {
+                "-type": "nonterm",
+                "-name": "идентификатор"
+              }, 
+              {
+                "-type": "term",
+                "-name": "="
+              },
+              {
+                "-type": "nonterm",
+                "-name": "выражение"
+              }
+            ]
+          }
+        }, 
+        {
+          "lhs": { "-name": "оператор" },
+          "rhs": {
+            "symbol": [
+              {
+                "-type": "nonterm",
+                "-name": "блок"
+              }
+            ]
+          }
+        }, 
+        {
+          "lhs": { "-name": "идентификатор" },
+          "rhs": {
+            "symbol": [
+              {
+                "-type": "term",
+                "-name": "__ANY"
               }
             ]
           }
@@ -623,7 +706,7 @@
               }, 
               {
                 "-type": "nonterm",
-                "-name": "выражение"
+                "-name": "оператор"
               },
               {
                 "-type": "nonterm",
@@ -638,7 +721,7 @@
             "symbol": [
               {
                 "-type": "term",
-                "-name": "e"
+                "-name": ";"
               }
             ]
           }
