@@ -2,10 +2,84 @@ package g5
 
 import (
 	"errors"
+	"log"
+	"time"
 
 	"github.com/buger/goterm"
 	"github.com/fatih/color"
 )
+
+func (r Resolver) handleReserved(
+	value string,
+	index int,
+	current, next map[int]int,
+	isDebug bool,
+) {
+	current[index] = IndexStatusFound
+	next[index+1] = 0
+	if isDebug {
+		goterm.Println(color.GreenString("Терм найден"))
+		goterm.Flush()
+	}
+}
+
+func (r Resolver) handleTerm(
+	input []string,
+	value string,
+	index int,
+	current, next map[int]int,
+	isDebug bool,
+) {
+	if input[index] == value {
+		current[index] = IndexStatusFound
+		next[index+1] = 0
+		if isDebug {
+			goterm.Println(color.GreenString("Терм найден"))
+			goterm.Flush()
+		}
+	}
+}
+
+func (r Resolver) handleNonTerm(
+	input []string,
+	value string,
+	index int,
+	current, next map[int]int,
+	isDebug bool,
+	finishedSuccess *bool,
+	comprassions *int,
+	speed time.Duration,
+) {
+	newResolver, ok := r.Lexer.NonTerms[value]
+	if !ok {
+		current[index] = IndexStatusNotFound
+		return
+	}
+
+	if isDebug {
+		goterm.Println(color.GreenString("Переходим в новый нетерм: " + value))
+		goterm.Flush()
+	}
+	lm, err := newResolver.GoTo(
+		input, index, isDebug, finishedSuccess,
+		comprassions, speed,
+	)
+	if *finishedSuccess {
+		return
+	}
+	if err != nil {
+		current[index] = IndexStatusNotFound
+		return
+	}
+	if len(lm) > 0 {
+		current[index] = IndexStatusFound
+		for newI := range lm {
+			next[newI] = 0
+		}
+	} else {
+		current[index] = IndexStatusNotFound
+	}
+}
 
 // принимает на вход массив всех символов сканируемого текста
 // и указатель на текущий символ
@@ -17,103 +91,69 @@ func (r Resolver) GoTo(
 	isDebug bool,
 	finishedSuccess *bool,
 	comprassions *int,
+	speed time.Duration,
 ) (map[int]interface{}, error) {
 	if len(input) <= inputI {
 		return nil, errors.New("указатель за пределы массива")
 	}
 
-	// var currInput = input[inputI]
-	// var foundRules = make(Rules, 0)
-	// for _, rule := range r.Rules {
-	// 	// Если первый символ правой части совпал, значит правило подходит
-	// 	for _, s := range rule.Symbols {
-	// 		if currInput == s.Value {
-	// 			foundRules = append(foundRules, rule)
-	// 		}
-	// 		break
-	// 	}
-	// }
-
 	// Мапка новых индексов
 	var newIndexes = make(map[int]interface{}, 0)
 	for ri, rule := range r.Rules {
-		//var allSymbolsFound = true
-
 		var ruleI = make(map[int]int, 0)
 		ruleI[inputI] = 0
 
 		for si, s := range rule.Symbols {
 			var symbolI = make(map[int]int, 0)
-			//log.Println("ruleI", si, s.Value, len(rule.Symbols), ruleI)
 			for index := range ruleI {
-				//	log.Println("symbolI", symbolI)
 				if isDebug {
-					r.Lexer.PrintState(input, ruleI, r.Symbol, index, ri, si)
+					r.Lexer.PrintState(
+						input, ruleI, r.Symbol,
+						index, ri, si, speed,
+					)
 				}
 				if index >= len(input) {
 					ruleI[index] = IndexStatusNotFound
 					continue
 				}
 				*comprassions++
-				if s.IsTerm {
-					if s.Value == "__EMPTY" {
-						//	log.Println("found", index)
-						ruleI[index] = IndexStatusFound
-						symbolI[index] = 0
-						//	log.Println("want symbolI", symbolI)
-						goterm.Println(color.GreenString("Терм найден"))
-						goterm.Flush()
-					}
-					if input[index] == s.Value || s.Value == "__ANY" || s.Value == "__NUMBER" || s.Value == "__IDENT" {
-						//	log.Println("found", index)
-						ruleI[index] = IndexStatusFound
-						symbolI[index+1] = 0
-						//	log.Println("want symbolI", symbolI)
-						goterm.Println(color.GreenString("Терм найден"))
-						goterm.Flush()
-					}
-				} else {
-					newResolver, ok := r.Lexer.NonTerms[s.Value]
-					if !ok {
-						ruleI[index] = IndexStatusNotFound
-						continue
-					}
-
-					goterm.Println(color.GreenString("Переходим в новый нетерм: " + s.Value))
-					goterm.Flush()
-					lm, err := newResolver.GoTo(input, index, isDebug, finishedSuccess, comprassions)
+				switch s.Type {
+				case Reserved:
+					r.handleReserved(
+						s.Value, index, ruleI, symbolI, isDebug,
+					)
+				case Term:
+					r.handleTerm(
+						input, s.Value, index, ruleI,
+						symbolI, isDebug,
+					)
+				case NonTerm:
+					r.handleNonTerm(
+						input, s.Value, index, ruleI,
+						symbolI, isDebug, finishedSuccess,
+						comprassions, speed,
+					)
 					if *finishedSuccess {
 						return nil, nil
 					}
-					//log.Println("returned", len(lm), err)
-					if err != nil {
-						ruleI[index] = IndexStatusNotFound
-						continue
-					}
-					if len(lm) > 0 {
-						ruleI[index] = IndexStatusFound
-						for newI := range lm {
-							symbolI[newI] = 0
-						}
-					} else {
-						ruleI[index] = IndexStatusNotFound
-					}
-
 				}
 			}
 			ruleI = map[int]int{}
-			//log.Println("symbolIsymbolI", symbolI)
 			for i := range symbolI {
 				ruleI[i] = 0
 			}
 		}
-		if len(ruleI) > 0 {
-			goterm.Println(color.GreenString("Правило подошло"))
-		} else {
-			goterm.Println(color.RedString("Правило не подошло"))
+		if isDebug {
+			var text string
+			if len(ruleI) > 0 {
+				text = color.GreenString("Правило подошло")
+			} else {
+				text = color.RedString("Правило не подошло")
+			}
+			goterm.Println(text)
+			goterm.Flush()
 		}
-		goterm.Flush()
-		//log.Println("xit", len(ruleI))
+
 		for i := range ruleI {
 			newIndexes[i] = true
 		}
@@ -128,11 +168,106 @@ func (r Resolver) GoTo(
 		}
 	}
 
-	//log.Println("return newIndexes", newIndexes)
-	//goterm.Println("newIndexes", len(newIndexes))
 	if len(newIndexes) == 0 {
 		return newIndexes, errors.New("Грамматика покрывает не весь код")
 	}
 
 	return newIndexes, nil
+}
+
+// !! написать тесты
+
+// Множество строк
+type StringSet map[string]interface{}
+
+// Множество нетермов, где каждому соответсвует множество строк
+type NoneTermsSet map[string]StringSet
+
+func (set NoneTermsSet) Println(text string) {
+	log.Println(text)
+	for nt, ts := range set {
+		var right string
+		for term := range ts {
+			right += term + " "
+		}
+		log.Printf("%s -> { %s}\n", nt, right)
+	}
+}
+
+// https://neerc.ifmo.ru/wiki/index.php?title=Построение_FIRST_и_FOLLOW
+func (lexer Lexer) ConstructFirst() NoneTermsSet {
+	var first = make(NoneTermsSet, 0)
+	for nt := range lexer.NonTerms {
+		first[nt] = make(StringSet, 0)
+	}
+	var changed = true
+	for changed {
+		changed = false
+		for noneTerm, r := range lexer.NonTerms {
+			var beforeLen = len(first[noneTerm])
+			for _, rule := range r.Rules {
+				for _, s := range rule.Symbols {
+					if s.Type == Term {
+						first[noneTerm][s.Value] = nil
+					} else if s.Type == NonTerm {
+						for term := range first[s.Value] {
+							first[noneTerm][term] = nil
+						}
+					}
+				}
+			}
+			var afterLen = len(first[noneTerm])
+			if beforeLen != afterLen {
+				changed = true
+			}
+		}
+	}
+	return first
+}
+
+// https://neerc.ifmo.ru/wiki/index.php?title=Построение_FIRST_и_FOLLOW
+func (lexer Lexer) ConstructFollow(first NoneTermsSet) NoneTermsSet {
+	var follow = make(NoneTermsSet, 0)
+	for nt := range lexer.NonTerms {
+		follow[nt] = make(StringSet, 0)
+	}
+	// в стартовый нетерминал помещается символ конца строки
+	follow[lexer.Start.Symbol]["$"] = nil
+
+	var changed = true
+	for changed {
+		changed = false
+		// for (A→α∈P)
+		for A, r := range lexer.NonTerms {
+			for _, rule := range r.Rules {
+				// for (B:α=βBγ)
+				for i, s := range rule.Symbols {
+					if s.Type == NonTerm {
+						B := s.Value
+						var beforeLen = len(follow[s.Value])
+
+						// FOLLOW[B] ∪= FIRST(γ)
+						for j := i; j < len(rule.Symbols); j++ {
+							if s.Type == Term {
+								γ := s.Value
+								follow[B][γ] = nil
+							}
+						}
+
+						//  FOLLOW[B] ∪= FOLLOW[A]
+						for term := range follow[A] {
+							follow[B][term] = nil
+						}
+
+						// changed = true if FOLLOW[B] изменился
+						var afterLen = len(follow[s.Value])
+						if beforeLen != afterLen {
+							changed = true
+						}
+					}
+				}
+			}
+		}
+	}
+	return follow
 }

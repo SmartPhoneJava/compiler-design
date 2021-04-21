@@ -354,7 +354,7 @@
           "rhs": {
             "symbol": [
               {
-                "-type": "term",
+                "-type": "reserved",
                 "-name": "__NUMBER"
               }
             ]
@@ -365,7 +365,7 @@
           "rhs": {
             "symbol": [
               {
-                "-type": "term",
+                "-type": "reserved",
                 "-name": "__IDENT"
               }
             ]
@@ -690,7 +690,7 @@
           "rhs": {
             "symbol": [
               {
-                "-type": "term",
+                "-type": "reserved",
                 "-name": "__ANY"
               }
             ]

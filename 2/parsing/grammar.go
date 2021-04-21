@@ -110,8 +110,8 @@ func (cg ContextGrammar) ToLexer() (g5.Lexer, error) {
 		var rightPart []g5.Symbol
 		for _, right := range rule.RightSide {
 			rightPart = append(rightPart, g5.Symbol{
-				Value:  right.Name,
-				IsTerm: right.Type == "term",
+				Value: right.Name,
+				Type:  right.Type,
 			})
 		}
 		resolver.Rules = append(resolver.Rules, g5.Rule{

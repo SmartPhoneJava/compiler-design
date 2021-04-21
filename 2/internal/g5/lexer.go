@@ -4,94 +4,51 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/buger/goterm"
 	"github.com/fatih/color"
 )
 
-type Lexer struct {
-	// ключ - нетерм, значение - распознаватель
-	NonTerms map[string]*Resolver
-	// Термы в мапе для быстрого поиска
-	Terms map[string]bool
-	Start *Resolver
-}
-
-type Resolver struct {
-	Rules
-	Symbol string
-	Lexer  *Lexer
-}
-
-type Rule struct {
-	Symbols Symbols
-}
-
-type Rules []Rule
-
-type Symbol struct {
-	Value  string
-	IsTerm bool
-}
-
-type Symbols []Symbol
-
-// func (l Lexer) ToCFR() internal.CFR {
-// 	// сделать приведение туда и обратно через хэши
-// 	var (
-// 		// N — конечный алфавит нетерминальных символов
-// 		n []string
-// 		// T —  конечный алфавит терминальных символов
-// 		t []string
-// 		// P — конечное множество правил порождения
-// 		p internal.Rules
-// 		// S — начальный нетерминал грамматики G
-// 		s []string
-// 	)
-// 	for _, nonterm := range cg.Nonterms {
-// 		n = append(n, nonterm.Name)
-// 	}
-// 	for _, term := range cg.Terms {
-// 		t = append(t, term.Name)
-// 	}
-// 	for _, start := range cg.Start {
-// 		s = append(s, start.Name)
-// 	}
-// 	for _, rule := range cg.Rules {
-// 		var rightPart string
-// 		for _, right := range rule.RightSide {
-// 			rightPart += right.Name
-// 		}
-// 		p = append(p, internal.Rule{
-// 			From: rule.LeftSide.Name,
-// 			To:   rightPart,
-// 		})
-// 	}
-// 	println("P", len(p), len(cg.Rules))
-// 	return internal.CFR{
-// 		N: n,
-// 		S: s,
-// 		P: p,
-// 		T: t,
-// 	}
-// }
-
-func (lexer Lexer) Validate(text string, isDebug bool) error {
+func (lexer Lexer) ValidateDebug(text string, speed time.Duration) error {
 	var (
-		rows         = strings.Split(strings.Replace(text, "\n", "", 0), " ")
+		rows         = strings.Split(strings.ReplaceAll(text, "\n", ""), " ")
 		comprassions int
 		success      bool
 	)
-	_, err := lexer.Start.GoTo(rows, 0, isDebug, &success, &comprassions)
+	_, err := lexer.Start.GoTo(rows, 0, true, &success, &comprassions, speed)
+
+	goterm.Println("Comprassions: ", comprassions)
+	goterm.Flush()
+
+	return err
+}
+
+func (lexer Lexer) Validate(text string, isDebug bool) error {
+	var (
+		rows         = strings.Split(strings.ReplaceAll(text, "\n", ""), " ")
+		comprassions int
+		success      bool
+	)
+	_, err := lexer.Start.GoTo(rows, 0, isDebug, &success, &comprassions, 0)
 	if isDebug {
 		goterm.Println("Comprassions: ", comprassions)
 		goterm.Flush()
 	}
 	return err
-
 }
 
-// !! вынести в отдельный тип __IDENT и иже с ними
+func (lexer Lexer) ColorSymbol(s Symbol, right *string) {
+	switch s.Type {
+	case Term:
+		*right += color.GreenString(s.Value)
+	case NonTerm:
+		*right += " <" + color.YellowString(s.Value) + "> "
+	case Reserved:
+		*right += color.HiMagentaString(s.Value)
+	}
+}
+
 // Print - распечатать грамматику
 func (lexer Lexer) Print(text string) {
 	log.Println(text)
@@ -109,18 +66,12 @@ func (lexer Lexer) Print(text string) {
 	color.Cyan("Стартовый нетерм: \n")
 	fmt.Println(lexer.Start.Symbol)
 
-	//sort.Sort(cfr.P)
-
 	color.Cyan("Набор правил: \n")
 	for nt, res := range lexer.NonTerms {
 		for _, rule := range res.Rules {
 			var right string
 			for _, s := range rule.Symbols {
-				if s.IsTerm {
-					right += color.GreenString(s.Value)
-				} else {
-					right += " <" + color.YellowString(s.Value) + "> "
-				}
+				lexer.ColorSymbol(s, &right)
 			}
 			if lexer.Start.Symbol == nt {
 				nt = color.RedString(nt)
@@ -142,6 +93,7 @@ func (lexer Lexer) PrintState(
 	indexes map[int]int,
 	currentResolverSymbol string,
 	currentTextIndex, currentRuleI, currentSymbolI int,
+	speed time.Duration,
 ) {
 	goterm.Clear()
 	goterm.MoveCursor(1, 1)
@@ -163,7 +115,6 @@ func (lexer Lexer) PrintState(
 
 	goterm.Println("Рассматриваемый код:")
 	for i, row := range text {
-		//goterm.Println("currentTextIndex", i, row, currentTextIndex)
 		if i == currentTextIndex {
 			row = color.CyanString(row)
 		}
@@ -179,27 +130,27 @@ func (lexer Lexer) PrintState(
 			for j, s := range rule.Symbols {
 				if i == currentRuleI && j == currentSymbolI && res.Symbol == currentResolverSymbol {
 					right += color.RedString(s.Value)
-				} else if s.IsTerm {
-					right += color.GreenString(s.Value)
 				} else {
-					right += " <" + color.YellowString(s.Value) + "> "
+					lexer.ColorSymbol(s, &right)
 				}
 			}
 			if i == currentRuleI {
 				if res.Symbol == currentResolverSymbol {
 					nt = color.RedString(nt)
 					goterm.Printf("%s → %s\n", nt, right)
-				} else {
-					nt = color.YellowString(nt)
 				}
-
-			} else {
-				nt = color.YellowString(nt)
+				// else {
+				// 	nt = color.YellowString(nt)
+				// }
 			}
-
+			// else {
+			// 	nt = color.YellowString(nt)
+			// }
 		}
 	}
 
 	goterm.Flush()
-	//time.Sleep(time.Second / 5)
+	if speed != 0 {
+		time.Sleep(speed)
+	}
 }

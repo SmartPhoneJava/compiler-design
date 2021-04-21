@@ -1,0 +1,167 @@
+{
+  "grammar": {
+    "-name": "G0",
+    "terminalsymbols": {
+      "term": [
+        {
+          "-name": "+",
+          "-spell": "+"
+        },
+        {
+          "-name": "*",
+          "-spell": "*"
+        },
+        {
+          "-name": "n",
+          "-spell": "n"
+        },
+        {
+          "-name": "e",
+          "-spell": "e"
+        },
+        {
+          "-name": "(",
+          "-spell": "("
+        },
+        {
+          "-name": ")",
+          "-spell": ")"
+        }
+      ]
+    },
+    "nonterminalsymbols": {
+      "nonterm": [
+        { "-name": "E" }, 
+        { "-name": "E'" },
+        { "-name": "T" },
+        { "-name": "T'" },
+        { "-name": "F" }
+      ]
+    },
+    "productions": {
+      "production": [
+        {
+          "lhs": { "-name": "E" },
+          "rhs": {
+            "symbol": [
+              {
+                "-type": "nonterm",
+                "-name": "T"
+              },
+              {
+                "-type": "nonterm",
+                "-name": "E'"
+              }
+            ]
+          }
+        },
+        {
+          "lhs": { "-name": "E'" },
+          "rhs": {
+            "symbol": [
+              {
+                "-type": "term",
+                "-name": "+"
+              },
+              {
+                "-type": "nonterm",
+                "-name": "T"
+              },
+              {
+                "-type": "nonterm",
+                "-name": "E'"
+              }
+            ]
+          }
+        },
+        {
+          "lhs": { "-name": "E'" },
+          "rhs": {
+            "symbol": [
+              {
+                "-type": "term",
+                "-name": "e"
+              }
+            ]
+          }
+        },
+        {
+          "lhs": { "-name": "T" },
+          "rhs": {
+            "symbol": [
+              {
+                "-type": "nonterm",
+                "-name": "F"
+              },
+              {
+                "-type": "nonterm",
+                "-name": "T'"
+              }
+            ]
+          }
+        },
+        {
+          "lhs": { "-name": "T'" },
+          "rhs": {
+            "symbol": [
+              {
+                "-type": "term",
+                "-name": "*"
+              },
+              {
+                "-type": "nonterm",
+                "-name": "F"
+              },
+              {
+                "-type": "nonterm",
+                "-name": "T'"
+              }
+            ]
+          }
+        },
+        {
+          "lhs": { "-name": "T'" },
+          "rhs": {
+            "symbol": [
+              {
+                "-type": "term",
+                "-name": "e"
+              }
+            ]
+          }
+        },
+        {
+          "lhs": { "-name": "F" },
+          "rhs": {
+            "symbol": [
+              {
+                "-type": "term",
+                "-name": "n"
+              }
+            ]
+          }
+        },
+        {
+          "lhs": { "-name": "F" },
+          "rhs": {
+            "symbol": [
+              {
+                "-type": "term",
+                "-name": "("
+              },
+              {
+                "-type": "nonterm",
+                "-name": "E"
+              },
+              {
+                "-type": "term",
+                "-name": ")"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "startsymbol": { "-name": "E" }
+  }
+}
