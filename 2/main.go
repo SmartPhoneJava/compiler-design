@@ -58,7 +58,12 @@ func mainLab3() {
 		log.Fatalf("%s", err.Error())
 	}
 	lexer.Print("Грамматика загружена:")
-	err = lexer.Validate(`{ a = 5 ; }`, true)
+
+	var code = "{ a = 5 + ( 7 - 8 ) ; }"
+	// log.Println("Введите код:")
+	// fmt.Scanf("%s\n", &code)
+
+	err = lexer.Validate(code, false)
 	//_, err = lexer.Start.GoTo(strings.Split(text, " "), 0, true)
 	if err != nil {
 		goterm.Println("Произошла ошибка", err)

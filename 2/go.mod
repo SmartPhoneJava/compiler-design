@@ -3,6 +3,7 @@ module lab2
 go 1.13
 
 require (
+	github.com/awalterschulze/gographviz v2.0.3+incompatible
 	github.com/buger/goterm v1.0.0
 	github.com/fatih/color v1.10.0
 	github.com/labstack/gommon v0.3.0

@@ -8,6 +8,16 @@ type Lexer struct {
 	Start *Resolver
 }
 
+// Узел дерева AST
+type AST struct {
+	ID     uint32
+	Parent *AST
+	Value  string
+	Type   int
+}
+
+var ID_AST = 0
+
 type Resolver struct {
 	Rules
 	Symbol string

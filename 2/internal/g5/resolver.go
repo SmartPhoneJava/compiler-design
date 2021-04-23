@@ -3,6 +3,7 @@ package g5
 import (
 	"errors"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/buger/goterm"
@@ -10,11 +11,25 @@ import (
 )
 
 func (r Resolver) handleReserved(
+	input []string,
 	value string,
 	index int,
 	current, next map[int]int,
 	isDebug bool,
 ) {
+
+	var ok bool
+	switch value {
+	case TermAny:
+		ok = regexp.MustCompile(`^[A-Za-z0-9]+$`).MatchString(input[index])
+	case TermNumber:
+		ok = regexp.MustCompile(`^[0-9]+$`).MatchString(input[index])
+	case TermIDENT:
+		ok = regexp.MustCompile(`^[A-Za-z]+$`).MatchString(input[index])
+	}
+	if !ok {
+		return
+	}
 	current[index] = IndexStatusFound
 	next[index+1] = 0
 	if isDebug {
@@ -46,6 +61,7 @@ func (r Resolver) handleNonTerm(
 	index int,
 	current, next map[int]int,
 	isDebug bool,
+	getItRules *ResTs,
 	finishedSuccess *bool,
 	comprassions *int,
 	speed time.Duration,
@@ -61,8 +77,8 @@ func (r Resolver) handleNonTerm(
 		goterm.Flush()
 	}
 	lm, err := newResolver.GoTo(
-		input, index, isDebug, finishedSuccess,
-		comprassions, speed,
+		input, index, isDebug, getItRules,
+		finishedSuccess, comprassions, speed,
 	)
 	if *finishedSuccess {
 		return
@@ -89,6 +105,7 @@ func (r Resolver) GoTo(
 	input []string,
 	inputI int,
 	isDebug bool,
+	getItRules *ResTs,
 	finishedSuccess *bool,
 	comprassions *int,
 	speed time.Duration,
@@ -103,6 +120,10 @@ func (r Resolver) GoTo(
 		var ruleI = make(map[int]int, 0)
 		ruleI[inputI] = 0
 
+		var initial = make(ResTs, len(*getItRules))
+		copy(initial, *getItRules)
+
+		var symbols = []string{}
 		for si, s := range rule.Symbols {
 			var symbolI = make(map[int]int, 0)
 			for index := range ruleI {
@@ -119,21 +140,29 @@ func (r Resolver) GoTo(
 				*comprassions++
 				switch s.Type {
 				case Reserved:
+					symbols = append(symbols, input[index])
 					r.handleReserved(
-						s.Value, index, ruleI, symbolI, isDebug,
+						input, s.Value, index, ruleI,
+						symbolI, isDebug,
 					)
 				case Term:
+					symbols = append(symbols, input[index])
 					r.handleTerm(
 						input, s.Value, index, ruleI,
 						symbolI, isDebug,
 					)
 				case NonTerm:
+					symbols = append(symbols, input[index])
 					r.handleNonTerm(
 						input, s.Value, index, ruleI,
-						symbolI, isDebug, finishedSuccess,
-						comprassions, speed,
+						symbolI, isDebug, getItRules,
+						finishedSuccess, comprassions, speed,
 					)
 					if *finishedSuccess {
+						*getItRules = append(*getItRules, ResT{
+							Resolver: r,
+							Rule:     rule,
+						})
 						return nil, nil
 					}
 				}
@@ -146,9 +175,15 @@ func (r Resolver) GoTo(
 		if isDebug {
 			var text string
 			if len(ruleI) > 0 {
+				*getItRules = append(*getItRules, ResT{
+					Resolver: r,
+					Rule:     rule,
+					Symbols:  symbols,
+				})
 				text = color.GreenString("Правило подошло")
 			} else {
 				text = color.RedString("Правило не подошло")
+				*getItRules = initial
 			}
 			goterm.Println(text)
 			goterm.Flush()
@@ -248,8 +283,8 @@ func (lexer Lexer) ConstructFollow(first NoneTermsSet) NoneTermsSet {
 
 						// FOLLOW[B] ∪= FIRST(γ)
 						for j := i; j < len(rule.Symbols); j++ {
-							if s.Type == Term {
-								γ := s.Value
+							if rule.Symbols[j].Type == Term {
+								γ := rule.Symbols[j].Value
 								follow[B][γ] = nil
 							}
 						}

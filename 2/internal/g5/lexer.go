@@ -10,32 +10,110 @@ import (
 	"github.com/fatih/color"
 )
 
+type Node struct {
+	Value       string
+	Parent      *Node
+	ParentValue string
+	Type        string
+}
+
+type ResT struct {
+	Resolver Resolver
+	Rule     Rule
+	Symbols  []string
+
+	Symbol Symbol
+	Parent *ResT
+}
+type ResTs []ResT
+
 func (lexer Lexer) ValidateDebug(text string, speed time.Duration) error {
 	var (
 		rows         = strings.Split(strings.ReplaceAll(text, "\n", ""), " ")
 		comprassions int
 		success      bool
 	)
-	_, err := lexer.Start.GoTo(rows, 0, true, &success, &comprassions, speed)
+	var rules ResTs
+	_, err := lexer.Start.GoTo(rows, 0, true, &rules, &success, &comprassions, speed)
 
 	goterm.Println("Comprassions: ", comprassions)
 	goterm.Flush()
 
+	var nodes = []*Node{}
+	m := make(map[string]*Node, 0)
+	for _, r := range rules {
+		var right string
+		for _, s := range r.Rule.Symbols {
+			right += " " + s.Value
+		}
+		log.Printf("%s->%s", r.Resolver.Symbol, right)
+	}
+	// var nodes = []*Node{}
+	// m := make(map[string]*Node, 0)
+	//m[lexer.Start.Symbol] = startNode
+
+	//var goTextI = 0
+
+	for i := len(rules) - 1; i >= 0; i-- {
+		parent, ok := m[rules[i].Resolver.Symbol]
+		if !ok {
+			parent = &Node{
+				Value: fmt.Sprintf("%d.", i) + rules[i].Resolver.Symbol,
+				Type:  NonTerm,
+			}
+			nodes = append(nodes, parent)
+		}
+		for j, s := range rules[i].Symbols {
+			var node = &Node{
+				Value:       fmt.Sprintf("%d.%d... %s", i, j, s),
+				Parent:      parent,
+				ParentValue: parent.Value,
+				//Type:        rules[i].Rule.Symbols[j].Type,
+			}
+			log.Println("node.Value", node.Value)
+			// if rules[i].Rule.Symbols[j].Type == Term {
+			// 	node.Value = rows[goTextI]
+			// } else {
+			// 	m[rules[i].Rule.Symbols[j].Value] = node
+			// }
+			if len(rules[i].Rule.Symbols) > j {
+				if rules[i].Rule.Symbols[j].Type == NonTerm {
+					m[rules[i].Rule.Symbols[j].Value] = node
+					node.Value = fmt.Sprintf("%d.%d... %s", i, j, rules[i].Rule.Symbols[j].Value)
+				}
+
+				node.Type = rules[i].Rule.Symbols[j].Type
+				if node.Type == Reserved {
+					node.Type = Term
+				}
+			}
+
+			//node.Value = s
+			nodes = append(nodes, node)
+		}
+		delete(m, rules[i].Resolver.Symbol)
+	}
+
+	for _, node := range nodes {
+		if node.Parent == nil {
+			v := strings.Split(node.Value, "...")
+			if len(v) == 2 {
+				node.Parent = m[v[1]]
+			}
+		}
+
+	}
+
+	MustVisualize(nodes, "assets", "hello.dot")
 	return err
 }
 
 func (lexer Lexer) Validate(text string, isDebug bool) error {
-	var (
-		rows         = strings.Split(strings.ReplaceAll(text, "\n", ""), " ")
-		comprassions int
-		success      bool
-	)
-	_, err := lexer.Start.GoTo(rows, 0, isDebug, &success, &comprassions, 0)
+	var t time.Duration
 	if isDebug {
-		goterm.Println("Comprassions: ", comprassions)
-		goterm.Flush()
+		t = time.Second
 	}
-	return err
+	return lexer.ValidateDebug(text, t)
 }
 
 func (lexer Lexer) ColorSymbol(s Symbol, right *string) {
