@@ -31,7 +31,7 @@ func VisualizeFSM(nodes []*Node, path, name string) error {
 
 	var attrs = make(map[string]string, 0)
 	for _, v := range nodes {
-		log.Println("node", v.Value, v.Type)
+		log.Println("node", v.ID+v.Value, v.Type)
 		var vattr = make(map[string]string, 0)
 
 		if v.Type == Term {
@@ -39,13 +39,13 @@ func VisualizeFSM(nodes []*Node, path, name string) error {
 		} else {
 			vattr["label"] = fmt.Sprintf(`<<font color="red">%s</font>>`, v.Value)
 		}
-		graph.AddNode("G", toString(v.Value), vattr)
+		graph.AddNode("G", toString(v.ID), vattr)
 	}
 	for _, e := range nodes {
 		//attrs["label"] = fmt.Sprintf(`<<font color="blue">%s</font>>`, "hello")
 		if e.Parent != nil {
-			log.Println("edge", e.Value, e.Parent.Value, e.ParentValue)
-			graph.AddEdge(toString(e.Parent.Value), toString(e.Value), true, attrs)
+			log.Println("edge", e.ID+e.Value, e.Parent.ID+e.Parent.Value, e.ParentValue)
+			graph.AddEdge(toString(e.Parent.ID), toString(e.ID), true, attrs)
 		}
 	}
 	if _, err := os.Stat(path); os.IsNotExist(err) {

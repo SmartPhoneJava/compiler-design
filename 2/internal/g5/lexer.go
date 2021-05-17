@@ -11,6 +11,7 @@ import (
 )
 
 type Node struct {
+	ID          string
 	Value       string
 	Parent      *Node
 	ParentValue string
@@ -41,8 +42,46 @@ func (lexer Lexer) ValidateDebug(text string, speed time.Duration) error {
 
 	var nodes = []*Node{}
 	m := make(map[string]*Node, 0)
-	for _, r := range rules {
+	var counter = 0
+	for i := len(rules) - 1; i >= 0; i-- {
+		var r = rules[i]
+		parent, ok := m[r.Resolver.Symbol]
+		if !ok {
+			parent = &Node{
+				ID:    fmt.Sprintf("%d.", counter),
+				Value: r.Resolver.Symbol,
+				Type:  NonTerm,
+			}
+			nodes = append(nodes, parent)
+			counter++
+		} else {
+			delete(m, r.Resolver.Symbol)
+		}
 		var right string
+		for j, s := range r.Symbols {
+			var node = &Node{
+				ID:          fmt.Sprintf("%d.", counter),
+				Value:       s,
+				Parent:      parent,
+				ParentValue: parent.Value,
+				//Type:        rules[i].Rule.Symbols[j].Type,
+			}
+			log.Printf("\nconnect %s -> %s", s, parent.Value)
+			counter++
+			if len(r.Rule.Symbols) > j {
+				if r.Rule.Symbols[j].Type == NonTerm {
+					m[r.Rule.Symbols[j].Value] = node
+					node.Value = r.Rule.Symbols[j].Value
+				}
+
+				node.Type = r.Rule.Symbols[j].Type
+				if node.Type == Reserved {
+					node.Type = Term
+				}
+			}
+			nodes = append(nodes, node)
+
+		}
 		for _, s := range r.Rule.Symbols {
 			right += " " + s.Value
 		}
@@ -54,59 +93,53 @@ func (lexer Lexer) ValidateDebug(text string, speed time.Duration) error {
 
 	//var goTextI = 0
 
-	for i := len(rules) - 1; i >= 0; i-- {
-		parent, ok := m[rules[i].Resolver.Symbol]
-		if !ok {
-			parent = &Node{
-				Value: fmt.Sprintf("%d.", i) + rules[i].Resolver.Symbol,
-				Type:  NonTerm,
-			}
-			nodes = append(nodes, parent)
-		}
-		for j, s := range rules[i].Symbols {
-			var node = &Node{
-				Value:       fmt.Sprintf("%d.%d... %s", i, j, s),
-				Parent:      parent,
-				ParentValue: parent.Value,
-				//Type:        rules[i].Rule.Symbols[j].Type,
-			}
-			log.Println("node.Value", node.Value)
-			// if rules[i].Rule.Symbols[j].Type == Term {
-			// 	node.Value = rows[goTextI]
-			// } else {
-			// 	m[rules[i].Rule.Symbols[j].Value] = node
-			// }
-			if len(rules[i].Rule.Symbols) > j {
-				if rules[i].Rule.Symbols[j].Type == NonTerm {
-					m[rules[i].Rule.Symbols[j].Value] = node
-					node.Value = fmt.Sprintf("%d.%d... %s", i, j, rules[i].Rule.Symbols[j].Value)
-				}
+	// for i := len(rules) - 1; i >= 0; i-- {
+	// 	parent, ok := m[rules[i].Resolver.Symbol]
+	// 	if !ok {
+	// 		parent = &Node{
+	// 			Value: fmt.Sprintf("%d.", i) + rules[i].Resolver.Symbol,
+	// 			Type:  NonTerm,
+	// 		}
+	// 		nodes = append(nodes, parent)
+	// 	}
+	// 	for j, s := range rules[i].Symbols {
+	// 		var node = &Node{
+	// 			Value:       fmt.Sprintf("%d.%d... %s", i, j, s),
+	// 			Parent:      parent,
+	// 			ParentValue: parent.Value,
+	// 			//Type:        rules[i].Rule.Symbols[j].Type,
+	// 		}
+	// 		log.Println("node.Value", node.Value)
+	// 		// if rules[i].Rule.Symbols[j].Type == Term {
+	// 		// 	node.Value = rows[goTextI]
+	// 		// } else {
+	// 		// 	m[rules[i].Rule.Symbols[j].Value] = node
+	// 		// }
+	// 		if len(rules[i].Rule.Symbols) > j {
+	// 			if rules[i].Rule.Symbols[j].Type == NonTerm {
+	// 				m[rules[i].Rule.Symbols[j].Value] = node
+	// 				node.Value = fmt.Sprintf("%d.%d... %s", i, j, rules[i].Rule.Symbols[j].Value)
+	// 			}
 
-				node.Type = rules[i].Rule.Symbols[j].Type
-				if node.Type == Reserved {
-					node.Type = Term
-				}
-			}
+	// 			node.Type = rules[i].Rule.Symbols[j].Type
+	// 			if node.Type == Reserved {
+	// 				node.Type = Term
+	// 			}
+	// 		}
 
-			//node.Value = s
-			nodes = append(nodes, node)
-		}
-		delete(m, rules[i].Resolver.Symbol)
-	}
-
-	for _, node := range nodes {
-		if node.Parent == nil {
-			v := strings.Split(node.Value, "...")
-			if len(v) == 2 {
-				node.Parent = m[v[1]]
-			}
-		}
-
-	}
+	// 		//node.Value = s
+	// 		nodes = append(nodes, node)
+	// 	}
+	// 	delete(m, rules[i].Resolver.Symbol)
+	// }
 
 	MustVisualize(nodes, "assets", "hello.dot")
 	return err
 }
+
+// func goInside(r Resolver, input []string, index int, output *string) {
+
+// }
 
 func (lexer Lexer) Validate(text string, isDebug bool) error {
 	var t time.Duration

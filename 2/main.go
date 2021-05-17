@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"lab2/internal"
+	"lab2/internal/opa"
 	"lab2/parsing"
 	"log"
 	"os"
@@ -37,7 +38,47 @@ func main() {
 	// 	time.Sleep(time.Second)
 	// }
 	// goterm.Clear()
-	mainLab3()
+	mainLab4()
+}
+
+func mainLab4() {
+	var inputPath = "lab4.json"
+
+	c, err := parsing.MakeGrammar(inputPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	lexer, err := c.ToLexer()
+	if err != nil {
+		log.Fatalf("%s", err.Error())
+	}
+	lexer.Print("Грамматика загружена:")
+
+	var (
+		left  = opa.MakeMostLeftTerm(lexer)
+		right = opa.MakeMostRightTerm(lexer)
+	)
+
+	left.Println("L")
+	right.Println("R")
+
+	matr := opa.MakeMatrixV2(lexer)
+	matr.Println()
+
+	//_ = opa.MakeMatrix(lexer)
+
+	// var code = "{ a = 5 + ( 7 - 8 ) ; }"
+	// // log.Println("Введите код:")
+	// // fmt.Scanf("%s\n", &code)
+
+	// err = lexer.Validate(code, false)
+	// //_, err = lexer.Start.GoTo(strings.Split(text, " "), 0, true)
+	// if err != nil {
+	// 	goterm.Println("Произошла ошибка", err)
+	// } else {
+	// 	goterm.Println("Успех")
+	// }
+	// goterm.Flush()
 }
 
 func mainLab3() {

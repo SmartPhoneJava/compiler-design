@@ -1,0 +1,101 @@
+{
+  "grammar": {
+    "-name": "lecture6",
+    "terminalsymbols": {
+      "term": [
+        {
+          "-name": "b",
+          "-spell": "b"
+        },
+        {
+          "-name": "a",
+          "-spell": "a"
+        },
+        {
+          "-name": "c",
+          "-spell": "c"
+        },
+        {
+          "-name": "d",
+          "-spell": "d"
+        }
+      ]
+    },
+    "nonterminalsymbols": {
+      "nonterm": [
+        { "-name": "A" }, 
+        { "-name": "B" },
+        { "-name": "S" }
+      ]
+    },
+    "productions": {
+      "production": [
+        {
+          "lhs": { "-name": "S" },
+          "rhs": {
+            "symbol": [
+              {
+                "-type": "term",
+                "-name": "b"
+              },
+              {
+                "-type": "nonterm",
+                "-name": "A"
+              },
+              {
+                "-type": "term",
+                "-name": "b"
+              }
+            ]
+          }
+        },
+        {
+          "lhs": { "-name": "A" },
+          "rhs": {
+            "symbol": [
+              {
+                "-type": "term",
+                "-name": "c"
+              },
+              {
+                "-type": "nonterm",
+                "-name": "B"
+              }
+            ]
+          }
+        },
+        {
+          "lhs": { "-name": "A" },
+          "rhs": {
+            "symbol": [
+              {
+                "-type": "term",
+                "-name": "a"
+              }
+            ]
+          }
+        },
+        {
+          "lhs": { "-name": "B" },
+          "rhs": {
+            "symbol": [
+              {
+                "-type": "nonterm",
+                "-name": "A"
+              },
+              {
+                "-type": "term",
+                "-name": "a"
+              },
+              {
+                "-type": "term",
+                "-name": "d"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "startsymbol": { "-name": "S" }
+  }
+}
