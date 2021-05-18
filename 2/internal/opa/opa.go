@@ -4,6 +4,9 @@ package opa
 import (
 	"fmt"
 	"lab2/internal/g5"
+	"log"
+
+	"github.com/fatih/color"
 )
 
 const (
@@ -11,7 +14,17 @@ const (
 	EQ
 	MORE
 	LESS
+	DONE
 )
+
+const (
+	EqText   = "="
+	MoreText = "▶"
+	LessText = "◀"
+)
+
+const StartEnd = "⏊"
+const AnalyserNonTerm = "E"
 
 // Matrix of operator precedence relations
 type OperatorsMatrix map[string]map[string]byte
@@ -442,11 +455,11 @@ func (matrix OperatorsMatrix) Println() {
 			var text = ""
 			switch symbol {
 			case EQ:
-				text = "="
+				text = EqText
 			case MORE:
-				text = "▶"
+				text = MoreText
 			case LESS:
-				text = "◀"
+				text = LessText
 			}
 			realMatrix[elemIndex[c]][elemIndex[r]] = text
 		}
@@ -478,4 +491,367 @@ func (matrix OperatorsMatrix) Println() {
 
 func center(s string, w int) string {
 	return fmt.Sprintf("%*s", -w, fmt.Sprintf("%*s", (w+len(s))/2, s))
+}
+
+/*
+
+1. Составляем новый список правил, заменив нетермы на E
+2. У нас 4 структуры:
+	-	строка разбора
+	- 	предыдущий символ,
+	-	лента(остаток кода юзера),
+	-	номера примененных правил
+3. Пока код юзера не опустел, смотрим его первым символ
+4. находим в матрице элемент [прошлый_символ_ленты][текущий_символ_ленты]
+4* прошлый_символ_ленты в первой итерации это символ старта $
+5. Если <, =:
+	Добавляем текущий элемент ленты в строку разбора
+	Меняем прошлый элемент ленты на текущий
+	Двигаем ленту на 1 вправо
+   Если >:
+	Ищем правило, где строка разбора находится справа и
+	заменяем эту часть в строке разбора на правую часть правила
+	В массив номеров добавляем номер правила, которое смогло перевести
+	Если ни одного правило не отработало возвращаем ошибку
+
+*/
+
+// Operator Precedence Analyzer
+type Analyzer struct {
+	Rules  g5.Rules
+	Matrix OperatorsMatrix
+	terms  map[string]bool
+}
+
+// Установим новые правила для анализатора
+func (analyser *Analyzer) Build(lexer g5.Lexer) {
+	var (
+		ruleMap = make(map[string]*g5.Rule)
+	)
+	for _, res := range lexer.NonTerms {
+		for _, rule := range res.Rules {
+			var (
+				newRuleString string
+				newRule       = &g5.Rule{}
+			)
+			for _, symbol := range rule.Symbols {
+				if symbol.Type == g5.NonTerm {
+					newRuleString += " <" + AnalyserNonTerm + "> "
+					newRule.Symbols = append(newRule.Symbols, g5.Symbol{
+						Value: AnalyserNonTerm,
+						Type:  symbol.Type,
+					})
+				} else {
+					newRuleString += " " + symbol.Value + " "
+					newRule.Symbols = append(newRule.Symbols, g5.Symbol{
+						Value: symbol.Value,
+						Type:  symbol.Type,
+					})
+				}
+			}
+			if newRuleString == " <"+AnalyserNonTerm+"> " {
+				continue
+			}
+			ruleMap[newRuleString] = newRule
+		}
+	}
+
+	analyser.Rules = make(g5.Rules, 0, len(ruleMap))
+	for _, rule := range ruleMap {
+		analyser.Rules = append(analyser.Rules, *rule)
+	}
+
+	analyser.terms = lexer.Terms
+	analyser.Matrix = MakeMatrixV2(lexer)
+	analyser.Matrix[StartEnd][StartEnd] = DONE // помечаем, что при
+	// совпадении спец. символа успешно зканчиваем
+}
+
+func (analyser Analyzer) PrintRules() {
+	var resolver = &g5.Resolver{
+		Rules:  analyser.Rules,
+		Symbol: AnalyserNonTerm,
+	}
+	var printingLexer = &g5.Lexer{
+		NonTerms: map[string]*g5.Resolver{
+			AnalyserNonTerm: resolver,
+		},
+		Terms: analyser.terms,
+		Start: resolver,
+	}
+
+	resolver.Lexer = printingLexer
+
+	printingLexer.Print("\n\nПравила внутри анализатора")
+}
+
+func (analyser Analyzer) findRule(row *[]string) (g5.Rule, error) {
+	for rowC := 1; rowC < len(*row); rowC++ {
+		for _, rule := range analyser.Rules {
+			if len(rule.Symbols) != rowC {
+				continue
+			}
+			var matched = true
+			for i, symbol := range rule.Symbols {
+				if symbol.Value != (*row)[len(*row)-1-i] {
+					matched = false
+					break
+				}
+			}
+			if matched {
+				*row = (*row)[:len(*row)-rowC+1]
+				(*row)[len(*row)-1] = AnalyserNonTerm
+				return rule, nil
+			}
+		}
+	}
+	return g5.Rule{}, fmt.Errorf("Правила не найдено для %s", row)
+}
+
+// Exec - попробовать считать введенные символы
+/*
+	Возвращает:
+		- слайс символов грамматиков для составления АСТ
+		- слайс правил, которые необходимо применить для получения
+			введенной строки
+		- ошибка, если введены некорретные входные данные
+*/
+func (analyser Analyzer) Exec(input []string) ([]string, g5.Rules, error) {
+	// Добавляем символ конца ввода
+	input = append(input, StartEnd)
+	var (
+		outputSymbols []string
+		outputRules   g5.Rules
+		// В стек сразу помещаем символа начала ввода
+		stack = []string{StartEnd}
+	)
+	for len(stack) > 0 {
+		var (
+			currStack      = getFromStack(stack)
+			currInput      = input[0]
+			matrixOperator = analyser.Matrix[currStack][currInput]
+		)
+
+		switch {
+		case matrixOperator == EQ || matrixOperator == LESS:
+			stack = append(stack, currInput)
+			input = input[1:]
+		case matrixOperator == MORE:
+			foundRule, err := analyser.findRule(&stack)
+			if err != nil {
+				return nil, nil, wrapError(err)
+			}
+			outputRules = append(outputRules, foundRule)
+			outputSymbols = append(outputSymbols, currStack)
+		case matrixOperator == DONE:
+			return outputSymbols, outputRules, nil
+		case matrixOperator == NO:
+			var err error
+			if currStack == StartEnd {
+				err = fmt.Errorf("код не может начинаться с `%s`", currInput)
+			} else {
+				err = fmt.Errorf("ключевое слово `%s` не может находиться слева от `%s`", currStack, currInput)
+			}
+			return nil, nil, wrapError(err)
+		default:
+			var err = fmt.Errorf("обнаружен неопознанный символ в матрице '%d'", matrixOperator)
+			return nil, nil, wrapError(err)
+		}
+	}
+	return outputSymbols, outputRules, nil
+}
+
+func (analyser Analyzer) PrintlnExecResult(
+	text, input string,
+	symbols []string,
+	rules g5.Rules,
+) {
+	fmt.Println("\n" + text)
+	color.Cyan("Прочитанные символы: \n")
+	var right string
+	for _, s := range symbols {
+		right += color.GreenString(s) + " "
+	}
+	fmt.Printf("%s\n", right)
+
+	fmt.Printf("%s %s\n", color.CyanString("Правила, применённые к "), color.GreenString(input))
+
+	for _, rule := range rules {
+		var right string
+		for _, s := range rule.Symbols {
+			g5.ColorSymbol(s, &right)
+		}
+		fmt.Printf("%s → %s\n", color.RedString(AnalyserNonTerm), right)
+	}
+}
+
+func wrapError(err error) error {
+	return fmt.Errorf("Введенный код содержит ошибку: %s", err)
+}
+
+func getFromStack(stack []string) string {
+	for i := len(stack) - 1; i >= 0; i-- {
+		if stack[i] == AnalyserNonTerm {
+			continue
+		}
+		return stack[i]
+	}
+	return ""
+}
+
+func (analyser Analyzer) ToAst(rules g5.Rules) {
+	var nodes = []*g5.Node{}
+	savedArr := make([]*g5.Node, 0)
+	var counter = 0
+	for i := 0; i < len(rules); i++ {
+		var r = rules[i]
+		var ok bool
+		var parent *g5.Node
+		for _, el := range savedArr {
+			parent = el
+			break
+		}
+		if len(savedArr) > 0 {
+			log.Println("mmmmmm", i)
+		}
+		for _, m := range savedArr {
+			log.Println("m", m)
+		}
+		if !ok {
+			parent = &g5.Node{
+				ID:    fmt.Sprintf("%d.", counter),
+				Value: AnalyserNonTerm,
+				Type:  g5.NonTerm,
+			}
+			nodes = append(nodes, parent)
+			counter++
+			savedArr = append(savedArr, parent)
+		}
+		var right string
+		for _, s := range r.Symbols {
+			var node = &g5.Node{
+				ID:          fmt.Sprintf("%d.", counter),
+				Value:       s.Value,
+				Parent:      parent,
+				ParentValue: parent.Value,
+				//Type:        rules[i].Rule.Symbols[j].Type,
+			}
+			log.Printf("\nconnect %s -> %s", s, parent.Value)
+			counter++
+			// if len(r.Symbols) > j {
+			// 	if r.Symbols[j].Type == g5.NonTerm {
+			// 		m[r.Symbols[j].Value] = node
+			// 		node.Value = r.Symbols[j].Value
+			// 	}
+
+			// 	node.Type = r.Symbols[j].Type
+			// 	if node.Type == g5.Reserved {
+			// 		node.Type = g5.Term
+			// 	}
+			// }
+			nodes = append(nodes, node)
+
+		}
+		for _, s := range r.Symbols {
+			right += " " + s.Value
+		}
+		log.Printf("%s->%s", AnalyserNonTerm, right)
+		if ok {
+			savedArr = savedArr[1:]
+		}
+	}
+
+	g5.MustVisualize(nodes, "assets", "hello2.dot")
+}
+
+func (analyser Analyzer) ToAstV2(rules g5.Rules) error {
+	var nodes = []*g5.Node{}
+
+	var counter = 2
+	var root = &g5.Node{
+		ID:    fmt.Sprintf("%d.", 1),
+		Value: AnalyserNonTerm,
+		Type:  g5.NonTerm,
+	}
+	freeNodes := []*g5.Node{root}
+	nodes = append(nodes, root)
+
+	for i := len(rules) - 1; i >= 0; i-- {
+		var r = rules[i]
+		var model, err = ToNumOperator(r)
+		if err != nil {
+			return err
+		}
+
+		node := freeNodes[0]
+		newNodes := model.ToNodes(node, &counter)
+		nodes = append(nodes, node)
+		freeNodes = append(freeNodes[1:], newNodes...)
+	}
+
+	return g5.VisualizeFSM(nodes, "assets", "hello2.dot")
+}
+
+// ast переделка
+
+func ToNumOperator(r g5.Rule) (NumOperator, error) {
+	var (
+		terms, nonTerms []string
+	)
+	for _, s := range r.Symbols {
+		if s.Type == g5.Term {
+			terms = append(terms, s.Value)
+		} else {
+			nonTerms = append(nonTerms, s.Value)
+		}
+	}
+	switch {
+	case len(terms) == 1 && len(nonTerms) == 2:
+		return OneTwoOperatored{
+			Main: terms[0],
+		}, nil
+	case len(terms) == 1 && len(nonTerms) == 0:
+		return NoOperatored{
+			Main: terms[0],
+		}, nil
+	default:
+		return nil, fmt.Errorf("Нет модели для правила с %d термами и %d нетермами", len(terms), len(nonTerms))
+	}
+}
+
+type NumOperator interface {
+	ToNodes(node *g5.Node, counter *int) []*g5.Node
+}
+
+type OneTwoOperatored struct {
+	Main string
+}
+
+func (two OneTwoOperatored) ToNodes(node *g5.Node, counter *int) []*g5.Node {
+	node.Value = two.Main
+
+	var leftNode = &g5.Node{
+		ID:          fmt.Sprintf("%d.", *counter),
+		Parent:      node,
+		ParentValue: two.Main,
+		Type:        g5.Term,
+	}
+	*counter++
+	var rightNode = &g5.Node{
+		ID:          fmt.Sprintf("%d.", *counter),
+		Parent:      node,
+		ParentValue: two.Main,
+		Type:        g5.Term,
+	}
+	*counter++
+	return []*g5.Node{leftNode, rightNode}
+}
+
+type NoOperatored struct {
+	Main string
+}
+
+func (no NoOperatored) ToNodes(node *g5.Node, counter *int) []*g5.Node {
+	node.Value = no.Main
+	return nil
 }

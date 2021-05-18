@@ -149,12 +149,12 @@ func (lexer Lexer) Validate(text string, isDebug bool) error {
 	return lexer.ValidateDebug(text, t)
 }
 
-func (lexer Lexer) ColorSymbol(s Symbol, right *string) {
+func ColorSymbol(s Symbol, right *string) {
 	switch s.Type {
 	case Term:
-		*right += color.GreenString(s.Value)
+		*right += " " + color.GreenString(s.Value)
 	case NonTerm:
-		*right += " <" + color.YellowString(s.Value) + "> "
+		*right += " <" + color.YellowString(s.Value) + ">"
 	case Reserved:
 		*right += color.HiMagentaString(s.Value)
 	}
@@ -182,7 +182,7 @@ func (lexer Lexer) Print(text string) {
 		for _, rule := range res.Rules {
 			var right string
 			for _, s := range rule.Symbols {
-				lexer.ColorSymbol(s, &right)
+				ColorSymbol(s, &right)
 			}
 			if lexer.Start.Symbol == nt {
 				nt = color.RedString(nt)
@@ -242,7 +242,7 @@ func (lexer Lexer) PrintState(
 				if i == currentRuleI && j == currentSymbolI && res.Symbol == currentResolverSymbol {
 					right += color.RedString(s.Value)
 				} else {
-					lexer.ColorSymbol(s, &right)
+					ColorSymbol(s, &right)
 				}
 			}
 			if i == currentRuleI {

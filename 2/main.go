@@ -7,6 +7,7 @@ import (
 	"lab2/parsing"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/buger/goterm"
 )
@@ -62,23 +63,18 @@ func mainLab4() {
 	left.Println("L")
 	right.Println("R")
 
-	matr := opa.MakeMatrixV2(lexer)
-	matr.Println()
+	var analyzer = &opa.Analyzer{}
+	analyzer.Build(lexer)
+	analyzer.Matrix.Println()
+	analyzer.PrintRules()
 
-	//_ = opa.MakeMatrix(lexer)
-
-	// var code = "{ a = 5 + ( 7 - 8 ) ; }"
-	// // log.Println("Введите код:")
-	// // fmt.Scanf("%s\n", &code)
-
-	// err = lexer.Validate(code, false)
-	// //_, err = lexer.Start.GoTo(strings.Split(text, " "), 0, true)
-	// if err != nil {
-	// 	goterm.Println("Произошла ошибка", err)
-	// } else {
-	// 	goterm.Println("Успех")
-	// }
-	// goterm.Flush()
+	var inputRow = "a + a * a"
+	outS, outR, err := analyzer.Exec(strings.Split(inputRow, " "))
+	if err != nil {
+		log.Fatal(err)
+	}
+	analyzer.PrintlnExecResult("Результаты анализатора", inputRow, outS, outR)
+	analyzer.ToAstV2(outR)
 }
 
 func mainLab3() {
