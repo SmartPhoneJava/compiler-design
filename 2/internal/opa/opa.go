@@ -3,6 +3,7 @@ package opa
 // operator_precedence_analyzer.go
 import (
 	"fmt"
+	"lab2/internal/ast"
 	"lab2/internal/g5"
 	"log"
 
@@ -29,169 +30,6 @@ const AnalyserNonTerm = "E"
 // Matrix of operator precedence relations
 type OperatorsMatrix map[string]map[string]byte
 
-/*
-func MakeMatrix(lexer g5.Lexer) OperatorsMatrix {
-	var (
-		AllTermsInNoneTerms   = MakeNT2T(lexer)
-		leftNT, rightNT, some = MakeT2NT(lexer)
-		matrix                = make(OperatorsMatrix)
-	)
-	log.Println("leftNT", leftNT)
-	log.Println("rightNT", rightNT)
-	log.Println("some", some)
-
-	for row, rules := range rightNT {
-		_, ok := matrix[row]
-		if !ok {
-			matrix[row] = make(map[string]byte)
-		}
-		for noneTerm := range rules {
-			for column := range AllTermsInNoneTerms[noneTerm] {
-				matrix[row][column] = MORE
-				log.Println("row more", row, column)
-			}
-		}
-	}
-	for row, rules := range leftNT {
-		_, ok := matrix[row]
-		if !ok {
-			matrix[row] = make(map[string]byte)
-		}
-		for noneTerm := range rules {
-			for column := range AllTermsInNoneTerms[noneTerm] {
-				matrix[row][column] = MORE
-				log.Println("row less", row, column)
-			}
-		}
-	}
-
-	for row, rules := range some {
-		_, ok := matrix[row]
-		if !ok {
-			matrix[row] = make(map[string]byte)
-		}
-		for column := range rules {
-			matrix[row][column] = MORE
-			log.Println("row equal", row, column)
-		}
-	}
-	log.Println("matrix", matrix)
-	return matrix
-}
-
-// Matrix of operator precedence relations
-type OperatorsSet map[string]map[string]interface{}
-
-type NoneTermsSet map[string]interface{}
-
-// Из каких нетермов в какие термы можно попасть
-func MakeNT2T(lexer g5.Lexer) OperatorsSet {
-	var nt2nt = make(OperatorsSet)
-	var symbolsSeen = make(NoneTermsSet)
-	makeNT2NT(lexer, "", nt2nt, symbolsSeen, nil)
-	return nt2nt
-}
-
-// какие термы в каких нетермах лежат
-func MakeT2NT(lexer g5.Lexer) (OperatorsSet, OperatorsSet, OperatorsSet) {
-	var (
-		leftNT  = make(OperatorsSet)
-		rightNT = make(OperatorsSet)
-		rightT  = make(OperatorsSet)
-	)
-	for _, r := range lexer.NonTerms {
-		for _, r := range r.Rules {
-			var (
-				savedTerms    []string
-				savedNonTerms []string
-			)
-			for _, s := range r.Symbols {
-				//log.Println("savedSymbols", s, savedSymbols)
-				for _, savedS := range savedNonTerms {
-					if s.Type != g5.NonTerm {
-						_, ok := leftNT[savedS]
-						if !ok {
-							leftNT[savedS] = make(NoneTermsSet)
-						}
-						leftNT[savedS][s.Value] = nil
-					}
-				}
-				for _, savedS := range savedTerms {
-					if s.Type == g5.NonTerm {
-						_, ok := rightNT[savedS]
-						if !ok {
-							rightNT[savedS] = make(NoneTermsSet)
-						}
-						rightNT[savedS][s.Value] = nil
-					} else {
-						_, ok := rightT[savedS]
-						if !ok {
-							rightT[savedS] = make(NoneTermsSet)
-						}
-						rightT[savedS][s.Value] = nil
-					}
-				}
-				if s.Type != g5.NonTerm {
-					savedTerms = append(savedTerms, s.Value)
-				} else {
-					savedNonTerms = append(savedNonTerms, s.Value)
-				}
-			}
-		}
-	}
-	return leftNT, rightNT, rightT
-}
-
-func makeNT2NT(
-	lexer g5.Lexer,
-	currSymb string,
-	nt2nt OperatorsSet,
-	symbolsSeen NoneTermsSet,
-	alreadySearching map[string]interface{},
-) {
-	for row, r := range lexer.NonTerms {
-		if currSymb != "" && row != currSymb {
-			continue
-		}
-		if currSymb == "" {
-			alreadySearching = make(map[string]interface{})
-		}
-		_, ok := nt2nt[row]
-		if !ok {
-			nt2nt[row] = make(NoneTermsSet)
-		}
-		for _, rule := range r.Rules {
-			for _, s := range rule.Symbols {
-				if s.Type != g5.NonTerm {
-					//log.Println("ssss", s.Type, s.Value, row, s.Value)
-					nt2nt[row][s.Value] = nil
-				} else {
-					if s.Value == row {
-						continue
-					}
-					_, seen := symbolsSeen[s.Value]
-
-					if !seen {
-						_, already := alreadySearching[s.Value]
-						if !already {
-							log.Println(s.Value)
-							log.Println(alreadySearching[s.Value])
-							alreadySearching[s.Value] = nil
-							log.Println("s.Value", s.Value, row)
-							makeNT2NT(lexer, s.Value, nt2nt, symbolsSeen, alreadySearching)
-						}
-					}
-
-					for ts := range nt2nt[s.Value] {
-						nt2nt[row][ts] = nil
-					}
-				}
-			}
-		}
-		symbolsSeen[row] = true
-	}
-}
-*/
 /*
 
 Для каждого нетерминального символа А ищем все правила, содержащие А в левой части.
@@ -429,15 +267,22 @@ func MakeMatrixV2(lexer g5.Lexer) OperatorsMatrix {
 }
 
 func (matrix OperatorsMatrix) Println() {
-	//var arr = make([]string, 0, len(matrix))
-	var arr = []string{"(", "a", "*", "+", ")", "⏊"}
+	// var arr = make([]string, 0, len(matrix))
+	// var elemIndex = map[string]int{}
+	var arr = []string{";", "if", "then", "else", "a", "=", "or", "xor", "and", "(", ")", "⏊"}
 	var elemIndex = map[string]int{
-		"(": 0,
-		"a": 1,
-		"*": 2,
-		"+": 3,
-		")": 4,
-		"⏊": 5,
+		";":    0,
+		"if":   1,
+		"then": 2,
+		"else": 3,
+		"a":    4,
+		"=":    5,
+		"or":   6,
+		"xor":  7,
+		"and":  8,
+		"(":    9,
+		")":    10,
+		"⏊":    11,
 	}
 
 	// for v := range matrix {
@@ -556,6 +401,129 @@ func (analyser *Analyzer) Build(lexer g5.Lexer) {
 		}
 	}
 
+	/*
+
+		E ? E; – правило 1;
+		E ? if E then E else E | if E then E | a:= E – правила 2, 3 и 4;
+
+		E ? if E then E else E | a:= E – правила 5 и 6;
+
+		E ? E or E | E xor E | E – правила 7, 8 и 9;
+
+		E ? E and E | E – правила 10 и 11;
+
+		E ? a | (E) – правила 12 и 13.
+
+	*/
+	/*
+		analyser.Rules = g5.Rules{
+			g5.Rule{
+				Symbols: g5.Symbols{g5.Symbol{
+					Value: "if",
+					Type:  g5.Term,
+				}, g5.Symbol{
+					Value: "E",
+					Type:  g5.NonTerm,
+				}, g5.Symbol{
+					Value: "then",
+					Type:  g5.Term,
+				}, g5.Symbol{
+					Value: "E",
+					Type:  g5.NonTerm,
+				}, g5.Symbol{
+					Value: "else",
+					Type:  g5.Term,
+				}, g5.Symbol{
+					Value: "E",
+					Type:  g5.NonTerm,
+				}},
+			},
+			g5.Rule{
+				Symbols: g5.Symbols{g5.Symbol{
+					Value: "if",
+					Type:  g5.Term,
+				}, g5.Symbol{
+					Value: "E",
+					Type:  g5.NonTerm,
+				}, g5.Symbol{
+					Value: "then",
+					Type:  g5.Term,
+				}, g5.Symbol{
+					Value: "E",
+					Type:  g5.NonTerm,
+				}},
+			},
+			g5.Rule{
+				Symbols: g5.Symbols{g5.Symbol{
+					Value: "a",
+					Type:  g5.Term,
+				}, g5.Symbol{
+					Value: "=",
+					Type:  g5.Term,
+				}, g5.Symbol{
+					Value: "E",
+					Type:  g5.NonTerm,
+				}},
+			},
+			g5.Rule{
+				Symbols: g5.Symbols{g5.Symbol{
+					Value: "E",
+					Type:  g5.NonTerm,
+				}, g5.Symbol{
+					Value: "or",
+					Type:  g5.Term,
+				}, g5.Symbol{
+					Value: "E",
+					Type:  g5.NonTerm,
+				}},
+			},
+			g5.Rule{
+				Symbols: g5.Symbols{g5.Symbol{
+					Value: "E",
+					Type:  g5.NonTerm,
+				}, g5.Symbol{
+					Value: "xor",
+					Type:  g5.Term,
+				}, g5.Symbol{
+					Value: "E",
+					Type:  g5.NonTerm,
+				}},
+			},
+			g5.Rule{
+				Symbols: g5.Symbols{g5.Symbol{
+					Value: "E",
+					Type:  g5.NonTerm,
+				}, g5.Symbol{
+					Value: "and",
+					Type:  g5.Term,
+				}, g5.Symbol{
+					Value: "E",
+					Type:  g5.NonTerm,
+				}},
+			},
+			g5.Rule{
+				Symbols: g5.Symbols{g5.Symbol{
+					Value: "a",
+					Type:  g5.Term,
+				}},
+			},
+			g5.Rule{
+				Symbols: g5.Symbols{
+					g5.Symbol{
+						Value: "(",
+						Type:  g5.Term,
+					},
+					g5.Symbol{
+						Value: "E",
+						Type:  g5.NonTerm,
+					},
+					g5.Symbol{
+						Value: ")",
+						Type:  g5.Term,
+					}},
+			},
+		}
+	*/
 	analyser.Rules = make(g5.Rules, 0, len(ruleMap))
 	for _, rule := range ruleMap {
 		analyser.Rules = append(analyser.Rules, *rule)
@@ -586,19 +554,41 @@ func (analyser Analyzer) PrintRules() {
 }
 
 func (analyser Analyzer) findRule(row *[]string) (g5.Rule, error) {
+	log.Println("row", *row)
+	for _, s := range *row {
+		fmt.Printf(s + " ")
+	}
+	log.Println("locaaaaaaaaals", len(analyser.Rules))
 	for rowC := 1; rowC < len(*row); rowC++ {
+		log.Println("local row", (*row)[len(*row)-rowC:])
+		// for _, s := range (*row)[len(*row)-rowC:] {
+		// 	fmt.Printf(s + " ")
+		// }
+
 		for _, rule := range analyser.Rules {
+			fmt.Printf("\n")
+			fmt.Printf("%d------------\n", len(rule.Symbols))
+			for _, s := range rule.Symbols {
+				fmt.Printf(s.Value + " ")
+			}
+			fmt.Printf("\n")
+
 			if len(rule.Symbols) != rowC {
+				fmt.Printf("\ndiff %d, %d", len(rule.Symbols), rowC)
 				continue
 			}
 			var matched = true
-			for i, symbol := range rule.Symbols {
-				if symbol.Value != (*row)[len(*row)-1-i] {
+
+			for i, _ := range rule.Symbols {
+				if rule.Symbols[len(rule.Symbols)-1-i].Value != (*row)[len(*row)-1-i] {
+					log.Println("symbol", rule.Symbols[len(rule.Symbols)-1-i].Value, (*row)[len(*row)-1-i])
 					matched = false
 					break
 				}
 			}
+
 			if matched {
+				log.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ")
 				*row = (*row)[:len(*row)-rowC+1]
 				(*row)[len(*row)-1] = AnalyserNonTerm
 				return rule, nil
@@ -711,12 +701,6 @@ func (analyser Analyzer) ToAst(rules g5.Rules) {
 			parent = el
 			break
 		}
-		if len(savedArr) > 0 {
-			log.Println("mmmmmm", i)
-		}
-		for _, m := range savedArr {
-			log.Println("m", m)
-		}
 		if !ok {
 			parent = &g5.Node{
 				ID:    fmt.Sprintf("%d.", counter),
@@ -765,93 +749,29 @@ func (analyser Analyzer) ToAst(rules g5.Rules) {
 }
 
 func (analyser Analyzer) ToAstV2(rules g5.Rules) error {
-	var nodes = []*g5.Node{}
+	var nodes = []*ast.Node{}
 
 	var counter = 2
-	var root = &g5.Node{
+	var root = &ast.Node{
 		ID:    fmt.Sprintf("%d.", 1),
 		Value: AnalyserNonTerm,
 		Type:  g5.NonTerm,
 	}
-	freeNodes := []*g5.Node{root}
+	freeNodes := []*ast.Node{root}
 	nodes = append(nodes, root)
 
 	for i := len(rules) - 1; i >= 0; i-- {
 		var r = rules[i]
-		var model, err = ToNumOperator(r)
+		var model, err = ast.ToNumOperator(r)
 		if err != nil {
 			return err
 		}
 
 		node := freeNodes[0]
-		newNodes := model.ToNodes(node, &counter)
-		nodes = append(nodes, node)
+		newNodes, toAst := model.ToNodes(node, &counter)
+		nodes = append(nodes, append(toAst, node)...)
 		freeNodes = append(freeNodes[1:], newNodes...)
 	}
 
-	return g5.VisualizeFSM(nodes, "assets", "hello2.dot")
-}
-
-// ast переделка
-
-func ToNumOperator(r g5.Rule) (NumOperator, error) {
-	var (
-		terms, nonTerms []string
-	)
-	for _, s := range r.Symbols {
-		if s.Type == g5.Term {
-			terms = append(terms, s.Value)
-		} else {
-			nonTerms = append(nonTerms, s.Value)
-		}
-	}
-	switch {
-	case len(terms) == 1 && len(nonTerms) == 2:
-		return OneTwoOperatored{
-			Main: terms[0],
-		}, nil
-	case len(terms) == 1 && len(nonTerms) == 0:
-		return NoOperatored{
-			Main: terms[0],
-		}, nil
-	default:
-		return nil, fmt.Errorf("Нет модели для правила с %d термами и %d нетермами", len(terms), len(nonTerms))
-	}
-}
-
-type NumOperator interface {
-	ToNodes(node *g5.Node, counter *int) []*g5.Node
-}
-
-type OneTwoOperatored struct {
-	Main string
-}
-
-func (two OneTwoOperatored) ToNodes(node *g5.Node, counter *int) []*g5.Node {
-	node.Value = two.Main
-
-	var leftNode = &g5.Node{
-		ID:          fmt.Sprintf("%d.", *counter),
-		Parent:      node,
-		ParentValue: two.Main,
-		Type:        g5.Term,
-	}
-	*counter++
-	var rightNode = &g5.Node{
-		ID:          fmt.Sprintf("%d.", *counter),
-		Parent:      node,
-		ParentValue: two.Main,
-		Type:        g5.Term,
-	}
-	*counter++
-	return []*g5.Node{leftNode, rightNode}
-}
-
-type NoOperatored struct {
-	Main string
-}
-
-func (no NoOperatored) ToNodes(node *g5.Node, counter *int) []*g5.Node {
-	node.Value = no.Main
-	return nil
+	return ast.Visualize(nodes, "assets", "ast.dot")
 }

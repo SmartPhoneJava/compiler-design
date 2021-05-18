@@ -43,7 +43,7 @@ func main() {
 }
 
 func mainLab4() {
-	var inputPath = "lab4.json"
+	var inputPath = "bigexample.json"
 
 	c, err := parsing.MakeGrammar(inputPath)
 	if err != nil {
@@ -68,7 +68,8 @@ func mainLab4() {
 	analyzer.Matrix.Println()
 	analyzer.PrintRules()
 
-	var inputRow = "a + a * a"
+	var inputRow = "if a or a and a then a = a xor a ;"
+	//var inputRow = "if a or a and a then a = a xor a ;"
 	outS, outR, err := analyzer.Exec(strings.Split(inputRow, " "))
 	if err != nil {
 		log.Fatal(err)
