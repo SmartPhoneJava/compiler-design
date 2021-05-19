@@ -25,11 +25,11 @@ func Test_Opa1(t *testing.T) {
 		analyzer = opa.NewAnalyzer(lexer)
 		inputRow = "if a or a and a then a = a xor a ;"
 	)
-	_, outR, err := analyzer.Exec(strings.Split(inputRow, " "))
+	outS, outR, err := analyzer.Exec(strings.Split(inputRow, " "), false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ast.Visualize(outR, "assets", "Test_Opa1.dot")
+	err = ast.Visualize("", "", outS, outR, "assets", "Test_Opa1.dot")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +52,7 @@ func Test_Opa2(t *testing.T) {
 		inputRow    = "if a a or a and a then a = a xor a ;"
 		expectedErr = errors.New("Введенный код содержит ошибку: ключевое слово `a` не может находиться слева от `a`")
 	)
-	_, _, err = analyzer.Exec(strings.Split(inputRow, " "))
+	_, _, err = analyzer.Exec(strings.Split(inputRow, " "), false)
 
 	if err.Error() != expectedErr.Error() {
 		t.Fatalf("Ожидалось '%s', а получено '%s'", expectedErr, err)
@@ -76,7 +76,7 @@ func Test_Opa3(t *testing.T) {
 		inputRow    = "a + + a * a"
 		expectedErr = errors.New("Введенный код содержит ошибку: Правила не найдено для &[⏊ E +]")
 	)
-	_, _, err = analyzer.Exec(strings.Split(inputRow, " "))
+	_, _, err = analyzer.Exec(strings.Split(inputRow, " "), false)
 
 	if err.Error() != expectedErr.Error() {
 		t.Fatalf("Ожидалось '%s', а получено '%s'", expectedErr, err)
@@ -99,11 +99,63 @@ func Test_Opa4(t *testing.T) {
 		analyzer = opa.NewAnalyzer(lexer)
 		inputRow = "a + a * a"
 	)
-	_, outR, err := analyzer.Exec(strings.Split(inputRow, " "))
+	outS, outR, err := analyzer.Exec(strings.Split(inputRow, " "), false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ast.Visualize(outR, "assets", "Test_Opa4.dot")
+	err = ast.Visualize("", "", outS, outR, "assets", "Test_Opa4.dot")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func Test_Opa5(t *testing.T) {
+	var inputPath = "assets/grammar/lab4.json"
+
+	c, err := parsing.MakeGrammar(inputPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lexer, err := c.ToLexer()
+	if err != nil {
+		t.Fatalf("%s", err.Error())
+	}
+
+	var (
+		analyzer = opa.NewAnalyzer(lexer)
+		inputRow = "{ a = a ; }"
+	)
+	outS, outR, err := analyzer.Exec(strings.Split(inputRow, " "), false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = ast.Visualize("", "", outS, outR, "assets", "Test_Opa5.dot")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func Test_Opa6(t *testing.T) {
+	var inputPath = "assets/grammar/lab4.json"
+
+	c, err := parsing.MakeGrammar(inputPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lexer, err := c.ToLexer()
+	if err != nil {
+		t.Fatalf("%s", err.Error())
+	}
+
+	var (
+		analyzer = opa.NewAnalyzer(lexer)
+		inputRow = "{ a = a ; }"
+	)
+	outS, outR, err := analyzer.Exec(strings.Split(inputRow, " "), false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = ast.Visualize("", "", outS, outR, "assets", "Test_Opa5.dot")
 	if err != nil {
 		t.Fatal(err)
 	}

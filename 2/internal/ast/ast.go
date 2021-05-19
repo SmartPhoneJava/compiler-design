@@ -3,18 +3,39 @@ package ast
 import (
 	"fmt"
 	"lab2/internal/g5"
+	"log"
 	"os"
 
 	"github.com/awalterschulze/gographviz"
 )
 
-func ToNumOperator(r g5.Rule) (NumOperator, error) {
+const (
+	Type1to2 = iota + 1
+	Type1to1
+	Type2to1
+	TypeHard
+	TypeTerm
+)
+
+func ToNumOperator(symbols []string, nt, start string, r g5.Rule, anyCounter *int) (NumOperator, error) {
 	var (
 		terms, nonTerms []string
 	)
 	for _, s := range r.Symbols {
 		if s.Type == g5.Term {
-			terms = append(terms, s.Value)
+			var val = s.Value
+			if s.Value == g5.TermAny {
+				log.Println("*anyCounter ", *anyCounter)
+				if *anyCounter >= 0 {
+					for j := *anyCounter; j >= 0; j-- {
+						val = symbols[j]
+						*anyCounter = j - 1
+						break
+					}
+				}
+
+			}
+			terms = append(terms, val)
 		} else {
 			nonTerms = append(nonTerms, s.Value)
 		}
@@ -28,6 +49,13 @@ func ToNumOperator(r g5.Rule) (NumOperator, error) {
 		return NoOperatored{
 			Main: terms[0],
 		}, nil
+	case len(terms) == 1 && len(nonTerms) == 1:
+		if terms[0] == ";" {
+			return IgnoreOperatored{}, nil
+		}
+		return OneOneOperatored{
+			Main: terms[0],
+		}, nil
 	case len(r.Symbols) == 6:
 		if IsIfThenElseOperator(r) {
 			return IfThenElseOperatored{}, nil
@@ -36,16 +64,20 @@ func ToNumOperator(r g5.Rule) (NumOperator, error) {
 		if IsIfThenOperator(r) {
 			return IfThenOperatored{}, nil
 		}
-	case len(terms) == 1 && len(nonTerms) == 1:
-		if terms[0] == ";" {
-			return IgnoreOperatored{}, nil
-		}
 	case len(terms) == 2 && len(nonTerms) == 1:
-		if IsAEqOperator(r) {
-			return AEqOperatored{}, nil
+		log.Println("aaaaaaaaaaaaa", terms)
+		if terms[1] == "=" {
+			log.Println("bbbbb")
+			return LeftTemEqOperatored{
+				Left: terms[0],
+			}, nil
 		}
+		return TwoOneOperatored{
+			Left:  terms[0],
+			Right: terms[1],
+		}, nil
 	}
-	return nil, fmt.Errorf("нет модели для правила с %d термами и %d нетермами: %v", len(terms), len(nonTerms), r)
+	return nil, fmt.Errorf("нет модели для правила с %d термами и %d нетермами: %s", len(terms), len(nonTerms), r.String(nt, start))
 }
 
 func IsIfThenElseOperator(r g5.Rule) bool {
@@ -70,21 +102,12 @@ func IsIfThenOperator(r g5.Rule) bool {
 		r.Symbols[3].Type == g5.NonTerm
 }
 
-func IsAEqOperator(r g5.Rule) bool {
-	if len(r.Symbols) != 3 {
-		return false
-	}
-	return r.Symbols[0].Type == g5.Term && r.Symbols[0].Value == "a" &&
-		r.Symbols[1].Type == g5.Term && r.Symbols[1].Value == "=" &&
-		r.Symbols[2].Type == g5.NonTerm
-}
-
 type Node struct {
 	ID          string
 	Value       string
 	Parent      *Node
 	ParentValue string
-	Type        string
+	Type        uint
 }
 
 type NumOperator interface {
@@ -107,6 +130,7 @@ func (two OneTwoOperatored) ToNodes(
 	node *Node, counter *int,
 ) ([]*Node, []*Node) {
 	node.Value = two.Main
+	node.Type = Type1to2
 
 	var leftNode = &Node{
 		ID:          fmt.Sprintf("%d.", *counter),
@@ -123,25 +147,69 @@ func (two OneTwoOperatored) ToNodes(
 	return []*Node{leftNode, rightNode}, nil
 }
 
-// a =
-type AEqOperatored struct{}
+// :+, :-
+type OneOneOperatored struct {
+	Main string
+}
 
-func (two AEqOperatored) ToNodes(
+func (two OneOneOperatored) ToNodes(
 	node *Node, counter *int,
 ) ([]*Node, []*Node) {
-	node.Value = "="
+	node.Value = two.Main
+	node.Type = Type1to1
 
-	var leftNode = &Node{
+	var downNode = &Node{
+		ID:          fmt.Sprintf("%d.", *counter),
+		Parent:      node,
+		ParentValue: two.Main,
+	}
+	*counter++
+	return []*Node{downNode}, nil
+}
+
+// { E }, ( E ) ...
+type TwoOneOperatored struct {
+	Left, Right string
+}
+
+func (two TwoOneOperatored) ToNodes(
+	node *Node, counter *int,
+) ([]*Node, []*Node) {
+	node.Value = two.Left + " " + two.Right
+	node.Type = Type2to1
+
+	var downNode = &Node{
 		ID:          fmt.Sprintf("%d.", *counter),
 		Parent:      node,
 		ParentValue: node.Value,
-		Value:       "a",
 	}
 	*counter++
+	return []*Node{downNode}, nil
+}
+
+// { E }, ( E ) ...
+type LeftTemEqOperatored struct {
+	Left string
+}
+
+func (two LeftTemEqOperatored) ToNodes(
+	node *Node, counter *int,
+) ([]*Node, []*Node) {
+	node.Value = "="
+	node.Type = Type1to2
+
 	var rightNode = &Node{
 		ID:          fmt.Sprintf("%d.", *counter),
 		Parent:      node,
 		ParentValue: node.Value,
+	}
+	*counter++
+	var leftNode = &Node{
+		ID:          fmt.Sprintf("%d.", *counter),
+		Parent:      node,
+		ParentValue: node.Value,
+		Value:       two.Left,
+		Type:        TypeTerm,
 	}
 	*counter++
 	return []*Node{rightNode}, []*Node{leftNode}
@@ -154,7 +222,7 @@ func (two IfThenOperatored) ToNodes(
 	node *Node, counter *int,
 ) ([]*Node, []*Node) {
 	node.Value = "branch"
-	node.Type = g5.NonTerm
+	node.Type = TypeHard
 
 	var conditionNodeParent = &Node{
 		ID:          fmt.Sprintf("%d.", *counter),
@@ -199,7 +267,7 @@ func (two IfThenElseOperatored) ToNodes(
 	node *Node, counter *int,
 ) ([]*Node, []*Node) {
 	node.Value = "branch"
-	node.Type = g5.NonTerm
+	node.Type = TypeHard
 
 	var conditionNodeParent = &Node{
 		ID:          fmt.Sprintf("%d.", *counter),
@@ -272,10 +340,11 @@ func (no NoOperatored) ToNodes(
 	node *Node, counter *int,
 ) ([]*Node, []*Node) {
 	node.Value = no.Main
+	node.Type = TypeTerm
 	return nil, nil
 }
 
-// VisualizeFSM - визуализировать граф
+// visualize - визуализировать граф
 func visualize(nodes []*Node, path, name string) error {
 	graphAst, err := gographviz.ParseString(`digraph G {}`)
 	if err != nil {
@@ -290,16 +359,23 @@ func visualize(nodes []*Node, path, name string) error {
 	var attrs = make(map[string]string, 0)
 	for _, v := range nodes {
 		var vattr = make(map[string]string, 0)
-
-		// if v.Type == g5.Term {
-		// 	vattr["label"] = fmt.Sprintf(`<<font color="green">%s</font>>`, v.Value)
-		// } else {
-		vattr["label"] = fmt.Sprintf(`<<font color="red">%s</font>>`, v.Value)
-		//}
+		var color = "black"
+		switch v.Type {
+		case Type1to2:
+			color = "blue"
+		case Type1to1:
+			color = "cyan"
+		case Type2to1:
+			color = "orange"
+		case TypeHard:
+			color = "brown"
+		case TypeTerm:
+			color = "red"
+		}
+		vattr["label"] = fmt.Sprintf(`<<font color="%s">%s</font>>`, color, v.Value)
 		graph.AddNode("G", toString(v.ID), vattr)
 	}
 	for _, e := range nodes {
-		//attrs["label"] = fmt.Sprintf(`<<font color="blue">%s</font>>`, "hello")
 		if e.Parent != nil {
 			graph.AddEdge(toString(e.Parent.ID), toString(e.ID), true, attrs)
 		}
@@ -325,28 +401,35 @@ func toString(s string) string {
 }
 
 // ToAst привести правила к АСТ
-func Visualize(rules g5.Rules, path, name string) error {
+func Visualize(nt, start string, symbols []string, rules g5.Rules, path, name string) error {
 	var (
 		counter = 2
 		root    = &Node{
-			ID:   fmt.Sprintf("%d.", 1),
-			Type: g5.NonTerm,
+			ID: fmt.Sprintf("%d.", 1),
 		}
-		freeNodes = []*Node{root}
-		nodes     = []*Node{root}
+		freeNodes       = []*Node{root}
+		nodes           = []*Node{root}
+		alreadyAddNodes = make(map[string]interface{})
 	)
+	var anyCounter = len(symbols) - 1
 	for i := len(rules) - 1; i >= 0; i-- {
 		var r = rules[i]
-		var model, err = ToNumOperator(r)
+		var model, err = ToNumOperator(symbols, nt, start, r, &anyCounter)
 		if err != nil {
 			return err
 		}
 
-		node := freeNodes[0]
+		node := freeNodes[len(freeNodes)-1]
 		newNodes, toAst := model.ToNodes(node, &counter)
 
-		nodes = append(nodes, append(toAst, node)...)
-		freeNodes = append(freeNodes[1:], newNodes...)
+		_, ok := alreadyAddNodes[node.ID]
+		if !ok {
+			nodes = append(nodes, node)
+			alreadyAddNodes[node.ID] = nil
+		}
+
+		nodes = append(nodes, toAst...)
+		freeNodes = append(freeNodes[:len(freeNodes)-1], newNodes...)
 	}
 
 	return visualize(nodes, path, name)

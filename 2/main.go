@@ -32,7 +32,7 @@ func main() {
 }
 
 func mainLab4() {
-	var inputPath = "bigexample.json"
+	var inputPath = "assets/grammar/lab4.json"
 
 	c, err := parsing.MakeGrammar(inputPath)
 	if err != nil {
@@ -56,14 +56,15 @@ func mainLab4() {
 	analyzer.Matrix.Println()
 	analyzer.PrintRules()
 
-	var inputRow = "if a or a and a then a = a xor a ;"
+	var inputRow = "{ a = 1 + ( ( ( 2 - 3 ) and b ) or abs ( 4 xor 5 ) ) ; }"
+	//var inputRow = "{ a = 5 + ( 7 - 8 ) ; }"
 	//var inputRow = "if a or a and a then a = a xor a ;"
-	outS, outR, err := analyzer.Exec(strings.Split(inputRow, " "))
+	outS, outR, err := analyzer.Exec(strings.Split(inputRow, " "), true)
 	if err != nil {
 		log.Fatal(err)
 	}
 	analyzer.PrintlnExecResult("Результаты анализатора", inputRow, outS, outR)
-	err = ast.Visualize(outR, "assets", "ast.dot")
+	err = ast.Visualize(opa.AnalyserNonTerm, opa.AnalyserNonTerm, outS, outR, "assets", "ast.dot")
 	if err != nil {
 		log.Fatal(err)
 	}

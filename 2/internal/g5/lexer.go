@@ -180,18 +180,22 @@ func (lexer Lexer) Print(text string) {
 	color.Cyan("Набор правил: \n")
 	for nt, res := range lexer.NonTerms {
 		for _, rule := range res.Rules {
-			var right string
-			for _, s := range rule.Symbols {
-				ColorSymbol(s, &right)
-			}
-			if lexer.Start.Symbol == nt {
-				nt = color.RedString(nt)
-			} else {
-				nt = color.YellowString(nt)
-			}
-			fmt.Printf("%s → %s\n", nt, right)
+			fmt.Println(rule.String(nt, lexer.Start.Symbol))
 		}
 	}
+}
+
+func (rule Rule) String(left, startSymbol string) string {
+	var right string
+	for _, s := range rule.Symbols {
+		ColorSymbol(s, &right)
+	}
+	if startSymbol == left {
+		left = color.RedString(left)
+	} else {
+		left = color.YellowString(left)
+	}
+	return fmt.Sprintf("%s → %s", left, right)
 }
 
 const (

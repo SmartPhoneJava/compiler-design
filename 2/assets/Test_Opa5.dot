@@ -1,0 +1,10 @@
+digraph G {
+	"1."->"2.";
+	"2."->"4.";
+	"2."->"3.";
+	"1." [ label=<<font color="orange">{ }</font>> ];
+	"2." [ label=<<font color="blue">=</font>> ];
+	"3." [ label=<<font color="red">a</font>> ];
+	"4." [ label=<<font color="red">a</font>> ];
+
+}

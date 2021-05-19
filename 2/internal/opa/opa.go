@@ -4,6 +4,7 @@ package opa
 import (
 	"fmt"
 	"lab2/internal/g5"
+	"log"
 
 	"github.com/fatih/color"
 )
@@ -264,23 +265,60 @@ func MakeMatrixV2(lexer g5.Lexer) OperatorsMatrix {
 	return matrix
 }
 
+func ToMatrixOperator(b byte) string {
+	var text = ""
+	switch b {
+	case EQ:
+		text = EqText
+	case MORE:
+		text = MoreText
+	case LESS:
+		text = LessText
+	}
+	return text
+}
+
 func (matrix OperatorsMatrix) Println() {
 	// var arr = make([]string, 0, len(matrix))
 	// var elemIndex = map[string]int{}
-	var arr = []string{";", "if", "then", "else", "a", "=", "or", "xor", "and", "(", ")", "⏊"}
+	// var arr = []string{";", "if", "then", "else", "a", "=", "or", "xor", "and", "(", ")", "⏊"}
+	// var elemIndex = map[string]int{
+	// 	";":    0,
+	// 	"if":   1,
+	// 	"then": 2,
+	// 	"else": 3,
+	// 	"a":    4,
+	// 	"=":    5,
+	// 	"or":   6,
+	// 	"xor":  7,
+	// 	"and":  8,
+	// 	"(":    9,
+	// 	")":    10,
+	// 	"⏊":    11,
+	// }
+
+	/*
+		abs  |  {   |__IDENT|  &   |  (   |__ANY |  /   |  or  | xor  |  <>  |  =   |__NUMBER|  +   | rem  |  )   |  ==  | mod  | not  |  **  | and  |  <   |  >   |  }   |  -   |   ⏊  |  ;   |  <=  |  >=
+	*/
+
+	var arr = []string{"err", "{", "&", "xor", "(", ")", "=", ";", "}", "+", ">", "<", "a", "abs", "not", "⏊"}
 	var elemIndex = map[string]int{
-		";":    0,
-		"if":   1,
-		"then": 2,
-		"else": 3,
-		"a":    4,
-		"=":    5,
-		"or":   6,
-		"xor":  7,
-		"and":  8,
-		"(":    9,
-		")":    10,
-		"⏊":    11,
+		"err": 0,
+		"{":   1,
+		"&":   2,
+		"xor": 3,
+		"(":   4,
+		")":   5,
+		"=":   6,
+		";":   7,
+		"}":   8,
+		"+":   9,
+		">":   10,
+		"<":   11,
+		"a":   12,
+		"abs": 13,
+		"not": 14,
+		"⏊":   15,
 	}
 
 	// for v := range matrix {
@@ -295,38 +333,29 @@ func (matrix OperatorsMatrix) Println() {
 
 	for c, terms := range matrix {
 		for r, symbol := range terms {
-			var text = ""
-			switch symbol {
-			case EQ:
-				text = EqText
-			case MORE:
-				text = MoreText
-			case LESS:
-				text = LessText
-			}
+			var text = ToMatrixOperator(symbol)
 			realMatrix[elemIndex[c]][elemIndex[r]] = text
 		}
 	}
 
 	var printHorLine = func() {
-
 		fmt.Printf("\n")
 		for range arr {
-			fmt.Printf("------|")
+			fmt.Printf("----|")
 		}
-		fmt.Printf("------|")
+		fmt.Printf("----|")
 		fmt.Printf("\n")
 	}
 
-	fmt.Printf("\n\n%6s|", "")
+	fmt.Printf("\n\n%4s|", "")
 	for _, s := range arr {
-		fmt.Printf("%6s|", center(s, 6))
+		fmt.Printf("%4s|", center(s, 4))
 	}
 	printHorLine()
 	for i, row := range realMatrix {
-		fmt.Printf("%6s|", center(arr[i], 6))
+		fmt.Printf("%4s|", center(arr[i], 4))
 		for _, v := range row {
-			fmt.Printf("%6s|", center(v, 6))
+			fmt.Printf("%4s|", center(v, 4))
 		}
 		printHorLine()
 	}
@@ -401,7 +430,10 @@ func NewAnalyzer(lexer g5.Lexer) *Analyzer {
 	}
 
 	analyser.Rules = make(g5.Rules, 0, len(ruleMap))
-	for _, rule := range ruleMap {
+	for str, rule := range ruleMap {
+		if str == " ; " { // !! придумать как поправить
+			continue
+		}
 		analyser.Rules = append(analyser.Rules, *rule)
 	}
 
@@ -430,7 +462,8 @@ func (analyser Analyzer) PrintRules() {
 	printingLexer.Print("\n\nПравила внутри анализатора")
 }
 
-func (analyser Analyzer) findRule(row *[]string) (g5.Rule, error) {
+func (analyser Analyzer) findRule(row *[]string) (g5.Rule, []string, error) {
+	log.Println("find", *row)
 	for rowC := 1; rowC < len(*row); rowC++ {
 		for _, rule := range analyser.Rules {
 			if len(rule.Symbols) != rowC {
@@ -439,20 +472,34 @@ func (analyser Analyzer) findRule(row *[]string) (g5.Rule, error) {
 			var matched = true
 
 			for i := range rule.Symbols {
-				if rule.Symbols[len(rule.Symbols)-1-i].Value != (*row)[len(*row)-1-i] {
+				var (
+					ruleSymbol = rule.Symbols[len(rule.Symbols)-1-i]
+					inputValue = (*row)[len(*row)-1-i]
+					ok         bool
+				)
+				// if ruleSymbol.Type == g5.Reserved {
+				// 	ok = g5.HandleReserved(ruleSymbol.Value, inputValue)
+				// } else {
+				ok = ruleSymbol.Value == inputValue
+				//	}
+				if !ok {
 					matched = false
 					break
 				}
 			}
 
 			if matched {
+				var deleted []string
+				for i := len(*row) - rowC; i < len(*row); i++ {
+					deleted = append(deleted, (*row)[i])
+				}
 				*row = (*row)[:len(*row)-rowC+1]
 				(*row)[len(*row)-1] = AnalyserNonTerm
-				return rule, nil
+				return rule, deleted, nil
 			}
 		}
 	}
-	return g5.Rule{}, fmt.Errorf("Правила не найдено для %s", row)
+	return g5.Rule{}, nil, fmt.Errorf("Правила не найдено для %s", row)
 }
 
 // Exec - попробовать считать введенные символы
@@ -463,33 +510,57 @@ func (analyser Analyzer) findRule(row *[]string) (g5.Rule, error) {
 			введенной строки
 		- ошибка, если введены некорретные входные данные
 */
-func (analyser Analyzer) Exec(input []string) ([]string, g5.Rules, error) {
+func (analyser Analyzer) Exec(
+	input []string,
+	withDebug bool,
+) ([]string, g5.Rules, error) {
 	// Добавляем символ конца ввода
 	input = append(input, StartEnd)
 	var (
 		outputSymbols []string
 		outputRules   g5.Rules
 		// В стек сразу помещаем символа начала ввода
-		stack = []string{StartEnd}
+		stack    = []string{StartEnd}
+		symStack = []string{StartEnd}
 	)
 	for len(stack) > 0 {
 		var (
 			currStack      = getFromStack(stack)
-			currInput      = input[0]
+			currInput      = analyser.getFromInput(input)
 			matrixOperator = analyser.Matrix[currStack][currInput]
 		)
 
+		if withDebug {
+			printIterate(stack, input, outputSymbols, currStack, currInput, matrixOperator)
+		}
 		switch {
 		case matrixOperator == EQ || matrixOperator == LESS:
 			stack = append(stack, currInput)
+			if currInput == g5.TermAny {
+				symStack = append(symStack, input[0])
+			}
 			input = input[1:]
 		case matrixOperator == MORE:
-			foundRule, err := analyser.findRule(&stack)
+			foundRule, deleted, err := analyser.findRule(&stack)
 			if err != nil {
 				return nil, nil, wrapError(err)
 			}
 			outputRules = append(outputRules, foundRule)
-			outputSymbols = append(outputSymbols, currStack)
+			//deleted = append(deleted, currStack)
+			log.Println("deleted", deleted)
+			for u := len(deleted) - 1; u >= 0; u-- {
+				if deleted[u] == AnalyserNonTerm {
+					continue
+				}
+				//outputSymbols = append(outputSymbols, deleted[u])
+				if deleted[u] == g5.TermAny {
+					outputSymbols = append(outputSymbols, symStack[len(symStack)-1])
+					symStack = symStack[:len(symStack)-1]
+				} else {
+					//	outputSymbols = append(outputSymbols, deleted[u])
+				}
+			}
+
 		case matrixOperator == DONE:
 			return outputSymbols, outputRules, nil
 		case matrixOperator == NO:
@@ -508,6 +579,32 @@ func (analyser Analyzer) Exec(input []string) ([]string, g5.Rules, error) {
 	return outputSymbols, outputRules, nil
 }
 
+func printIterate(
+	stack, input, outputSymbols []string,
+	currStack, currInput string,
+	matrixOperator byte,
+) {
+	var stackStr string
+	for _, str := range stack {
+		stackStr += str + " "
+	}
+
+	var inputStr string
+	for _, str := range input {
+		inputStr += str + " "
+	}
+
+	var outputStr string
+	for _, str := range outputSymbols {
+		outputStr += str + " "
+	}
+	log.Printf("stack(%v), input(%v), inMatrix(%v) \n", color.GreenString(stackStr), color.YellowString(inputStr), ToMatrixOperator(matrixOperator))
+	log.Printf("outputSymbols(%v) \n", color.CyanString(outputStr))
+	log.Printf("currstack(%v), currinput(%v), %v \n", currStack, currInput, input[0])
+}
+
+// PrintlnExecResult - форматированный вывод результатов
+// проверки цепочки
 func (analyser Analyzer) PrintlnExecResult(
 	text, input string,
 	symbols []string,
@@ -520,7 +617,6 @@ func (analyser Analyzer) PrintlnExecResult(
 		right += color.GreenString(s) + " "
 	}
 	fmt.Printf("%s\n", right)
-
 	fmt.Printf("%s %s\n", color.CyanString("Правила, применённые к "), color.GreenString(input))
 
 	for _, rule := range rules {
@@ -532,10 +628,12 @@ func (analyser Analyzer) PrintlnExecResult(
 	}
 }
 
+// wrapError - обернуть ошибку
 func wrapError(err error) error {
 	return fmt.Errorf("Введенный код содержит ошибку: %s", err)
 }
 
+// getFromStack - получить первый терм с верхушки стека
 func getFromStack(stack []string) string {
 	for i := len(stack) - 1; i >= 0; i-- {
 		if stack[i] == AnalyserNonTerm {
@@ -544,4 +642,18 @@ func getFromStack(stack []string) string {
 		return stack[i]
 	}
 	return ""
+}
+
+// получить первый терм из входной строки юзера
+// если терм не распознан, подставляется g5.TermIDENT
+func (analyzer Analyzer) getFromInput(input []string) string {
+	val := input[0]
+	if analyzer.terms[val] {
+		return val
+	}
+	if val == StartEnd {
+		return val
+	}
+	//panic(val)
+	return g5.TermAny
 }

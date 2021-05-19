@@ -12,6 +12,9 @@ func MakeGrammar(filename string) (ContextGrammar, error) {
 	//здесь термы
 	name := gojsonq.New().File(filename).
 		From("grammar.-name").Get()
+	if name == nil {
+		return ContextGrammar{}, errors.New("Файл не найден или не содержит данных")
+	}
 	cg.Name = name.(string)
 
 	terms := gojsonq.New().File(filename).

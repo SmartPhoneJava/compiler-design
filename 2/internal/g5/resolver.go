@@ -10,6 +10,23 @@ import (
 	"github.com/fatih/color"
 )
 
+// Обработать зарезервированный терм
+func HandleReserved(
+	symbolInRule, symbolInInput string,
+) bool {
+
+	var ok bool
+	switch symbolInRule {
+	case TermAny:
+		ok = regexp.MustCompile(`^[A-Za-z0-9]+$`).MatchString(symbolInInput)
+	case TermNumber:
+		ok = regexp.MustCompile(`^[0-9]+$`).MatchString(symbolInInput)
+	case TermIDENT:
+		ok = regexp.MustCompile(`^[A-Za-z]+$`).MatchString(symbolInInput)
+	}
+	return ok
+}
+
 func (r Resolver) handleReserved(
 	input []string,
 	value string,
@@ -17,16 +34,7 @@ func (r Resolver) handleReserved(
 	current, next map[int]int,
 	isDebug bool,
 ) {
-
-	var ok bool
-	switch value {
-	case TermAny:
-		ok = regexp.MustCompile(`^[A-Za-z0-9]+$`).MatchString(input[index])
-	case TermNumber:
-		ok = regexp.MustCompile(`^[0-9]+$`).MatchString(input[index])
-	case TermIDENT:
-		ok = regexp.MustCompile(`^[A-Za-z]+$`).MatchString(input[index])
-	}
+	ok := HandleReserved(value, input[index])
 	if !ok {
 		return
 	}
