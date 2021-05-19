@@ -28,14 +28,14 @@ type ResT struct {
 }
 type ResTs []ResT
 
-func (lexer Lexer) ValidateDebug(text string, speed time.Duration) error {
+func (lexer Lexer) ValidateDebug(text string, speed *time.Duration) error {
 	var (
 		rows         = strings.Split(strings.ReplaceAll(text, "\n", ""), " ")
 		comprassions int
 		success      bool
 	)
 	var rules ResTs
-	_, err := lexer.Start.GoTo(rows, 0, true, &rules, &success, &comprassions, speed)
+	_, err := lexer.Start.GoTo(rows, 0, speed != nil, &rules, &success, &comprassions, speed)
 
 	goterm.Println("Comprassions: ", comprassions)
 	goterm.Flush()
@@ -142,11 +142,11 @@ func (lexer Lexer) ValidateDebug(text string, speed time.Duration) error {
 // }
 
 func (lexer Lexer) Validate(text string, isDebug bool) error {
-	var t time.Duration
 	if isDebug {
-		t = time.Second
+		var t = time.Second
+		return lexer.ValidateDebug(text, &t)
 	}
-	return lexer.ValidateDebug(text, t)
+	return lexer.ValidateDebug(text, nil)
 }
 
 func ColorSymbol(s Symbol, right *string) {
@@ -204,7 +204,7 @@ func (lexer Lexer) PrintState(
 	indexes map[int]int,
 	currentResolverSymbol string,
 	currentTextIndex, currentRuleI, currentSymbolI int,
-	speed time.Duration,
+	speed *time.Duration,
 ) {
 	goterm.Clear()
 	goterm.MoveCursor(1, 1)
@@ -229,7 +229,6 @@ func (lexer Lexer) PrintState(
 		if i == currentTextIndex {
 			row = color.CyanString(row)
 		}
-		goterm.Print(row + " ")
 	}
 
 	//sort.Sort(cfr.P)
@@ -261,7 +260,7 @@ func (lexer Lexer) PrintState(
 	}
 
 	goterm.Flush()
-	if speed != 0 {
-		time.Sleep(speed)
+	if speed != nil {
+		time.Sleep(*speed)
 	}
 }

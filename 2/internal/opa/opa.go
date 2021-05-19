@@ -3,9 +3,7 @@ package opa
 // operator_precedence_analyzer.go
 import (
 	"fmt"
-	"lab2/internal/ast"
 	"lab2/internal/g5"
-	"log"
 
 	"github.com/fatih/color"
 )
@@ -369,9 +367,10 @@ type Analyzer struct {
 }
 
 // Установим новые правила для анализатора
-func (analyser *Analyzer) Build(lexer g5.Lexer) {
+func NewAnalyzer(lexer g5.Lexer) *Analyzer {
 	var (
-		ruleMap = make(map[string]*g5.Rule)
+		analyser = &Analyzer{}
+		ruleMap  = make(map[string]*g5.Rule)
 	)
 	for _, res := range lexer.NonTerms {
 		for _, rule := range res.Rules {
@@ -401,129 +400,6 @@ func (analyser *Analyzer) Build(lexer g5.Lexer) {
 		}
 	}
 
-	/*
-
-		E ? E; – правило 1;
-		E ? if E then E else E | if E then E | a:= E – правила 2, 3 и 4;
-
-		E ? if E then E else E | a:= E – правила 5 и 6;
-
-		E ? E or E | E xor E | E – правила 7, 8 и 9;
-
-		E ? E and E | E – правила 10 и 11;
-
-		E ? a | (E) – правила 12 и 13.
-
-	*/
-	/*
-		analyser.Rules = g5.Rules{
-			g5.Rule{
-				Symbols: g5.Symbols{g5.Symbol{
-					Value: "if",
-					Type:  g5.Term,
-				}, g5.Symbol{
-					Value: "E",
-					Type:  g5.NonTerm,
-				}, g5.Symbol{
-					Value: "then",
-					Type:  g5.Term,
-				}, g5.Symbol{
-					Value: "E",
-					Type:  g5.NonTerm,
-				}, g5.Symbol{
-					Value: "else",
-					Type:  g5.Term,
-				}, g5.Symbol{
-					Value: "E",
-					Type:  g5.NonTerm,
-				}},
-			},
-			g5.Rule{
-				Symbols: g5.Symbols{g5.Symbol{
-					Value: "if",
-					Type:  g5.Term,
-				}, g5.Symbol{
-					Value: "E",
-					Type:  g5.NonTerm,
-				}, g5.Symbol{
-					Value: "then",
-					Type:  g5.Term,
-				}, g5.Symbol{
-					Value: "E",
-					Type:  g5.NonTerm,
-				}},
-			},
-			g5.Rule{
-				Symbols: g5.Symbols{g5.Symbol{
-					Value: "a",
-					Type:  g5.Term,
-				}, g5.Symbol{
-					Value: "=",
-					Type:  g5.Term,
-				}, g5.Symbol{
-					Value: "E",
-					Type:  g5.NonTerm,
-				}},
-			},
-			g5.Rule{
-				Symbols: g5.Symbols{g5.Symbol{
-					Value: "E",
-					Type:  g5.NonTerm,
-				}, g5.Symbol{
-					Value: "or",
-					Type:  g5.Term,
-				}, g5.Symbol{
-					Value: "E",
-					Type:  g5.NonTerm,
-				}},
-			},
-			g5.Rule{
-				Symbols: g5.Symbols{g5.Symbol{
-					Value: "E",
-					Type:  g5.NonTerm,
-				}, g5.Symbol{
-					Value: "xor",
-					Type:  g5.Term,
-				}, g5.Symbol{
-					Value: "E",
-					Type:  g5.NonTerm,
-				}},
-			},
-			g5.Rule{
-				Symbols: g5.Symbols{g5.Symbol{
-					Value: "E",
-					Type:  g5.NonTerm,
-				}, g5.Symbol{
-					Value: "and",
-					Type:  g5.Term,
-				}, g5.Symbol{
-					Value: "E",
-					Type:  g5.NonTerm,
-				}},
-			},
-			g5.Rule{
-				Symbols: g5.Symbols{g5.Symbol{
-					Value: "a",
-					Type:  g5.Term,
-				}},
-			},
-			g5.Rule{
-				Symbols: g5.Symbols{
-					g5.Symbol{
-						Value: "(",
-						Type:  g5.Term,
-					},
-					g5.Symbol{
-						Value: "E",
-						Type:  g5.NonTerm,
-					},
-					g5.Symbol{
-						Value: ")",
-						Type:  g5.Term,
-					}},
-			},
-		}
-	*/
 	analyser.Rules = make(g5.Rules, 0, len(ruleMap))
 	for _, rule := range ruleMap {
 		analyser.Rules = append(analyser.Rules, *rule)
@@ -533,6 +409,7 @@ func (analyser *Analyzer) Build(lexer g5.Lexer) {
 	analyser.Matrix = MakeMatrixV2(lexer)
 	analyser.Matrix[StartEnd][StartEnd] = DONE // помечаем, что при
 	// совпадении спец. символа успешно зканчиваем
+	return analyser
 }
 
 func (analyser Analyzer) PrintRules() {
@@ -554,41 +431,21 @@ func (analyser Analyzer) PrintRules() {
 }
 
 func (analyser Analyzer) findRule(row *[]string) (g5.Rule, error) {
-	log.Println("row", *row)
-	for _, s := range *row {
-		fmt.Printf(s + " ")
-	}
-	log.Println("locaaaaaaaaals", len(analyser.Rules))
 	for rowC := 1; rowC < len(*row); rowC++ {
-		log.Println("local row", (*row)[len(*row)-rowC:])
-		// for _, s := range (*row)[len(*row)-rowC:] {
-		// 	fmt.Printf(s + " ")
-		// }
-
 		for _, rule := range analyser.Rules {
-			fmt.Printf("\n")
-			fmt.Printf("%d------------\n", len(rule.Symbols))
-			for _, s := range rule.Symbols {
-				fmt.Printf(s.Value + " ")
-			}
-			fmt.Printf("\n")
-
 			if len(rule.Symbols) != rowC {
-				fmt.Printf("\ndiff %d, %d", len(rule.Symbols), rowC)
 				continue
 			}
 			var matched = true
 
-			for i, _ := range rule.Symbols {
+			for i := range rule.Symbols {
 				if rule.Symbols[len(rule.Symbols)-1-i].Value != (*row)[len(*row)-1-i] {
-					log.Println("symbol", rule.Symbols[len(rule.Symbols)-1-i].Value, (*row)[len(*row)-1-i])
 					matched = false
 					break
 				}
 			}
 
 			if matched {
-				log.Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ")
 				*row = (*row)[:len(*row)-rowC+1]
 				(*row)[len(*row)-1] = AnalyserNonTerm
 				return rule, nil
@@ -687,91 +544,4 @@ func getFromStack(stack []string) string {
 		return stack[i]
 	}
 	return ""
-}
-
-func (analyser Analyzer) ToAst(rules g5.Rules) {
-	var nodes = []*g5.Node{}
-	savedArr := make([]*g5.Node, 0)
-	var counter = 0
-	for i := 0; i < len(rules); i++ {
-		var r = rules[i]
-		var ok bool
-		var parent *g5.Node
-		for _, el := range savedArr {
-			parent = el
-			break
-		}
-		if !ok {
-			parent = &g5.Node{
-				ID:    fmt.Sprintf("%d.", counter),
-				Value: AnalyserNonTerm,
-				Type:  g5.NonTerm,
-			}
-			nodes = append(nodes, parent)
-			counter++
-			savedArr = append(savedArr, parent)
-		}
-		var right string
-		for _, s := range r.Symbols {
-			var node = &g5.Node{
-				ID:          fmt.Sprintf("%d.", counter),
-				Value:       s.Value,
-				Parent:      parent,
-				ParentValue: parent.Value,
-				//Type:        rules[i].Rule.Symbols[j].Type,
-			}
-			log.Printf("\nconnect %s -> %s", s, parent.Value)
-			counter++
-			// if len(r.Symbols) > j {
-			// 	if r.Symbols[j].Type == g5.NonTerm {
-			// 		m[r.Symbols[j].Value] = node
-			// 		node.Value = r.Symbols[j].Value
-			// 	}
-
-			// 	node.Type = r.Symbols[j].Type
-			// 	if node.Type == g5.Reserved {
-			// 		node.Type = g5.Term
-			// 	}
-			// }
-			nodes = append(nodes, node)
-
-		}
-		for _, s := range r.Symbols {
-			right += " " + s.Value
-		}
-		log.Printf("%s->%s", AnalyserNonTerm, right)
-		if ok {
-			savedArr = savedArr[1:]
-		}
-	}
-
-	g5.MustVisualize(nodes, "assets", "hello2.dot")
-}
-
-func (analyser Analyzer) ToAstV2(rules g5.Rules) error {
-	var nodes = []*ast.Node{}
-
-	var counter = 2
-	var root = &ast.Node{
-		ID:    fmt.Sprintf("%d.", 1),
-		Value: AnalyserNonTerm,
-		Type:  g5.NonTerm,
-	}
-	freeNodes := []*ast.Node{root}
-	nodes = append(nodes, root)
-
-	for i := len(rules) - 1; i >= 0; i-- {
-		var r = rules[i]
-		var model, err = ast.ToNumOperator(r)
-		if err != nil {
-			return err
-		}
-
-		node := freeNodes[0]
-		newNodes, toAst := model.ToNodes(node, &counter)
-		nodes = append(nodes, append(toAst, node)...)
-		freeNodes = append(freeNodes[1:], newNodes...)
-	}
-
-	return ast.Visualize(nodes, "assets", "ast.dot")
 }

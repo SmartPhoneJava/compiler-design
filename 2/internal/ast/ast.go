@@ -3,7 +3,6 @@ package ast
 import (
 	"fmt"
 	"lab2/internal/g5"
-	"log"
 	"os"
 
 	"github.com/awalterschulze/gographviz"
@@ -37,6 +36,14 @@ func ToNumOperator(r g5.Rule) (NumOperator, error) {
 		if IsIfThenOperator(r) {
 			return IfThenOperatored{}, nil
 		}
+	case len(terms) == 1 && len(nonTerms) == 1:
+		if terms[0] == ";" {
+			return IgnoreOperatored{}, nil
+		}
+	case len(terms) == 2 && len(nonTerms) == 1:
+		if IsAEqOperator(r) {
+			return AEqOperatored{}, nil
+		}
 	}
 	return nil, fmt.Errorf("нет модели для правила с %d термами и %d нетермами: %v", len(terms), len(nonTerms), r)
 }
@@ -61,6 +68,15 @@ func IsIfThenOperator(r g5.Rule) bool {
 		r.Symbols[1].Type == g5.NonTerm &&
 		r.Symbols[2].Type == g5.Term && r.Symbols[2].Value == "then" &&
 		r.Symbols[3].Type == g5.NonTerm
+}
+
+func IsAEqOperator(r g5.Rule) bool {
+	if len(r.Symbols) != 3 {
+		return false
+	}
+	return r.Symbols[0].Type == g5.Term && r.Symbols[0].Value == "a" &&
+		r.Symbols[1].Type == g5.Term && r.Symbols[1].Value == "=" &&
+		r.Symbols[2].Type == g5.NonTerm
 }
 
 type Node struct {
@@ -105,6 +121,30 @@ func (two OneTwoOperatored) ToNodes(
 	}
 	*counter++
 	return []*Node{leftNode, rightNode}, nil
+}
+
+// a =
+type AEqOperatored struct{}
+
+func (two AEqOperatored) ToNodes(
+	node *Node, counter *int,
+) ([]*Node, []*Node) {
+	node.Value = "="
+
+	var leftNode = &Node{
+		ID:          fmt.Sprintf("%d.", *counter),
+		Parent:      node,
+		ParentValue: node.Value,
+		Value:       "a",
+	}
+	*counter++
+	var rightNode = &Node{
+		ID:          fmt.Sprintf("%d.", *counter),
+		Parent:      node,
+		ParentValue: node.Value,
+	}
+	*counter++
+	return []*Node{rightNode}, []*Node{leftNode}
 }
 
 // if A then B
@@ -212,6 +252,17 @@ func (two IfThenElseOperatored) ToNodes(
 		}
 }
 
+type IgnoreOperatored struct {
+	Main string
+}
+
+func (no IgnoreOperatored) ToNodes(
+	node *Node, counter *int,
+) ([]*Node, []*Node) {
+	node.Value = no.Main
+	return []*Node{node}, nil
+}
+
 // A -> a
 type NoOperatored struct {
 	Main string
@@ -225,7 +276,7 @@ func (no NoOperatored) ToNodes(
 }
 
 // VisualizeFSM - визуализировать граф
-func Visualize(nodes []*Node, path, name string) error {
+func visualize(nodes []*Node, path, name string) error {
 	graphAst, err := gographviz.ParseString(`digraph G {}`)
 	if err != nil {
 		return err
@@ -238,7 +289,6 @@ func Visualize(nodes []*Node, path, name string) error {
 
 	var attrs = make(map[string]string, 0)
 	for _, v := range nodes {
-		log.Println("node", v.ID+v.Value, v.Type)
 		var vattr = make(map[string]string, 0)
 
 		// if v.Type == g5.Term {
@@ -251,7 +301,6 @@ func Visualize(nodes []*Node, path, name string) error {
 	for _, e := range nodes {
 		//attrs["label"] = fmt.Sprintf(`<<font color="blue">%s</font>>`, "hello")
 		if e.Parent != nil {
-			log.Println("edge", e.ID+e.Value, e.Parent.ID+e.Parent.Value, e.ParentValue)
 			graph.AddEdge(toString(e.Parent.ID), toString(e.ID), true, attrs)
 		}
 	}
@@ -273,4 +322,32 @@ func Visualize(nodes []*Node, path, name string) error {
 
 func toString(s string) string {
 	return `"` + s + `"`
+}
+
+// ToAst привести правила к АСТ
+func Visualize(rules g5.Rules, path, name string) error {
+	var (
+		counter = 2
+		root    = &Node{
+			ID:   fmt.Sprintf("%d.", 1),
+			Type: g5.NonTerm,
+		}
+		freeNodes = []*Node{root}
+		nodes     = []*Node{root}
+	)
+	for i := len(rules) - 1; i >= 0; i-- {
+		var r = rules[i]
+		var model, err = ToNumOperator(r)
+		if err != nil {
+			return err
+		}
+
+		node := freeNodes[0]
+		newNodes, toAst := model.ToNodes(node, &counter)
+
+		nodes = append(nodes, append(toAst, node)...)
+		freeNodes = append(freeNodes[1:], newNodes...)
+	}
+
+	return visualize(nodes, path, name)
 }

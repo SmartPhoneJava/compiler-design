@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"lab2/internal"
+	"lab2/internal/ast"
 	"lab2/internal/opa"
 	"lab2/parsing"
 	"log"
@@ -27,18 +28,6 @@ const (
 func main() {
 	goterm.Clear() // Clear current screen
 
-	// for {
-	// 	// By moving cursor to top-left position we ensure that console output
-	// 	// will be overwritten each time, instead of adding new.
-	// 	goterm.MoveCursor(1, 1)
-
-	// 	goterm.Println("Current Time:", time.Now().Format(time.RFC1123))
-
-	// 	goterm.Flush() // Call it every time at the end of rendering
-
-	// 	time.Sleep(time.Second)
-	// }
-	// goterm.Clear()
 	mainLab4()
 }
 
@@ -63,8 +52,7 @@ func mainLab4() {
 	left.Println("L")
 	right.Println("R")
 
-	var analyzer = &opa.Analyzer{}
-	analyzer.Build(lexer)
+	var analyzer = opa.NewAnalyzer(lexer)
 	analyzer.Matrix.Println()
 	analyzer.PrintRules()
 
@@ -75,7 +63,10 @@ func mainLab4() {
 		log.Fatal(err)
 	}
 	analyzer.PrintlnExecResult("Результаты анализатора", inputRow, outS, outR)
-	analyzer.ToAstV2(outR)
+	err = ast.Visualize(outR, "assets", "ast.dot")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func mainLab3() {

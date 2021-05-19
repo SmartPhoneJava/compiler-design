@@ -1,0 +1,28 @@
+digraph G {
+	"1."->"2.";
+	"1."->"3.";
+	"4."->"6.";
+	"2."->"4.";
+	"3."->"5.";
+	"4."->"7.";
+	"5."->"8.";
+	"5."->"9.";
+	"9."->"10.";
+	"9."->"11.";
+	"10."->"12.";
+	"10."->"13.";
+	"1." [ label=<<font color="red">branch</font>> ];
+	"10." [ label=<<font color="red">and</font>> ];
+	"11." [ label=<<font color="red">a</font>> ];
+	"12." [ label=<<font color="red">a</font>> ];
+	"13." [ label=<<font color="red">a</font>> ];
+	"2." [ label=<<font color="red">if</font>> ];
+	"3." [ label=<<font color="red">then</font>> ];
+	"4." [ label=<<font color="red">=</font>> ];
+	"5." [ label=<<font color="red">xor</font>> ];
+	"6." [ label=<<font color="red">a</font>> ];
+	"7." [ label=<<font color="red">a</font>> ];
+	"8." [ label=<<font color="red">a</font>> ];
+	"9." [ label=<<font color="red">or</font>> ];
+
+}

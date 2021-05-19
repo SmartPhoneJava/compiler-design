@@ -64,7 +64,7 @@ func (r Resolver) handleNonTerm(
 	getItRules *ResTs,
 	finishedSuccess *bool,
 	comprassions *int,
-	speed time.Duration,
+	speed *time.Duration,
 ) {
 	newResolver, ok := r.Lexer.NonTerms[value]
 	if !ok {
@@ -108,7 +108,7 @@ func (r Resolver) GoTo(
 	getItRules *ResTs,
 	finishedSuccess *bool,
 	comprassions *int,
-	speed time.Duration,
+	speed *time.Duration,
 ) (map[int]interface{}, error) {
 	if len(input) <= inputI {
 		return nil, errors.New("указатель за пределы массива")
