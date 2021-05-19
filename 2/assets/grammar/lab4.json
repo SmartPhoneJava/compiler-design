@@ -666,7 +666,7 @@
           "rhs": {
             "symbol": [
               {
-                "-type": "term",
+                "-type": "reserved",
                 "-name": "__ANY"
               }
             ]
@@ -726,7 +726,7 @@
           "rhs": {
             "symbol": [
               {
-                "-type": "term",
+                "-type": "reserved",
                 "-name": "__ANY"
               }
             ]
@@ -849,7 +849,7 @@
           "rhs": {
             "symbol": [
               {
-                "-type": "term",
+                "-type": "reserved",
                 "-name": "__ANY"
               }, 
               {

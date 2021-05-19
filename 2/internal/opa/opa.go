@@ -463,7 +463,6 @@ func (analyser Analyzer) PrintRules() {
 }
 
 func (analyser Analyzer) findRule(row *[]string) (g5.Rule, []string, error) {
-	log.Println("find", *row)
 	for rowC := 1; rowC < len(*row); rowC++ {
 		for _, rule := range analyser.Rules {
 			if len(rule.Symbols) != rowC {
@@ -520,7 +519,9 @@ func (analyser Analyzer) Exec(
 		outputSymbols []string
 		outputRules   g5.Rules
 		// В стек сразу помещаем символа начала ввода
-		stack    = []string{StartEnd}
+		stack = []string{StartEnd}
+		// Стек, хранящий только __ANY символы из инпута, для дальнейшего
+		// определния, что это был за символ
 		symStack = []string{StartEnd}
 	)
 	for len(stack) > 0 {
@@ -546,17 +547,16 @@ func (analyser Analyzer) Exec(
 				return nil, nil, wrapError(err)
 			}
 			outputRules = append(outputRules, foundRule)
-			//deleted = append(deleted, currStack)
-			log.Println("deleted", deleted)
 			for u := len(deleted) - 1; u >= 0; u-- {
 				if deleted[u] == AnalyserNonTerm {
 					continue
 				}
-				//outputSymbols = append(outputSymbols, deleted[u])
 				if deleted[u] == g5.TermAny {
 					outputSymbols = append(outputSymbols, symStack[len(symStack)-1])
 					symStack = symStack[:len(symStack)-1]
 				} else {
+					// разкомментить, если нужно вывести все считанные символы
+					// но это сломает построение АСТ
 					//	outputSymbols = append(outputSymbols, deleted[u])
 				}
 			}
@@ -585,22 +585,37 @@ func printIterate(
 	matrixOperator byte,
 ) {
 	var stackStr string
-	for _, str := range stack {
-		stackStr += str + " "
+	var foundCurr bool
+	for i := len(stack) - 1; i >= 0; i-- {
+		var val string
+		if !foundCurr && currStack == stack[i] {
+			val = color.RedString(stack[i])
+			foundCurr = true
+		} else {
+			val = color.GreenString(stack[i])
+		}
+
+		stackStr = val + " " + stackStr
 	}
 
 	var inputStr string
-	for _, str := range input {
-		inputStr += str + " "
+	for i := range input {
+		var val string
+		if i == 0 && currInput == input[i] {
+			val = color.RedString(input[i])
+		} else {
+			val = color.GreenString(input[i])
+		}
+		inputStr += val + " "
 	}
 
 	var outputStr string
 	for _, str := range outputSymbols {
 		outputStr += str + " "
 	}
-	log.Printf("stack(%v), input(%v), inMatrix(%v) \n", color.GreenString(stackStr), color.YellowString(inputStr), ToMatrixOperator(matrixOperator))
-	log.Printf("outputSymbols(%v) \n", color.CyanString(outputStr))
-	log.Printf("currstack(%v), currinput(%v), %v \n", currStack, currInput, input[0])
+	matrixOperatorStr := color.YellowString(ToMatrixOperator(matrixOperator))
+	log.Printf("stack(%v) %v input(%v) \n", stackStr, matrixOperatorStr, inputStr)
+	log.Printf("outputSymbols(%v) \n\n", color.CyanString(outputStr))
 }
 
 // PrintlnExecResult - форматированный вывод результатов

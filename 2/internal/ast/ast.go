@@ -3,12 +3,12 @@ package ast
 import (
 	"fmt"
 	"lab2/internal/g5"
-	"log"
 	"os"
 
 	"github.com/awalterschulze/gographviz"
 )
 
+// Типы генератора узлов для АСТ
 const (
 	Type1to2 = iota + 1
 	Type1to1
@@ -17,26 +17,37 @@ const (
 	TypeTerm
 )
 
-func ToNumOperator(symbols []string, nt, start string, r g5.Rule, anyCounter *int) (NumOperator, error) {
+/*
+	ToNumOperator - определить модель, по которой строить узлы для АСТ
+	на основе правила
+
+	symbols - слайс символов, которые будут подставлены в
+		зарезервированные термы
+	anyCounter - счётчик неиспользованных зарезервированных
+		символов - индекс для получения элемента массива symbols
+	left - левая часть правила
+	right - правая часть правила
+	start - стартовый нетерм грамматики
+*/
+func ToNumOperator(
+	symbols []string,
+	left, start string,
+	right g5.Rule,
+	anyCounter *int,
+) (NumOperator, error) {
 	var (
 		terms, nonTerms []string
 	)
-	for _, s := range r.Symbols {
-		if s.Type == g5.Term {
-			var val = s.Value
-			if s.Value == g5.TermAny {
-				log.Println("*anyCounter ", *anyCounter)
-				if *anyCounter >= 0 {
-					for j := *anyCounter; j >= 0; j-- {
-						val = symbols[j]
-						*anyCounter = j - 1
-						break
-					}
-				}
-
+	for _, s := range right.Symbols {
+		switch s.Type {
+		case g5.Term:
+			terms = append(terms, s.Value)
+		case g5.Reserved:
+			if *anyCounter >= 0 {
+				terms = append(terms, symbols[*anyCounter])
+				*anyCounter--
 			}
-			terms = append(terms, val)
-		} else {
+		default:
 			nonTerms = append(nonTerms, s.Value)
 		}
 	}
@@ -56,18 +67,16 @@ func ToNumOperator(symbols []string, nt, start string, r g5.Rule, anyCounter *in
 		return OneOneOperatored{
 			Main: terms[0],
 		}, nil
-	case len(r.Symbols) == 6:
-		if IsIfThenElseOperator(r) {
+	case len(right.Symbols) == 6:
+		if IsIfThenElseOperator(right) {
 			return IfThenElseOperatored{}, nil
 		}
-	case len(r.Symbols) == 4:
-		if IsIfThenOperator(r) {
+	case len(right.Symbols) == 4:
+		if IsIfThenOperator(right) {
 			return IfThenOperatored{}, nil
 		}
 	case len(terms) == 2 && len(nonTerms) == 1:
-		log.Println("aaaaaaaaaaaaa", terms)
 		if terms[1] == "=" {
-			log.Println("bbbbb")
 			return LeftTemEqOperatored{
 				Left: terms[0],
 			}, nil
@@ -77,7 +86,9 @@ func ToNumOperator(symbols []string, nt, start string, r g5.Rule, anyCounter *in
 			Right: terms[1],
 		}, nil
 	}
-	return nil, fmt.Errorf("нет модели для правила с %d термами и %d нетермами: %s", len(terms), len(nonTerms), r.String(nt, start))
+	return nil, fmt.Errorf("нет модели для правила с %d термами и %d нетермами: %s",
+		len(terms), len(nonTerms), right.String(left, start),
+	)
 }
 
 func IsIfThenElseOperator(r g5.Rule) bool {
@@ -320,6 +331,7 @@ func (two IfThenElseOperatored) ToNodes(
 		}
 }
 
+// Для ;
 type IgnoreOperatored struct {
 	Main string
 }
@@ -344,7 +356,12 @@ func (no NoOperatored) ToNodes(
 	return nil, nil
 }
 
-// visualize - визуализировать граф
+/*
+ visualize - визуализировать граф
+	nodes - узлы АСТ
+	path - путь до файла формата .dot
+	name - имя выходного файла
+*/
 func visualize(nodes []*Node, path, name string) error {
 	graphAst, err := gographviz.ParseString(`digraph G {}`)
 	if err != nil {
@@ -401,7 +418,12 @@ func toString(s string) string {
 }
 
 // ToAst привести правила к АСТ
-func Visualize(nt, start string, symbols []string, rules g5.Rules, path, name string) error {
+func Visualize(
+	nt, start string,
+	symbols []string,
+	rules g5.Rules,
+	path, name string,
+) error {
 	var (
 		counter = 2
 		root    = &Node{
