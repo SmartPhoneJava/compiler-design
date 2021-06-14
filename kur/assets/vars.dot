@@ -1,0 +1,12 @@
+digraph G {
+	"Statistics"->"main local variables"[ color="#ffa000" ];
+	"Statistics"->"main local tables"[ color=grey ];
+	"Statistics" [ shape="box", style="rounded,filled" ];
+	"main local tables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#BDB76B">table: Global tables</TD></TR>
+	<TR><TD BGCOLOR="#F0E68C" PORT="k1">Name</TD>\n<TD BGCOLOR="#F0E68C" PORT="k1">num of fields</TD>\n<TD BGCOLOR="#F0E68C" PORT="k1">num of methods</TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="k1">widgets</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1">6</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1"></TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="k1">coords</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1">3</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1"></TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="k1">MyAddOn</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1">2</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1"></TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="k1">tbl</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1">4</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1"></TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="k1">luaValue</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1">9</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1"></TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#FFDAB9">table: Global variables</TD></TR>
+	<TR><TD BGCOLOR="#FFE4B5" PORT="k1">Name</TD>\n<TD BGCOLOR="#FFE4B5" PORT="k1">Value</TD>\n<TD BGCOLOR="#FFE4B5" PORT="k1">first initialized by</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="k1">usual_s</TD>\n<TD BGCOLOR="#FFEFD5" PORT="k1">1</TD>\n<TD BGCOLOR="#FFEFD5" PORT="k1">main</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="k1">strange</TD>\n<TD BGCOLOR="#FFEFD5" PORT="k1">2</TD>\n<TD BGCOLOR="#FFEFD5" PORT="k1">main</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="k1">not_so_much</TD>\n<TD BGCOLOR="#FFEFD5" PORT="k1">6</TD>\n<TD BGCOLOR="#FFEFD5" PORT="k1">main</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="k1">naMES</TD>\n<TD BGCOLOR="#FFEFD5" PORT="k1">3</TD>\n<TD BGCOLOR="#FFEFD5" PORT="k1">main</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+
+}

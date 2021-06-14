@@ -1,0 +1,10 @@
+digraph G {
+	"main"->"outputChatBox"[ color="#ffc107" ];
+	"main"->"d"[ color="#ffc107" ];
+	"" [ color="#ffa000", shape="box", style="rounded,filled" ];
+	"MyFunction" [ color="#ffa000", shape="box", style="rounded,filled" ];
+	"d" [ color="#ffa000", shape="box", style="rounded,filled" ];
+	"main" [ color="#ffc107", shape="box", style="rounded,filled" ];
+	"outputChatBox" [ color="#ffa000", shape="box", style="rounded,filled" ];
+
+}
