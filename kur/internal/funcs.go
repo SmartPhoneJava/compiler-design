@@ -131,6 +131,45 @@ func FuncName(name string) string {
 	return funcName
 }
 
+func (funcs funcMap) Node(isGlobal bool) string {
+	var name = "Local"
+	if isGlobal {
+		name = "Global"
+	}
+	name += " functions"
+
+	var table = fmt.Sprintf(`<<TABLE BORDER="0" CELLBORDER="1" color="black" CELLSPACING="0">
+	<TR><TD COLSPAN="3" BGCOLOR="%s">%s</TD></TR>
+	  `, colorMapping[name+":header"], name)
+
+	table += "<TR>" + cell(
+		colorMapping[name+":naming"],
+		NewPair("Name"),
+		NewPair("Input"),
+		NewPair("Output"),
+	) + "</TR>"
+
+	for _, funcObj := range funcs {
+		normalized := funcObj.NormalizedName()
+		if isGlobal && normalized == MainFunc {
+			continue
+		}
+		table += "<TR>" + cell(
+			colorMapping[name+":body"],
+			NewPair(normalized),
+			NewPair(funcObj.Args),
+			NewPair(funcObj.Return),
+		) + "</TR>"
+	}
+
+	table += `\n</TABLE>>`
+	return table
+}
+
+func (funcs funcMap) Len() int {
+	return len(funcs)
+}
+
 func (f Func) NormalizedName() string {
 	names := strings.Split(f.Name, " ")
 	return names[len(names)-1]
@@ -144,31 +183,52 @@ func (f Func) ParentName() string {
 	return f.Name[:last]
 }
 
-func (funcs funcMap) Node(isGlobal bool) string {
-	var name = "Local"
-	if isGlobal {
-		name = "Global"
-	}
-	name += " functions"
-
-	var table = fmt.Sprintf(`<<TABLE BORDER="0" CELLBORDER="1" color="black" CELLSPACING="0">
-	<TR><TD COLSPAN="3" BGCOLOR="%s">%s</TD></TR>
-	  `, colorMapping[name+":header"], name)
-
-	table += "<TR>" + cell(colorMapping[name+":naming"], "Name", "Input", "Output") + "</TR>"
-
-	for _, funcObj := range funcs {
-		normalized := funcObj.NormalizedName()
-		if isGlobal && normalized == MainFunc {
-			continue
-		}
-		table += "<TR>" + cell(colorMapping[name+":body"], normalized, funcObj.Args, funcObj.Return) + "</TR>"
-	}
-
-	table += `\n</TABLE>>`
-	return table
+func (f Func) Tables() tableMap {
+	return f.LocalTables
 }
 
-func (funcs funcMap) Len() int {
-	return len(funcs)
+func (f Func) Funcs() funcMap {
+	return f.LocalFuncs
+}
+
+func (f Func) Vars() varMap {
+	return f.LocalVars
+}
+
+func (f Func) Path() string {
+	return f.Name
+}
+
+func (s *InfoCollector) createFunc(content, funcName, bodyContent string) *Func {
+
+	var (
+		startI = strings.Index(content, "function")
+		endI   = strings.Index(content, bodyContent)
+		head   = s.Funcs.GetCallStackTop()
+	)
+
+	if funcName == "" {
+		funcName = content[startI+len("function") : endI]
+	}
+
+	if funcName == "" {
+		funcName = "anonymous"
+	}
+
+	namedFunc := s.Funcs.GetFunc(head.Name + " " + funcName)
+	if content[endI] == '(' {
+		leftBracket := endI
+		params := content[leftBracket+1:]
+		rightBracket := strings.Index(params, ")")
+		if rightBracket != -1 {
+			params = params[:rightBracket]
+			namedFunc.Args = params
+		}
+	}
+
+	head.Calls = append(head.Calls, namedFunc)
+	//head.LocalFuncs[namedFunc.Name] = namedFunc
+
+	s.Funcs.pushToStack(namedFunc)
+	return namedFunc
 }

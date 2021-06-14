@@ -2,6 +2,7 @@ package visualizer
 
 import (
 	"os"
+	"strings"
 
 	"github.com/awalterschulze/gographviz"
 )
@@ -12,8 +13,8 @@ type Node struct {
 }
 
 type Edge struct {
-	From, To string
-	Style    func() map[string]string
+	From, To, FromPort string
+	Style              func() map[string]string
 }
 
 // VisualizeFSM - визуализировать таблицу
@@ -50,7 +51,9 @@ func Visualize(nodes []*Node, edges []*Edge, path, name string) error {
 			continue
 		}
 		edgesMap[e.From][e.To] = nil
-		graph.AddEdge(toString(e.From), toString(e.To), true, e.Style())
+		fromEdge := toString(e.From)
+
+		graph.AddEdge(fromEdge, toString(e.To), true, e.Style())
 
 	}
 	if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -64,7 +67,17 @@ func Visualize(nodes []*Node, edges []*Edge, path, name string) error {
 		return err
 	}
 	defer file.Close()
-	file.WriteString(graph.String())
+
+	str := graph.String()
+	for _, e := range edges {
+		if e.FromPort != "" {
+			str = strings.Replace(str,
+				toString(e.From)+"->"+toString(e.To),
+				toString(e.From)+":"+e.FromPort+"->"+toString(e.To),
+				1)
+		}
+	}
+	file.WriteString(str)
 
 	return nil
 }

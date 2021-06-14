@@ -100,4 +100,6 @@ end
 
 local a, b, c = foo()
 
+d, f, g = foo()
+
 localfunc = 8

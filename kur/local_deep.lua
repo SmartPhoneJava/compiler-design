@@ -13,3 +13,4 @@ end
 localfunc = 3
 localvar = 5
 a, b, c = 9,8,7
+local g, d, k = 9,8,7

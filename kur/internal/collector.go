@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"kurs/parser"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
@@ -23,11 +24,11 @@ type InfoCollector struct {
 	candidate       string
 	candidateFindIn string
 
+	tableFunc string
+
 	localStatus uint
 
 	isReturning bool
-
-	ExitStatCallback func()
 }
 
 func NewInfoCollector() *InfoCollector {
@@ -52,6 +53,7 @@ func NewInfoCollector() *InfoCollector {
 			callStack: []*Table{
 				mainTable,
 			},
+			implicitIndex: make(map[int]int),
 		},
 	}
 }
@@ -62,7 +64,7 @@ func (s *InfoCollector) VisitTerminal(node antlr.TerminalNode) {
 }
 
 func (s *InfoCollector) EnterEveryRule(c antlr.ParserRuleContext) {
-	//fmt.Printf("rule %v %v\n", c.GetText(), c.GetRuleIndex())
+	fmt.Printf("rule %v %v\n", c.GetText(), c.GetRuleIndex())
 }
 
 func (s *InfoCollector) ExitEveryRule(c antlr.ParserRuleContext) {

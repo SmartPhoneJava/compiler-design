@@ -1,12 +1,156 @@
 digraph G {
-	"Statistics"->"main local variables"[ color="#ffa000" ];
-	"Statistics"->"main local tables"[ color=grey ];
-	"Statistics" [ shape="box", style="rounded,filled" ];
-	"main local tables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+	"main"->"main global variables"[ color="brown" ];
+	"main"->"main global tables"[ color="#BDB76B" ];
+	"main global tables":coords->"coords"[ color=lightgrey ];
+	"coords"->"coords local variables"[ color="#7FFFD4" ];
+	"main global tables":t->"main t"[ color=lightgrey ];
+	"main global tables":a->"main  a"[ color=lightgrey ];
+	"main  a"->"main  a local variables"[ color="#7FFFD4" ];
+	"main global tables":deep->"deep"[ color=lightgrey ];
+	"deep"->"deep local tables"[ color="#00BFFF" ];
+	"deep local tables":0->"deep  0"[ color=lightgrey ];
+	"deep  0"->"deep  0 local tables"[ color="#00BFFF" ];
+	"deep  0 local tables":0->"deep  0  0"[ color=lightgrey ];
+	"deep  0  0"->"deep  0  0 local tables"[ color="#00BFFF" ];
+	"deep  0  0 local tables":0->"deep  0  0  0"[ color=lightgrey ];
+	"deep  0  0  0"->"deep  0  0  0 local tables"[ color="#00BFFF" ];
+	"deep  0  0  0 local tables":0->"deep  0  0  0  0"[ color=lightgrey ];
+	"deep  0  0  0  0"->"deep  0  0  0  0 local tables"[ color="#00BFFF" ];
+	"deep  0  0  0  0 local tables":0->"deep  0  0  0  0  0"[ color=lightgrey ];
+	"deep  0  0  0  0  0"->"deep  0  0  0  0  0 local tables"[ color="#00BFFF" ];
+	"deep  0  0  0  0  0 local tables":0->"deep  0  0  0  0  0  0"[ color=lightgrey ];
+	"deep  0  0  0  0  0  0"->"deep  0  0  0  0  0  0 local tables"[ color="#00BFFF" ];
+	"deep  0  0  0  0  0  0 local tables":0->"deep  0  0  0  0  0  0  0"[ color=lightgrey ];
+	"deep  0  0  0  0  0  0  0"->"deep  0  0  0  0  0  0  0 local tables"[ color="#00BFFF" ];
+	"deep  0  0  0  0  0  0  0 local tables":0->"deep  0  0  0  0  0  0  0  0"[ color=lightgrey ];
+	"deep  0  0  0  0  0  0  0  0"->"deep  0  0  0  0  0  0  0  0 local variables"[ color="#7FFFD4" ];
+	"main global tables":luaValue->"luaValue"[ color=lightgrey ];
+	"luaValue"->"luaValue local variables"[ color="#7FFFD4" ];
+	"main global tables":map->"map"[ color=lightgrey ];
+	"map"->"map local variables"[ color="#7FFFD4" ];
+	"main global tables":MyAddOn->"MyAddOn"[ color=lightgrey ];
+	"MyAddOn"->"MyAddOn local functions"[ color="#00FA9A" ];
+	"MyAddOn"->"MyAddOn local tables"[ color="#00BFFF" ];
+	"MyAddOn local functions":FirstFunction->"main MyAddOn FirstFunction"[ color=lightgrey ];
+	"main MyAddOn FirstFunction"->"main MyAddOn FirstFunction local variables"[ color="#7FFFD4" ];
+	"MyAddOn local tables":inside->"MyAddOn  inside"[ color=lightgrey ];
+	"MyAddOn  inside"->"MyAddOn  inside local functions"[ color="#00FA9A" ];
+	"MyAddOn  inside local functions":SecondFunction->"main MyAddOn  inside SecondFunction"[ color=lightgrey ];
+	"MyAddOn local tables":second->"MyAddOn  second"[ color=lightgrey ];
+	"main global tables":widgets->"widgets"[ color=lightgrey ];
+	"widgets"->"widgets local tables"[ color="#00BFFF" ];
+	"widgets local tables":0->"widgets  0"[ color=lightgrey ];
+	"widgets  0"->"widgets  0 local variables"[ color="#7FFFD4" ];
+	"main global tables":k->"main k"[ color=lightgrey ];
+	"main global tables":b->"main  b"[ color=lightgrey ];
+	"main  b"->"main  b local variables"[ color="#7FFFD4" ];
+	"main global tables":c->"main  c"[ color=lightgrey ];
+	"main  c"->"main  c local variables"[ color="#7FFFD4" ];
+	"main global tables":mytable->"main mytable"[ color=lightgrey ];
+	"main mytable"->"main mytable local variables"[ color="#7FFFD4" ];
+	"main global tables":tbl->"tbl"[ color=lightgrey ];
+	"tbl"->"tbl local variables"[ color="#7FFFD4" ];
+	"MyAddOn  inside local functions" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" color="black" CELLSPACING="0">
+	<TR><TD COLSPAN="3" BGCOLOR="#00FA9A">Local functions</TD></TR>
+	  <TR><TD BGCOLOR="#BDECB6" PORT="Name">Name</TD>\n<TD BGCOLOR="#BDECB6" PORT="Input">Input</TD>\n<TD BGCOLOR="#BDECB6" PORT="Output">Output</TD>\n</TR><TR><TD BGCOLOR="#D0F0C0" PORT="SecondFunction">SecondFunction</TD>\n<TD BGCOLOR="#D0F0C0" PORT="arg1,arg2">arg1,arg2</TD>\n<TD BGCOLOR="#D0F0C0" PORT=""></TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"MyAddOn  inside" [ color=white, label=inside, shape="plaintext", style="rounded,filled" ];
+	"MyAddOn  second" [ color=white, label=second, shape="plaintext", style="rounded,filled" ];
+	"MyAddOn local functions" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" color="black" CELLSPACING="0">
+	<TR><TD COLSPAN="3" BGCOLOR="#00FA9A">Local functions</TD></TR>
+	  <TR><TD BGCOLOR="#BDECB6" PORT="Name">Name</TD>\n<TD BGCOLOR="#BDECB6" PORT="Input">Input</TD>\n<TD BGCOLOR="#BDECB6" PORT="Output">Output</TD>\n</TR><TR><TD BGCOLOR="#D0F0C0" PORT="FirstFunction">FirstFunction</TD>\n<TD BGCOLOR="#D0F0C0" PORT="arg1,arg2">arg1,arg2</TD>\n<TD BGCOLOR="#D0F0C0" PORT=""></TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"MyAddOn local tables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#00BFFF">table: Local tables</TD></TR>
+	<TR><TD BGCOLOR="#87CEFA" PORT="Name">Name</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of fields">num of fields</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of methods">num of methods</TD>\n</TR><TR><TD BGCOLOR="#B0E0E6" PORT="inside">inside</TD>\n<TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n<TD BGCOLOR="#B0E0E6" PORT="1">1</TD>\n</TR><TR><TD BGCOLOR="#B0E0E6" PORT="second">second</TD>\n<TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n<TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"MyAddOn" [ color=white, label=MyAddOn, shape="plaintext", style="rounded,filled" ];
+	"coords local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
+	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n<TD BGCOLOR="#AFEEEE" PORT="first initialized by">first initialized by</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="0">0</TD>\n<TD BGCOLOR="#E0FFFF" PORT="123">123</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="1">1</TD>\n<TD BGCOLOR="#E0FFFF" PORT="321">321</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="2">2</TD>\n<TD BGCOLOR="#E0FFFF" PORT="231">231</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"coords" [ color=white, label=coords, shape="plaintext", style="rounded,filled" ];
+	"deep  0  0  0  0  0  0  0  0 local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
+	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n<TD BGCOLOR="#AFEEEE" PORT="first initialized by">first initialized by</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="0">0</TD>\n<TD BGCOLOR="#E0FFFF" PORT="1">1</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"deep  0  0  0  0  0  0  0  0" [ color=white, label=0, shape="plaintext", style="rounded,filled" ];
+	"deep  0  0  0  0  0  0  0 local tables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#00BFFF">table: Local tables</TD></TR>
+	<TR><TD BGCOLOR="#87CEFA" PORT="Name">Name</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of fields">num of fields</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of methods">num of methods</TD>\n</TR><TR><TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n<TD BGCOLOR="#B0E0E6" PORT="1">1</TD>\n<TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"deep  0  0  0  0  0  0  0" [ color=white, label=0, shape="plaintext", style="rounded,filled" ];
+	"deep  0  0  0  0  0  0 local tables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#00BFFF">table: Local tables</TD></TR>
+	<TR><TD BGCOLOR="#87CEFA" PORT="Name">Name</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of fields">num of fields</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of methods">num of methods</TD>\n</TR><TR><TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n<TD BGCOLOR="#B0E0E6" PORT="1">1</TD>\n<TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"deep  0  0  0  0  0  0" [ color=white, label=0, shape="plaintext", style="rounded,filled" ];
+	"deep  0  0  0  0  0 local tables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#00BFFF">table: Local tables</TD></TR>
+	<TR><TD BGCOLOR="#87CEFA" PORT="Name">Name</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of fields">num of fields</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of methods">num of methods</TD>\n</TR><TR><TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n<TD BGCOLOR="#B0E0E6" PORT="1">1</TD>\n<TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"deep  0  0  0  0  0" [ color=white, label=0, shape="plaintext", style="rounded,filled" ];
+	"deep  0  0  0  0 local tables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#00BFFF">table: Local tables</TD></TR>
+	<TR><TD BGCOLOR="#87CEFA" PORT="Name">Name</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of fields">num of fields</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of methods">num of methods</TD>\n</TR><TR><TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n<TD BGCOLOR="#B0E0E6" PORT="1">1</TD>\n<TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"deep  0  0  0  0" [ color=white, label=0, shape="plaintext", style="rounded,filled" ];
+	"deep  0  0  0 local tables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#00BFFF">table: Local tables</TD></TR>
+	<TR><TD BGCOLOR="#87CEFA" PORT="Name">Name</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of fields">num of fields</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of methods">num of methods</TD>\n</TR><TR><TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n<TD BGCOLOR="#B0E0E6" PORT="1">1</TD>\n<TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"deep  0  0  0" [ color=white, label=0, shape="plaintext", style="rounded,filled" ];
+	"deep  0  0 local tables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#00BFFF">table: Local tables</TD></TR>
+	<TR><TD BGCOLOR="#87CEFA" PORT="Name">Name</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of fields">num of fields</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of methods">num of methods</TD>\n</TR><TR><TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n<TD BGCOLOR="#B0E0E6" PORT="1">1</TD>\n<TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"deep  0  0" [ color=white, label=0, shape="plaintext", style="rounded,filled" ];
+	"deep  0 local tables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#00BFFF">table: Local tables</TD></TR>
+	<TR><TD BGCOLOR="#87CEFA" PORT="Name">Name</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of fields">num of fields</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of methods">num of methods</TD>\n</TR><TR><TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n<TD BGCOLOR="#B0E0E6" PORT="1">1</TD>\n<TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"deep  0" [ color=white, label=0, shape="plaintext", style="rounded,filled" ];
+	"deep local tables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#00BFFF">table: Local tables</TD></TR>
+	<TR><TD BGCOLOR="#87CEFA" PORT="Name">Name</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of fields">num of fields</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of methods">num of methods</TD>\n</TR><TR><TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n<TD BGCOLOR="#B0E0E6" PORT="1">1</TD>\n<TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"deep" [ color=white, label=deep, shape="plaintext", style="rounded,filled" ];
+	"luaValue local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
+	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n<TD BGCOLOR="#AFEEEE" PORT="first initialized by">first initialized by</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="0">0</TD>\n<TD BGCOLOR="#E0FFFF" PORT="Yellow">"Yellow"</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="1">1</TD>\n<TD BGCOLOR="#E0FFFF" PORT="Blue">"Blue"</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="2">2</TD>\n<TD BGCOLOR="#E0FFFF" PORT="Red">"Red"</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"luaValue" [ color=white, label=luaValue, shape="plaintext", style="rounded,filled" ];
+	"main  a local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
+	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n<TD BGCOLOR="#AFEEEE" PORT="first initialized by">first initialized by</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="0">0</TD>\n<TD BGCOLOR="#E0FFFF" PORT="1">1</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="1">1</TD>\n<TD BGCOLOR="#E0FFFF" PORT="2">2</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main  a" [ color=white, label=a, shape="plaintext", style="rounded,filled" ];
+	"main  b local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
+	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n<TD BGCOLOR="#AFEEEE" PORT="first initialized by">first initialized by</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="0">0</TD>\n<TD BGCOLOR="#E0FFFF" PORT="3">3</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="1">1</TD>\n<TD BGCOLOR="#E0FFFF" PORT="4">4</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main  b" [ color=white, label=b, shape="plaintext", style="rounded,filled" ];
+	"main  c local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
+	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n<TD BGCOLOR="#AFEEEE" PORT="first initialized by">first initialized by</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="0">0</TD>\n<TD BGCOLOR="#E0FFFF" PORT="5">5</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="1">1</TD>\n<TD BGCOLOR="#E0FFFF" PORT="6">6</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main  c" [ color=white, label=c, shape="plaintext", style="rounded,filled" ];
+	"main MyAddOn  inside SecondFunction" [ color=white, label=SecondFunction, shape="plaintext", style="rounded,filled" ];
+	"main MyAddOn FirstFunction local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
+	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n<TD BGCOLOR="#AFEEEE" PORT="first initialized by">first initialized by</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="some">some</TD>\n<TD BGCOLOR="#E0FFFF" PORT="3">3</TD>\n<TD BGCOLOR="#E0FFFF" PORT="main MyAddOn FirstFunction">main MyAddOn FirstFunction</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main MyAddOn FirstFunction" [ color=white, label=FirstFunction, shape="plaintext", style="rounded,filled" ];
+	"main global tables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
   <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#BDB76B">table: Global tables</TD></TR>
-	<TR><TD BGCOLOR="#F0E68C" PORT="k1">Name</TD>\n<TD BGCOLOR="#F0E68C" PORT="k1">num of fields</TD>\n<TD BGCOLOR="#F0E68C" PORT="k1">num of methods</TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="k1">widgets</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1">6</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1"></TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="k1">coords</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1">3</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1"></TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="k1">MyAddOn</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1">2</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1"></TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="k1">tbl</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1">4</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1"></TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="k1">luaValue</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1">9</TD>\n<TD BGCOLOR="#EEE8AA" PORT="k1"></TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
-	"main local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+	<TR><TD BGCOLOR="#F0E68C" PORT="Name">Name</TD>\n<TD BGCOLOR="#F0E68C" PORT="num of fields">num of fields</TD>\n<TD BGCOLOR="#F0E68C" PORT="num of methods">num of methods</TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="luaValue">luaValue</TD>\n<TD BGCOLOR="#EEE8AA" PORT="3">3</TD>\n<TD BGCOLOR="#EEE8AA" PORT="0">0</TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="map">map</TD>\n<TD BGCOLOR="#EEE8AA" PORT="1">1</TD>\n<TD BGCOLOR="#EEE8AA" PORT="0">0</TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="coords">coords</TD>\n<TD BGCOLOR="#EEE8AA" PORT="3">3</TD>\n<TD BGCOLOR="#EEE8AA" PORT="0">0</TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="t">t</TD>\n<TD BGCOLOR="#EEE8AA" PORT="0">0</TD>\n<TD BGCOLOR="#EEE8AA" PORT="0">0</TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="a">a</TD>\n<TD BGCOLOR="#EEE8AA" PORT="2">2</TD>\n<TD BGCOLOR="#EEE8AA" PORT="0">0</TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="deep">deep</TD>\n<TD BGCOLOR="#EEE8AA" PORT="1">1</TD>\n<TD BGCOLOR="#EEE8AA" PORT="0">0</TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="mytable">mytable</TD>\n<TD BGCOLOR="#EEE8AA" PORT="1">1</TD>\n<TD BGCOLOR="#EEE8AA" PORT="0">0</TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="tbl">tbl</TD>\n<TD BGCOLOR="#EEE8AA" PORT="3">3</TD>\n<TD BGCOLOR="#EEE8AA" PORT="0">0</TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="MyAddOn">MyAddOn</TD>\n<TD BGCOLOR="#EEE8AA" PORT="2">2</TD>\n<TD BGCOLOR="#EEE8AA" PORT="1">1</TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="widgets">widgets</TD>\n<TD BGCOLOR="#EEE8AA" PORT="1">1</TD>\n<TD BGCOLOR="#EEE8AA" PORT="0">0</TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="k">k</TD>\n<TD BGCOLOR="#EEE8AA" PORT="0">0</TD>\n<TD BGCOLOR="#EEE8AA" PORT="0">0</TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="b">b</TD>\n<TD BGCOLOR="#EEE8AA" PORT="2">2</TD>\n<TD BGCOLOR="#EEE8AA" PORT="0">0</TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="c">c</TD>\n<TD BGCOLOR="#EEE8AA" PORT="2">2</TD>\n<TD BGCOLOR="#EEE8AA" PORT="0">0</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main global variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
   <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#FFDAB9">table: Global variables</TD></TR>
-	<TR><TD BGCOLOR="#FFE4B5" PORT="k1">Name</TD>\n<TD BGCOLOR="#FFE4B5" PORT="k1">Value</TD>\n<TD BGCOLOR="#FFE4B5" PORT="k1">first initialized by</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="k1">usual_s</TD>\n<TD BGCOLOR="#FFEFD5" PORT="k1">1</TD>\n<TD BGCOLOR="#FFEFD5" PORT="k1">main</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="k1">strange</TD>\n<TD BGCOLOR="#FFEFD5" PORT="k1">2</TD>\n<TD BGCOLOR="#FFEFD5" PORT="k1">main</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="k1">not_so_much</TD>\n<TD BGCOLOR="#FFEFD5" PORT="k1">6</TD>\n<TD BGCOLOR="#FFEFD5" PORT="k1">main</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="k1">naMES</TD>\n<TD BGCOLOR="#FFEFD5" PORT="k1">3</TD>\n<TD BGCOLOR="#FFEFD5" PORT="k1">main</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	<TR><TD BGCOLOR="#FFE4B5" PORT="Name">Name</TD>\n<TD BGCOLOR="#FFE4B5" PORT="Value">Value</TD>\n<TD BGCOLOR="#FFE4B5" PORT="first initialized by">first initialized by</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="some">some</TD>\n<TD BGCOLOR="#FFEFD5" PORT="1">1</TD>\n<TD BGCOLOR="#FFEFD5" PORT="main MyAddOn FirstFunction">main MyAddOn FirstFunction</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="usual_s">usual_s</TD>\n<TD BGCOLOR="#FFEFD5" PORT="1">1</TD>\n<TD BGCOLOR="#FFEFD5" PORT="main">main</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="strange">strange</TD>\n<TD BGCOLOR="#FFEFD5" PORT="2">2</TD>\n<TD BGCOLOR="#FFEFD5" PORT="main">main</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="not_so_much">not_so_much</TD>\n<TD BGCOLOR="#FFEFD5" PORT="6">6</TD>\n<TD BGCOLOR="#FFEFD5" PORT="main">main</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="naMES">naMES</TD>\n<TD BGCOLOR="#FFEFD5" PORT="3">3</TD>\n<TD BGCOLOR="#FFEFD5" PORT="main">main</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main k" [ color=white, label=k, shape="plaintext", style="rounded,filled" ];
+	"main mytable local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
+	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n<TD BGCOLOR="#AFEEEE" PORT="first initialized by">first initialized by</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="key">"key"</TD>\n<TD BGCOLOR="#E0FFFF" PORT="value">"value"</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main mytable" [ color=white, label=mytable, shape="plaintext", style="rounded,filled" ];
+	"main t" [ color=white, label=t, shape="plaintext", style="rounded,filled" ];
+	"main" [ color=white, label=main, shape="plaintext", style="rounded,filled" ];
+	"map local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
+	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n<TD BGCOLOR="#AFEEEE" PORT="first initialized by">first initialized by</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="key">"key"</TD>\n<TD BGCOLOR="#E0FFFF" PORT="value">"value"</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"map" [ color=white, label=map, shape="plaintext", style="rounded,filled" ];
+	"tbl local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
+	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n<TD BGCOLOR="#AFEEEE" PORT="first initialized by">first initialized by</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="0">0</TD>\n<TD BGCOLOR="#E0FFFF" PORT="1">1</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="1">1</TD>\n<TD BGCOLOR="#E0FFFF" PORT="Some Value">"Some Value"</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="2">2</TD>\n<TD BGCOLOR="#E0FFFF" PORT="10">10</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"tbl" [ color=white, label=tbl, shape="plaintext", style="rounded,filled" ];
+	"widgets  0 local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
+	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n<TD BGCOLOR="#AFEEEE" PORT="first initialized by">first initialized by</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="id">"id"</TD>\n<TD BGCOLOR="#E0FFFF" PORT="257">257</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="num1">"num1"</TD>\n<TD BGCOLOR="#E0FFFF" PORT="95694">95694</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="val2">"val2"</TD>\n<TD BGCOLOR="#E0FFFF" PORT="NA">"NA"</TD>\n<TD BGCOLOR="#E0FFFF" PORT=""></TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"widgets  0" [ color=white, label=0, shape="plaintext", style="rounded,filled" ];
+	"widgets local tables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#00BFFF">table: Local tables</TD></TR>
+	<TR><TD BGCOLOR="#87CEFA" PORT="Name">Name</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of fields">num of fields</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of methods">num of methods</TD>\n</TR><TR><TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n<TD BGCOLOR="#B0E0E6" PORT="3">3</TD>\n<TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"widgets" [ color=white, label=widgets, shape="plaintext", style="rounded,filled" ];
 
 }
