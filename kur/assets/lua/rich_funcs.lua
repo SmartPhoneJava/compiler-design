@@ -42,29 +42,8 @@ end
 
 
 
-function sub(num1, num2)
-  res = num1 - num2
-  res_square = square(res)
-  return res_square
-end
-
-function add(num1, num2)
-  -- b5 = square(num1)
-  -- b6 = fact(num2)
-  res = num1 + num2
-  return res
-end
-
 function max(num1, num2)
-  a1 = sub(num1, num2)
-  a2 = add(num1, num2)
-  a3 = add(num1, num2)
-  if (a1 > a2) then
-     result = a1
-  else
-     result = a2
-  end
-  return result
+  return num1
 end
 
 function fact (n)
@@ -79,21 +58,29 @@ function func_call_arg (arg)
   return arg("aaa")
 end
 
+a1 = 5        -- read a 
+b1 = 6
+
+a2 = 5.        -- read a 
+b2 = 6.
   
   b = 'if_you_see_it_is_bug("it is not function call")'
   print('enter a number:')
   a = io.read('*number')        -- read a number
   print(lvl1(a))
-  fact 'aaa'
+  -- fact 122
 
-  a = 5        -- read a 
-  b = 6
+
   local res = max(a, b)
+function max(num1, num2)
+  return num1 + num2
+end
+
   print(res)
 
   func_call_arg(print)
 
 
-  -- require( 'microscope' )( 'res.dot', res )
-  -- require( "microscope" )( "res.dot", res )
+  require( 'microscope' )( 'res.dot', res )
+  require( "microscope" )( "res.dot", res )
 

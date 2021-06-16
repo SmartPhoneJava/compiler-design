@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"kurs/parser"
+	"log"
 	"strings"
 )
 
@@ -21,6 +22,7 @@ func (s *InfoCollector) ExitBlock(ctx *parser.BlockContext) {}
 // EnterStat is called when production stat is entered.
 func (s *InfoCollector) EnterStat(ctx *parser.StatContext) {
 	statValue := ctx.GetText()
+	s.expression = ""
 
 	if strings.HasPrefix(statValue, "localfunc") {
 		s.localStatus = LocalFunc
@@ -49,6 +51,8 @@ func (s *InfoCollector) ExitStat(ctx *parser.StatContext) {}
 func (s *InfoCollector) EnterAttnamelist(ctx *parser.AttnamelistContext) {
 	if s.localStatus == MaybeLocalVar {
 		s.localStatus = LocalVar
+		s.candidateVar = ctx.GetText()
+
 	}
 }
 
@@ -63,9 +67,12 @@ func (s *InfoCollector) ExitAttrib(ctx *parser.AttribContext) {}
 
 // EnterRetstat is called when production retstat is entered.
 func (s *InfoCollector) EnterRetstat(ctx *parser.RetstatContext) {
-	retValue := strings.TrimLeft(ctx.GetText(), "return")
+	retValue := ctx.GetText()
+	retValue = strings.TrimPrefix(retValue, "return")
 	namedFunc := s.Funcs.GetCallStackTop()
+	log.Println("reeeeeturn", retValue, namedFunc.Name)
 	namedFunc.Return = retValue
+	namedFunc.ReturnRaw = strings.TrimLeft(s.GetText(ctx), "return")
 	s.isReturning = true
 	s.candidate = retValue
 }
@@ -91,7 +98,12 @@ func (s *InfoCollector) EnterFuncname(ctx *parser.FuncnameContext) {
 		return
 	}
 	namedFunc := s.Funcs.GetFunc(s.Funcs.GetCallStackTop().Name + " " + name)
+
+	if s.localStatus != LocalFunc {
+		s.candidate = name
+	}
 	s.Funcs.pushToStack(namedFunc)
+	log.Println("EnterFuncname", namedFunc.Name)
 }
 
 // ExitFuncname is called when production funcname is exited.
@@ -104,20 +116,21 @@ z = []
 
 */
 
-// #5 глобальные переменные
+// #5 поля
 // EnterVarlist is called when production varlist is entered.
 func (s *InfoCollector) EnterVarlist(ctx *parser.VarlistContext) {
-	withDots := strings.Split(ctx.GetText(), ".")
-	if len(withDots) == 1 {
-		s.candidateVar = ctx.GetText()
-	}
+	//withDots := strings.Split(ctx.GetText(), ".")
+	//if len(withDots) == 1 {
+	s.candidateVar = ctx.GetText()
+	//}
 }
 
 // ExitVarlist is called when production varlist is exited.
 func (s *InfoCollector) ExitVarlist(ctx *parser.VarlistContext) {}
 
 // EnterNamelist is called when production namelist is entered.
-func (s *InfoCollector) EnterNamelist(ctx *parser.NamelistContext) {}
+func (s *InfoCollector) EnterNamelist(ctx *parser.NamelistContext) {
+}
 
 // ExitNamelist is called when production namelist is exited.
 func (s *InfoCollector) ExitNamelist(ctx *parser.NamelistContext) {}
@@ -125,78 +138,39 @@ func (s *InfoCollector) ExitNamelist(ctx *parser.NamelistContext) {}
 // #1 граф вызовов
 // EnterExplist is called when production explist is entered.
 func (s *InfoCollector) EnterExplist(ctx *parser.ExplistContext) {
-	var (
-		headFunc = s.Funcs.GetCallStackTop()
-	)
-
-	if s.Tables.CandidateVar != "" {
-		var tableName = s.Tables.CandidateTable
-
-		tableNameI := strings.Index(tableName, s.Tables.CandidateVar)
-		if tableNameI != -1 {
-			tableName = tableName[:tableNameI]
-		}
-		namedTable := s.Tables.GetTable(headFunc.Name + " " + tableName)
-
-		varName := s.getVarName(s.Tables.CandidateVar)
-		namedTable.LocalVars[varName] = &Var{
-			Name:  s.getVarName(varName),
-			Value: ctx.GetText(),
-		}
+	if s.expression == "" {
+		s.expression = ctx.GetText()
 	}
-
-	// handle 'name = {}'
-	varsValues := ctx.GetText()
-	if strings.HasPrefix(varsValues, "{}") && s.candidateVar != "" {
-		eqI := strings.Index(s.candidateVar, "=")
-		var tableName = s.candidateVar
-		if eqI != -1 {
-			tableName = s.candidateVar[:eqI]
-		}
-
-		if s.localStatus == LocalVar {
-			tableName = strings.TrimPrefix(tableName, "local")
-		}
-
-		vars := strings.Split(tableName, ",")
-		for i := 0; i < len(vars); i++ {
-			headFunc.LocalTables[vars[i]] = s.Tables.GetTable(s.Funcs.GetCallStackTop().Name + " " + vars[i])
-		}
-
-		return
-	}
-
-	switch {
-	// case s.Tables.CandidateVar != "":
-	// 	updateVar(
-	// 		headTable.LocalVars,
-	// 		s.Tables.CandidateVar,
-	// 		ctx.GetText(),
-	// 		currentFunc,
-	// 	)
-	// 	s.Tables.CandidateVar = ""
-	case s.localStatus != LocalVar:
-		s.handleGlobalVar(s.candidateVar, ctx.GetText(), headFunc, s.Funcs.GetFunc(MainFunc))
-		s.localStatus = NotLocal
-	default:
-		s.handleLocalVar(s.candidateVar, headFunc)
-		s.localStatus = NotLocal
-	}
-
-	//s.candidateVar = ""
 }
 
 // ExitExplist is called when production explist is exited.
 func (s *InfoCollector) ExitExplist(ctx *parser.ExplistContext) {}
 
 // EnterExp is called when production exp is entered.
-func (s *InfoCollector) EnterExp(ctx *parser.ExpContext) {}
+func (s *InfoCollector) EnterExp(ctx *parser.ExpContext) {
+	content := ctx.GetText() // s.GetText(ctx.BaseParserRuleContext)
+
+	headTable := s.Tables.GetCallStackTop()
+	if headTable.NormalizedName() == "main" {
+		if !strings.HasPrefix(content, "{") {
+			s.pickVar(ctx)
+		}
+	}
+}
 
 // ExitExp is called when production exp is exited.
 func (s *InfoCollector) ExitExp(ctx *parser.ExpContext) {}
 
 // EnterPrefixexp is called when production prefixexp is entered.
-func (s *InfoCollector) EnterPrefixexp(ctx *parser.PrefixexpContext) {}
+func (s *InfoCollector) EnterPrefixexp(ctx *parser.PrefixexpContext) {
+	content := ctx.GetText()
+	s.pickVar(ctx)
+
+	tI := strings.Index(s.expression, content)
+	if tI != -1 {
+		s.expression = s.expression[tI+len(content):]
+	}
+}
 
 // ExitPrefixexp is called when production prefixexp is exited.
 func (s *InfoCollector) ExitPrefixexp(ctx *parser.PrefixexpContext) {}
@@ -223,11 +197,7 @@ func (s *InfoCollector) EnterVar_(ctx *parser.Var_Context) {}
 func (s *InfoCollector) ExitVar_(ctx *parser.Var_Context) {}
 
 // EnterVarSuffix is called when production varSuffix is entered.
-func (s *InfoCollector) EnterVarSuffix(ctx *parser.VarSuffixContext) {
-	s.candidateVar = ""
-	s.candidate = ""
-	s.Tables.CandidateVar = ctx.GetText()
-}
+func (s *InfoCollector) EnterVarSuffix(ctx *parser.VarSuffixContext) {}
 
 // ExitVarSuffix is called when production varSuffix is exited.
 func (s *InfoCollector) ExitVarSuffix(ctx *parser.VarSuffixContext) {}
@@ -295,11 +265,11 @@ func (s *InfoCollector) EnterFuncbody(ctx *parser.FuncbodyContext) {
 				currentTable = newTable
 			case i == len(tables)-1:
 				var (
-					funcName = currentTable.Name + " " + t
-					content  = ctx.GetText()
-					newFunc  = s.createFunc(content, funcName, content)
+					funcName    = currentTable.Name + " " + t
+					content     = ctx.GetText()
+					createdFunc = s.createFunc(content, funcName, content)
 				)
-				currentTable.LocalFuncs[funcName] = newFunc
+				currentTable.LocalFuncs[createdFunc.NormalizedName()] = createdFunc
 			default:
 				newTable, ok := currentTable.LocalTables[t]
 				if !ok {
@@ -309,13 +279,23 @@ func (s *InfoCollector) EnterFuncbody(ctx *parser.FuncbodyContext) {
 			}
 		}
 	}
+
+	var newFunc, addTo *Func
+
 	// Добавление локальной функции в мапу всех функций
-	// TODO одноименные внутренние функции так работать не смогут
 	if s.localStatus == LocalFunc || s.isReturning {
-		header := s.Funcs.GetCallStackTop()
-		newFunc := s.createFunc(s.candidate, "", ctx.GetText())
-		header.LocalFuncs[newFunc.Name] = newFunc
+		addTo = s.Funcs.GetCallStackTop()
+
+		newFunc = s.createFunc(s.candidate, "", ctx.GetText())
+		s.Funcs.GetCallStackTop().LocalFuncs[newFunc.NormalizedName()] = newFunc
+		s.Funcs.pushToStack(newFunc)
+	} else {
+		newFunc = s.Funcs.GetCallStackTop()
+		s.initFuncInfo(ctx.GetText(), newFunc)
+		addTo = s.Funcs.GetFunc(MainFunc)
 	}
+
+	addTo.LocalFuncs[newFunc.NormalizedName()] = newFunc
 }
 
 // #1 функции
@@ -325,7 +305,13 @@ func (s *InfoCollector) ExitFuncbody(ctx *parser.FuncbodyContext) {
 }
 
 // EnterParlist is called when production parlist is entered.
-func (s *InfoCollector) EnterParlist(ctx *parser.ParlistContext) {}
+func (s *InfoCollector) EnterParlist(ctx *parser.ParlistContext) {
+	head := s.Funcs.GetCallStackTop()
+	if head.Name == MainFunc {
+		return
+	}
+	head.ArgsRaw = s.GetText(ctx)
+}
 
 // ExitParlist is called when production parlist is exited.
 func (s *InfoCollector) ExitParlist(ctx *parser.ParlistContext) {}
@@ -333,7 +319,7 @@ func (s *InfoCollector) ExitParlist(ctx *parser.ParlistContext) {}
 // #4 таблицы
 // EnterTableconstructor is called when production tableconstructor is entered.
 func (s *InfoCollector) EnterTableconstructor(ctx *parser.TableconstructorContext) {
-	s.createTable()
+	s.createTable(ctx.GetText())
 }
 
 // #4 таблицы
@@ -355,6 +341,7 @@ func (s *InfoCollector) ExitFieldlist(ctx *parser.FieldlistContext) {}
 // #4 таблицы
 // EnterField is called when production field is entered.
 func (s *InfoCollector) EnterField(ctx *parser.FieldContext) {
+
 	var (
 		field             = ctx.GetText()
 		fieldParts        = strings.Split(field, "=")
@@ -370,14 +357,21 @@ func (s *InfoCollector) EnterField(ctx *parser.FieldContext) {
 		varValue = field
 	}
 
-	if s.Tables.currentLvl < 2 {
-		s.Funcs.GetCallStackTop().LocalTables[namedTable.NormalizedName()] = namedTable
-	}
+	// if s.Tables.currentLvl < 1 {
+	// 	s.Funcs.GetCallStackTop().LocalTables[namedTable.NormalizedName()] = namedTable
+	// }
 	if !strings.HasPrefix(varValue, "{") {
 		varName = s.getVarName(varName)
+
+		realTexts := strings.Split(s.GetText(ctx), "=")
+		var realText = s.GetText(ctx)
+		if len(realTexts) > 1 {
+			realText = realTexts[1]
+		}
 		namedTable.LocalVars[varName] = &Var{
-			Name:  varName,
-			Value: varValue,
+			Name:     varName,
+			Value:    varValue,
+			RealText: realText,
 		}
 	} else {
 		s.Tables.reserveName = strings.Trim(s.getVarName(varName), `"`)
@@ -447,14 +441,20 @@ func (s *InfoCollector) EnterOperatorPower(ctx *parser.OperatorPowerContext) {}
 // ExitOperatorPower is called when production operatorPower is exited.
 func (s *InfoCollector) ExitOperatorPower(ctx *parser.OperatorPowerContext) {}
 
+// #5 переменные
 // EnterNumber is called when production number is entered.
-func (s *InfoCollector) EnterNumber(ctx *parser.NumberContext) {}
+func (s *InfoCollector) EnterNumber(ctx *parser.NumberContext) {
+	s.pickVar(ctx)
+}
 
 // ExitNumber is called when production number is exited.
 func (s *InfoCollector) ExitNumber(ctx *parser.NumberContext) {}
 
+// #5 переменные
 // EnterStringg is called when production stringg is entered.
-func (s *InfoCollector) EnterStringg(ctx *parser.StringgContext) {}
+func (s *InfoCollector) EnterStringg(ctx *parser.StringgContext) {
+	s.pickVar(ctx)
+}
 
 // ExitStringg is called when production stringg is exited.
 func (s *InfoCollector) ExitStringg(ctx *parser.StringgContext) {}

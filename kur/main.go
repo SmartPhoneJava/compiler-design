@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"kurs/internal"
 	"kurs/parser"
 
@@ -8,6 +9,11 @@ import (
 )
 
 func Parse(filename string) {
+
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		panic(err)
+	}
 
 	is, err := antlr.NewFileStream(filename)
 	if err != nil {
@@ -18,14 +24,14 @@ func Parse(filename string) {
 
 	p := parser.NewLuaParser(stream)
 
-	collector := internal.NewInfoCollector()
+	collector := internal.NewInfoCollector(string(data))
 
 	antlr.ParseTreeWalkerDefault.Walk(collector, p.Chunk())
 
-	collector.Funcs.MustVisualize("assets", "func_calls.dot")
-	internal.FuncTableMustVisualize(collector.Funcs, "assets", "vars.dot")
+	collector.Funcs.MustVisualize("assets/out", "func_calls.dot")
+	internal.FuncTableMustVisualize(collector.Funcs, "assets/out", "vars.dot")
 }
 
 func main() {
-	Parse("tables.lua")
+	Parse("assets/lua/local_vals.lua")
 }

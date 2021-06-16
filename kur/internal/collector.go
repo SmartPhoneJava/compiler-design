@@ -3,6 +3,8 @@ package internal
 import (
 	"fmt"
 	"kurs/parser"
+	"log"
+	"strings"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 )
@@ -15,6 +17,9 @@ const (
 )
 
 type InfoCollector struct {
+	origin string
+	rows   []string
+
 	*parser.BaseLuaListener
 
 	Funcs  *Funcs
@@ -24,6 +29,8 @@ type InfoCollector struct {
 	candidate       string
 	candidateFindIn string
 
+	expression string
+
 	tableFunc string
 
 	localStatus uint
@@ -31,7 +38,7 @@ type InfoCollector struct {
 	isReturning bool
 }
 
-func NewInfoCollector() *InfoCollector {
+func NewInfoCollector(origin string) *InfoCollector {
 	var (
 		mainFunc  = NewFunc(MainFunc)
 		mainTable = NewTable(MainFunc)
@@ -55,7 +62,44 @@ func NewInfoCollector() *InfoCollector {
 			},
 			implicitIndex: make(map[int]int),
 		},
+		origin: origin,
+		rows:   strings.Split(origin, "\n"),
 	}
+}
+
+type AntlrNode interface {
+	GetText() string
+	GetStart() antlr.Token
+	GetStop() antlr.Token
+}
+
+func (s InfoCollector) GetText(ctx AntlrNode) string {
+	var str string
+	start := ctx.GetStart()
+	end := ctx.GetStop()
+	log.Println("start.GetLine()", start.GetLine())
+	for i := start.GetLine(); i < end.GetLine()+1; i++ {
+		if i == start.GetLine() {
+			str += s.rows[i-1][start.GetColumn():]
+		} else if i == end.GetLine() {
+			str += s.rows[i-1][:end.GetColumn()]
+		} else {
+			str += s.rows[i-1]
+		}
+	}
+
+	var text = ctx.GetText()
+	words := strings.Split(str, " ")
+	var wordsNum = 0
+	var summSymbols = 0
+	for summSymbols < len(text) && wordsNum < len(words) {
+		summSymbols += len(words[wordsNum])
+		if summSymbols > len(text) {
+			words[wordsNum] = words[wordsNum][:len(words[wordsNum])-(summSymbols-len(text))]
+		}
+		wordsNum += 1
+	}
+	return strings.Join(words[:wordsNum], " ")
 }
 
 // Example

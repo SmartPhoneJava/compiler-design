@@ -1,8 +1,0 @@
-digraph G {
-	"main"->"main MyAddOn FirstFunction"[ color="#0288d1" ];
-	"main"->"main MyAddOn  inside SecondFunction"[ color="#0288d1" ];
-	"main MyAddOn  inside SecondFunction" [ color="#ffa000", shape="box", style="rounded,filled" ];
-	"main MyAddOn FirstFunction" [ color="#ffa000", shape="box", style="rounded,filled" ];
-	"main" [ color="#0288d1", shape="box", style="rounded,filled" ];
-
-}

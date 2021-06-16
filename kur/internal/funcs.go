@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"kurs/internal/visualizer"
+	"log"
 	"regexp"
 	"strings"
 )
@@ -15,9 +16,13 @@ type Funcs struct {
 }
 
 type Func struct {
-	Name   string
-	Args   string
-	Return string
+	Name string
+
+	Args    string
+	ArgsRaw string
+
+	Return    string
+	ReturnRaw string
 
 	LocalVars   varMap
 	LocalTables tableMap
@@ -83,13 +88,33 @@ func chooseColor(n int) string {
 
 func (f *Funcs) MustVisualize(path, name string) {
 	var (
-		nodes []*visualizer.Node
+		mainFunc = f.GetFunc(MainFunc)
+		nodes    = []*visualizer.Node{{
+			Name: mainFunc.Path(),
+			Style: func() map[string]string {
+				return map[string]string{
+					"color": chooseColor(len(mainFunc.Calls)),
+					"shape": `"box"`,
+					"style": `"rounded,filled"`,
+				}
+			},
+		}}
 		edges []*visualizer.Edge
 	)
-	for _, from := range f.AllFuncs {
-		color := chooseColor(len(from.Calls))
-		nodes = append(nodes, &visualizer.Node{
-			Name: from.Name,
+
+	f.visualizeInternal(mainFunc, &nodes, &edges)
+	visualizer.Visualize(nodes, edges, path, name)
+}
+
+func (f *Funcs) visualizeInternal(
+	from *Func,
+	nodes *[]*visualizer.Node,
+	edges *[]*visualizer.Edge,
+) {
+	for _, to := range from.Calls {
+		color := chooseColor(len(to.Calls))
+		*nodes = append(*nodes, &visualizer.Node{
+			Name: to.Path(),
 			Style: func() map[string]string {
 				return map[string]string{
 					"color": color,
@@ -98,19 +123,17 @@ func (f *Funcs) MustVisualize(path, name string) {
 				}
 			},
 		})
-		for _, to := range from.Calls {
-			edges = append(edges, &visualizer.Edge{
-				From: from.Name,
-				To:   to.Name,
-				Style: func() map[string]string {
-					return map[string]string{
-						"color": color,
-					}
-				},
-			})
-		}
+		*edges = append(*edges, &visualizer.Edge{
+			From: from.Path(),
+			To:   to.Path(),
+			Style: func() map[string]string {
+				return map[string]string{
+					"color": color,
+				}
+			},
+		})
+		f.visualizeInternal(to, nodes, edges)
 	}
-	visualizer.Visualize(nodes, edges, path, name)
 }
 
 func FuncName(name string) string {
@@ -121,7 +144,7 @@ func FuncName(name string) string {
 		funcName = name[:bracketIndex]
 	}
 	var start = len(funcName) - 1
-	rex := regexp.MustCompile("^[ a-z0-9A-Z]+$")
+	rex := regexp.MustCompile("^[ a-z0-9A-Z_]+$")
 	for start >= 0 {
 		if !rex.Match([]byte(funcName[start:])) {
 			return funcName[start+1:]
@@ -157,8 +180,8 @@ func (funcs funcMap) Node(isGlobal bool) string {
 		table += "<TR>" + cell(
 			colorMapping[name+":body"],
 			NewPair(normalized),
-			NewPair(funcObj.Args),
-			NewPair(funcObj.Return),
+			stringPair{"", funcObj.ArgsRaw},
+			stringPair{"", funcObj.ReturnRaw},
 		) + "</TR>"
 	}
 
@@ -207,7 +230,7 @@ func (s *InfoCollector) createFunc(content, funcName, bodyContent string) *Func 
 		head   = s.Funcs.GetCallStackTop()
 	)
 
-	if funcName == "" {
+	if content != bodyContent && funcName == "" {
 		funcName = content[startI+len("function") : endI]
 	}
 
@@ -215,6 +238,7 @@ func (s *InfoCollector) createFunc(content, funcName, bodyContent string) *Func 
 		funcName = "anonymous"
 	}
 
+	log.Println("naaaaamedFunc", head.Name+"!"+funcName)
 	namedFunc := s.Funcs.GetFunc(head.Name + " " + funcName)
 	if content[endI] == '(' {
 		leftBracket := endI
@@ -227,8 +251,19 @@ func (s *InfoCollector) createFunc(content, funcName, bodyContent string) *Func 
 	}
 
 	head.Calls = append(head.Calls, namedFunc)
-	//head.LocalFuncs[namedFunc.Name] = namedFunc
-
-	s.Funcs.pushToStack(namedFunc)
+	//s.Funcs.pushToStack(namedFunc)
 	return namedFunc
+}
+
+func (s *InfoCollector) initFuncInfo(bodyContent string, funcObj *Func) {
+	if bodyContent == "" {
+		return
+	}
+
+	if bodyContent[0] == '(' {
+		rightBracket := strings.Index(bodyContent, ")")
+		if rightBracket != -1 {
+			funcObj.Args = bodyContent[:rightBracket]
+		}
+	}
 }

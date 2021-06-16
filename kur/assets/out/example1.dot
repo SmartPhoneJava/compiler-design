@@ -1,0 +1,43 @@
+digraph G {
+  1 [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+  <TR><TD PORT="0" COLSPAN="2" BGCOLOR="lightgrey">table: 0x55f31c4fd6f0</TD></TR>
+  <TR><TD PORT="k1">'val'</TD><TD PORT="v1">1</TD></TR>
+</TABLE>>,shape="plaintext"];
+  2 [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+  <TR><TD PORT="0" COLSPAN="2" BGCOLOR="lightgrey">table: 0x55f31c4fbf50</TD></TR>
+  <TR><TD PORT="k1">'__index'</TD><TD PORT="v1">function: 0x55f31c4fbfd0</TD></TR>
+</TABLE>>,shape="plaintext"];
+  3 [label="function: 0x55f31c4fbfd0",shape="ellipse",margin="0.01",height="0.3"];
+  4 [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+  <TR><TD PORT="0" COLSPAN="2" BGCOLOR="lightgrey">table: 0x55f31c4fd6a0</TD></TR>
+  <TR><TD PORT="k1">'val'</TD><TD PORT="v1">2</TD></TR>
+</TABLE>>,shape="plaintext"];
+  5 [label="false",shape="plaintext"];
+  6 [label="file (0x7ff6747206a0)",shape="box",height="0.3"];
+  7 [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+  <TR><TD PORT="0" COLSPAN="2" BGCOLOR="lightgrey">table: 0x55f31c4fc0b0</TD></TR>
+  <TR><TD PORT="k1">'__index'</TD><TD PORT="v1">table: 0x55f31c4fd6f0</TD></TR>
+</TABLE>>,shape="plaintext"];
+  8 [label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+  <TR><TD PORT="0" COLSPAN="2" BGCOLOR="lightgrey">table: 0x55f31c4f55c0</TD></TR>
+  <TR><TD PORT="k1">'setvbuf'</TD><TD PORT="v1">function: 0x55f31c4f7a90</TD></TR>
+  <TR><TD PORT="k2">'lines'</TD><TD PORT="v2">function: 0x55f31c4f7820</TD></TR>
+  <TR><TD PORT="k3">'write'</TD><TD PORT="v3">function: 0x55f31c4f7af0</TD></TR>
+  <TR><TD PORT="k4">'close'</TD><TD PORT="v4">function: 0x55f31c4f76e0</TD></TR>
+  <TR><TD PORT="k5">'flush'</TD><TD PORT="v5">function: 0x55f31c4f76b0</TD></TR>
+  <TR><TD PORT="k6">'__gc'</TD><TD PORT="v6">function: 0x55f31c4f7b50</TD></TR>
+  <TR><TD PORT="k7">'read'</TD><TD PORT="v7">function: 0x55f31c4f7880</TD></TR>
+  <TR><TD PORT="k8">'seek'</TD><TD PORT="v8">function: 0x55f31c4f7a30</TD></TR>
+  <TR><TD PORT="k9">'__index'</TD><TD PORT="v9">table: 0x55f31c4f55c0</TD></TR>
+  <TR><TD PORT="k10">'__tostring'</TD><TD PORT="v10">function: 0x55f31c4f7e10</TD></TR>
+</TABLE>>,shape="plaintext"];
+  1 -> 2:0 [label="metatable",style="dashed",dir="both",arrowtail="odiamond",color="blue"];
+  2:v1 -> 3 [style="solid"];
+  3 -> 4:0 [label="t2",style="dashed",color="green"];
+  3 -> 5 [label="up1",style="dashed",color="green"];
+  3 -> 6 [label="up2",style="dashed",color="green"];
+  4 -> 7:0 [label="metatable",style="dashed",dir="both",arrowtail="odiamond",color="blue"];
+  6 -> 8:0 [label="metatable",style="dashed",dir="both",arrowtail="odiamond",color="blue"];
+  7:v1 -> 1:0 [style="solid"];
+  8:v9 -> 8:0 [style="solid"];
+}

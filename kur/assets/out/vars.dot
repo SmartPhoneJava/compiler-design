@@ -1,0 +1,86 @@
+digraph G {
+	"main"->"main global variables"[ color="brown" ];
+	"main"->"main global functions"[ color="#FF8C00" ];
+	"main global functions":make->"main make"[ color=lightgrey ];
+	"main make"->"main make local variables"[ color="#7FFFD4" ];
+	"main make"->"main make local functions"[ color="#00FA9A" ];
+	"main make local functions":get->"main make get"[ color=lightgrey ];
+	"main make local functions":set->"main make set"[ color=lightgrey ];
+	"main global functions":factorial->"main factorial"[ color=lightgrey ];
+	"main global functions":makeGreeter->"main makeGreeter"[ color=lightgrey ];
+	"main makeGreeter"->"main makeGreeter local variables"[ color="#7FFFD4" ];
+	"main makeGreeter"->"main makeGreeter local functions"[ color="#00FA9A" ];
+	"main makeGreeter local functions":greet->"main makeGreeter greet"[ color=lightgrey ];
+	"main global functions":wtf->"main wtf"[ color=lightgrey ];
+	"main wtf"->"main wtf local variables"[ color="#7FFFD4" ];
+	"main wtf"->"main wtf local tables"[ color="#00BFFF" ];
+	"main wtf local tables":args->"main wtf args"[ color=lightgrey ];
+	"main wtf args"->"main wtf args local variables"[ color="#7FFFD4" ];
+	"main global functions":foo->"main foo"[ color=lightgrey ];
+	"main global functions":makeCounter->"main makeCounter"[ color=lightgrey ];
+	"main makeCounter"->"main makeCounter local variables"[ color="#7FFFD4" ];
+	"main makeCounter"->"main makeCounter local functions"[ color="#00FA9A" ];
+	"main makeCounter local functions":anonymous->"main makeCounter anonymous"[ color=lightgrey ];
+	"main makeCounter anonymous"->"main makeCounter anonymous local variables"[ color="#7FFFD4" ];
+	"main global functions":sign->"main sign"[ color=lightgrey ];
+	"main global functions":lerp->"main lerp"[ color=lightgrey ];
+	"main global functions":imap->"main imap"[ color=lightgrey ];
+	"main imap"->"main imap local tables"[ color="#00BFFF" ];
+	"main imap local tables":result->"main imap result"[ color=lightgrey ];
+	"main factorial" [ color=white, label=factorial, shape="plaintext", style="rounded,filled" ];
+	"main foo" [ color=white, label=foo, shape="plaintext", style="rounded,filled" ];
+	"main global functions" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" color="black" CELLSPACING="0">
+	<TR><TD COLSPAN="3" BGCOLOR="#FFD700">Global functions</TD></TR>
+	  <TR><TD BGCOLOR="#FFFF00" PORT="Name">Name</TD>\n<TD BGCOLOR="#FFFF00" PORT="Input">Input</TD>\n<TD BGCOLOR="#FFFF00" PORT="Output">Output</TD>\n</TR><TR><TD BGCOLOR="#FFFFE0" PORT="makeCounter">makeCounter</TD>\n<TD BGCOLOR="#FFFFE0" PORT=""></TD>\n<TD BGCOLOR="#FFFFE0" PORT=""> function ()        local i = i + 1        return i    </TD>\n</TR><TR><TD BGCOLOR="#FFFFE0" PORT="make">make</TD>\n<TD BGCOLOR="#FFFFE0" PORT="">initial</TD>\n<TD BGCOLOR="#FFFFE0" PORT=""> get, set</TD>\n</TR><TR><TD BGCOLOR="#FFFFE0" PORT="factorial">factorial</TD>\n<TD BGCOLOR="#FFFFE0" PORT="">n</TD>\n<TD BGCOLOR="#FFFFE0" PORT=""> factorial(n - 1) * n</TD>\n</TR><TR><TD BGCOLOR="#FFFFE0" PORT="makeGreeter">makeGreeter</TD>\n<TD BGCOLOR="#FFFFE0" PORT="">name</TD>\n<TD BGCOLOR="#FFFFE0" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#FFFFE0" PORT="wtf">wtf</TD>\n<TD BGCOLOR="#FFFFE0" PORT="">...</TD>\n<TD BGCOLOR="#FFFFE0" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#FFFFE0" PORT="foo">foo</TD>\n<TD BGCOLOR="#FFFFE0" PORT=""></TD>\n<TD BGCOLOR="#FFFFE0" PORT=""> 3, 4, 5</TD>\n</TR><TR><TD BGCOLOR="#FFFFE0" PORT="imap">imap</TD>\n<TD BGCOLOR="#FFFFE0" PORT="">t, f, ...</TD>\n<TD BGCOLOR="#FFFFE0" PORT=""> result</TD>\n</TR><TR><TD BGCOLOR="#FFFFE0" PORT="sign">sign</TD>\n<TD BGCOLOR="#FFFFE0" PORT="">x</TD>\n<TD BGCOLOR="#FFFFE0" PORT=""> 0</TD>\n</TR><TR><TD BGCOLOR="#FFFFE0" PORT="lerp">lerp</TD>\n<TD BGCOLOR="#FFFFE0" PORT="">a, b, amount</TD>\n<TD BGCOLOR="#FFFFE0" PORT=""> a + (b - a) * amount</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main global variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="2" BGCOLOR="#FFDAB9">table: Global variables</TD></TR>
+	<TR><TD BGCOLOR="#FFE4B5" PORT="Name">Name</TD>\n<TD BGCOLOR="#FFE4B5" PORT="Value">Value</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="">add5</TD>\n<TD BGCOLOR="#FFEFD5" PORT="">makeAdder(5)</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="">result[i]</TD>\n<TD BGCOLOR="#FFEFD5" PORT="">f(v, ...)</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="">a</TD>\n<TD BGCOLOR="#FFEFD5" PORT="">foo()</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="">d</TD>\n<TD BGCOLOR="#FFEFD5" PORT="">foo()</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="">localfunc</TD>\n<TD BGCOLOR="#FFEFD5" PORT="">8</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="">count</TD>\n<TD BGCOLOR="#FFEFD5" PORT="">makeCounter()</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="">value</TD>\n<TD BGCOLOR="#FFEFD5" PORT="">newValue</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="">getX</TD>\n<TD BGCOLOR="#FFEFD5" PORT="">make()</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="">setX</TD>\n<TD BGCOLOR="#FFEFD5" PORT="">50</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main imap local tables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#00BFFF">table: Local tables</TD></TR>
+	<TR><TD BGCOLOR="#87CEFA" PORT="Name">Name</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of fields">num of fields</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of methods">num of methods</TD>\n</TR><TR><TD BGCOLOR="#B0E0E6" PORT="result">result</TD>\n<TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n<TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main imap result" [ color=white, label=result, shape="plaintext", style="rounded,filled" ];
+	"main imap" [ color=white, label=imap, shape="plaintext", style="rounded,filled" ];
+	"main lerp" [ color=white, label=lerp, shape="plaintext", style="rounded,filled" ];
+	"main make get" [ color=white, label=get, shape="plaintext", style="rounded,filled" ];
+	"main make local functions" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" color="black" CELLSPACING="0">
+	<TR><TD COLSPAN="3" BGCOLOR="#00FA9A">Local functions</TD></TR>
+	  <TR><TD BGCOLOR="#BDECB6" PORT="Name">Name</TD>\n<TD BGCOLOR="#BDECB6" PORT="Input">Input</TD>\n<TD BGCOLOR="#BDECB6" PORT="Output">Output</TD>\n</TR><TR><TD BGCOLOR="#D0F0C0" PORT="set">set</TD>\n<TD BGCOLOR="#D0F0C0" PORT="">newValue</TD>\n<TD BGCOLOR="#D0F0C0" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#D0F0C0" PORT="get">get</TD>\n<TD BGCOLOR="#D0F0C0" PORT=""></TD>\n<TD BGCOLOR="#D0F0C0" PORT=""> value</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main make local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="2" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
+	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="">value</TD>\n<TD BGCOLOR="#E0FFFF" PORT="">initial or 0</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main make set" [ color=white, label=set, shape="plaintext", style="rounded,filled" ];
+	"main make" [ color=white, label=make, shape="plaintext", style="rounded,filled" ];
+	"main makeCounter anonymous local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="2" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
+	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="">i</TD>\n<TD BGCOLOR="#E0FFFF" PORT="">i + 1</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main makeCounter anonymous" [ color=white, label=anonymous, shape="plaintext", style="rounded,filled" ];
+	"main makeCounter local functions" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" color="black" CELLSPACING="0">
+	<TR><TD COLSPAN="3" BGCOLOR="#00FA9A">Local functions</TD></TR>
+	  <TR><TD BGCOLOR="#BDECB6" PORT="Name">Name</TD>\n<TD BGCOLOR="#BDECB6" PORT="Input">Input</TD>\n<TD BGCOLOR="#BDECB6" PORT="Output">Output</TD>\n</TR><TR><TD BGCOLOR="#D0F0C0" PORT="anonymous">anonymous</TD>\n<TD BGCOLOR="#D0F0C0" PORT=""></TD>\n<TD BGCOLOR="#D0F0C0" PORT=""> i</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main makeCounter local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="2" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
+	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="">i</TD>\n<TD BGCOLOR="#E0FFFF" PORT="">0</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main makeCounter" [ color=white, label=makeCounter, shape="plaintext", style="rounded,filled" ];
+	"main makeGreeter greet" [ color=white, label=greet, shape="plaintext", style="rounded,filled" ];
+	"main makeGreeter local functions" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" color="black" CELLSPACING="0">
+	<TR><TD COLSPAN="3" BGCOLOR="#00FA9A">Local functions</TD></TR>
+	  <TR><TD BGCOLOR="#BDECB6" PORT="Name">Name</TD>\n<TD BGCOLOR="#BDECB6" PORT="Input">Input</TD>\n<TD BGCOLOR="#BDECB6" PORT="Output">Output</TD>\n</TR><TR><TD BGCOLOR="#D0F0C0" PORT="greet">greet</TD>\n<TD BGCOLOR="#D0F0C0" PORT=""></TD>\n<TD BGCOLOR="#D0F0C0" PORT=""></TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main makeGreeter local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="2" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
+	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="">text</TD>\n<TD BGCOLOR="#E0FFFF" PORT="">"Hello, " .. name</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main makeGreeter" [ color=white, label=makeGreeter, shape="plaintext", style="rounded,filled" ];
+	"main sign" [ color=white, label=sign, shape="plaintext", style="rounded,filled" ];
+	"main wtf args local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="2" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
+	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="">0</TD>\n<TD BGCOLOR="#E0FFFF" PORT="">...</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main wtf args" [ color=white, label=args, shape="plaintext", style="rounded,filled" ];
+	"main wtf local tables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#00BFFF">table: Local tables</TD></TR>
+	<TR><TD BGCOLOR="#87CEFA" PORT="Name">Name</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of fields">num of fields</TD>\n<TD BGCOLOR="#87CEFA" PORT="num of methods">num of methods</TD>\n</TR><TR><TD BGCOLOR="#B0E0E6" PORT="args">args</TD>\n<TD BGCOLOR="#B0E0E6" PORT="1">1</TD>\n<TD BGCOLOR="#B0E0E6" PORT="0">0</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main wtf local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="2" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
+	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="">first</TD>\n<TD BGCOLOR="#E0FFFF" PORT="">...</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="">x</TD>\n<TD BGCOLOR="#E0FFFF" PORT="">... * 5</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main wtf" [ color=white, label=wtf, shape="plaintext", style="rounded,filled" ];
+	"main" [ color=white, label=main, shape="plaintext", style="rounded,filled" ];
+
+}

@@ -33,13 +33,13 @@ type Tables struct {
 	reserveName   string
 }
 
-func (f *Tables) GetCallStackTop() *Table {
-	// if len(f.callStack) == 0 {
-	// 	mainTable := f.GetTable(MainFunc)
-	// 	f.pushToStack(mainTable)
-	// 	return mainTable
-	// }
-	return f.callStack[len(f.callStack)-1]
+func (tables *Tables) GetCallStackTop() *Table {
+	if len(tables.callStack) == 0 {
+		mainTable, _ := tables.GetTable(MainFunc)
+		tables.pushToStack(mainTable)
+		return mainTable
+	}
+	return tables.callStack[len(tables.callStack)-1]
 }
 
 func (f *Tables) pushToStack(newTable *Table) {
@@ -53,15 +53,15 @@ func (f *Tables) popFromStack() {
 	f.callStack = f.callStack[:len(f.callStack)-1]
 }
 
-func (f *Tables) GetTable(name string) *Table {
+func (f *Tables) GetTable(name string) (*Table, bool) {
 	name = FuncName(name)
 	funcObj, ok := f.Tables[name]
 	if ok {
-		return funcObj
+		return funcObj, true
 	}
 	newTable := NewTable(name)
 	f.Tables[name] = newTable
-	return newTable
+	return newTable, false
 }
 
 func NewTable(name string) *Table {
@@ -129,7 +129,7 @@ func (table Table) Path() string {
 	return table.Name
 }
 
-func (s *InfoCollector) createTable() {
+func (s *InfoCollector) createTable(content string) {
 	var headTable = s.Tables.GetCallStackTop()
 	var name = headTable.Name + " "
 	var namedTable *Table
@@ -141,25 +141,15 @@ func (s *InfoCollector) createTable() {
 			index := s.Tables.implicitIndex[s.Tables.currentLvl]
 			name += " anonymous " + strconv.Itoa(index+1)
 		}
-		namedTable = NewTable(name)
+		namedTable, _ = s.Tables.GetTable(name)
 		headTable.LocalTables[namedTable.NormalizedName()] = namedTable
+		s.Tables.pushToStack(namedTable)
 	} else {
-		parts := strings.Split(s.candidateVar, "=")
-		if len(parts) != 1 {
-			tableName := strings.TrimPrefix(parts[0], "local")
-			namedTable = NewTable(tableName)
-		} else {
-			parts := strings.Split(s.candidateVar, ",")
-			s.candidateVar = strings.Join(parts[1:], ",")
-
-			name += " " + parts[0]
-			namedTable = NewTable(name)
-		}
+		s.pickTable(content)
 	}
 	s.Tables.implicitIndex[s.Tables.currentLvl]++
 	s.Tables.currentLvl++
 
-	s.Tables.pushToStack(namedTable)
 }
 
 // 168

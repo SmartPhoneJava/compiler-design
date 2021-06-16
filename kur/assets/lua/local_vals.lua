@@ -6,7 +6,7 @@ print(add5(4)) --> 9
 local function makeCounter()
     local i = 0
     return function ()
-        i = i + 1
+        local i = i + 1
         return i
     end
 end
@@ -49,7 +49,7 @@ end
 
 makeGreeter("Bob") --> "Hello, Bob"
 
--- imap вызывает указанную функцию для всех элементов массива и возвращает массив с результатами
+imap вызывает указанную функцию для всех элементов массива и возвращает массив с результатами
 local function imap(t, f, ...)
     local result = {}
 
@@ -59,8 +59,6 @@ local function imap(t, f, ...)
 
     return result
 end
-
-local squares = imap({5, 6, 7, 8, 9, 10}, function (v) return v ^ 2 end)
 
 for i, v in ipairs(squares) do
     print(i, v)
