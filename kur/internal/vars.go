@@ -8,6 +8,12 @@ import (
 	"strings"
 )
 
+const (
+	TypeVar = iota
+	TypeTable
+	TypeFunc
+)
+
 type varMap map[string]*Var
 
 type Var struct {
@@ -79,111 +85,128 @@ func (s *InfoCollector) pickVar(node AntlrNode) error {
 			RealText:  s.GetText(node),
 		}
 	)
-	if varName == "" {
+	searchValue := value
+	if s.Tables.currentLvl > 0 {
+		if strings.HasPrefix(searchValue, `"`) {
+			searchValue = "[" + searchValue + "]"
+		}
+	}
+	if varName == "" && !(s.Tables.currentLvl > 0 && s.candidateVar == "") {
 		return nil
 	}
 
 	s.expression = strings.TrimPrefix(s.expression, ",")
-	pickI := strings.Index(s.expression, value)
+	pickI := strings.Index(s.expression, searchValue)
 
-	log.Println("seeeeearch", s.expression, "!!", value, "!!", pickI)
 	if pickI != 0 {
 		return nil
 	}
 
-	var err error
-	var withPoints = strings.Split(varName, ".")
-
-	if len(withPoints) > 1 {
-		_, err = s.pickField(withPoints, value, false)
-	}
-	if err != nil {
-		return err
-	}
-	s.expression = s.expression[pickI+len(value):]
-
-	if len(vars) > 0 {
-		s.candidateVar = strings.Join(vars[1:], ",")
-	}
-	if len(withPoints) > 1 {
+	if s.Tables.currentLvl > 0 && s.candidateVar == "" {
+		//s.candidateVar = value
+		s.expression = s.expression[pickI+len(value):]
+		log.Println("prepare for use:", s.candidateVar)
 		return nil
 	}
 
-	funcObj := &Func{}
-	if s.localStatus == LocalVar {
-		funcObj = head
+	blocks, ok := s.fields(varName)
+	if ok {
+		_, err := s.pickField(blocks, value, TypeVar)
+		if err != nil {
+			return err
+		}
 	} else {
-		funcObj = s.Funcs.GetFunc(MainFunc)
-	}
-
-	log.Println("valuee", varName, "=", value)
-	funcObj.LocalVars[varName] = varObj
-	return nil
-}
-
-func (s *InfoCollector) pickTable(value string) error {
-	var (
-		vars      = strings.Split(s.candidateVar, ",")
-		tableName = vars[0]
-	)
-
-	var withPoints = strings.Split(tableName, ".")
-	var err error
-	var name string
-	if len(withPoints) > 1 {
-		name, err = s.pickField(withPoints, value, true)
-	}
-
-	if err != nil {
-		return err
-	}
-	if len(vars) > 0 {
-		s.candidateVar = strings.Join(vars[1:], ",")
-	}
-
-	if len(withPoints) > 1 {
-		table, _ := s.Tables.GetTable(name)
-		s.Tables.pushToStack(table)
-		return nil
-	}
-
-	if tableName == "" {
-		tableName = "0" // !! ???????
-	}
-
-	s.expression = strings.TrimPrefix(s.expression, ",")
-	pickI := strings.Index(s.expression, value)
-	if pickI != 0 {
-		return errors.New("cant pick")
-	}
-
-	s.expression = s.expression[pickI+len(value):]
-
-	table := &Table{}
-	if s.Tables.currentLvl == 0 {
 		funcObj := &Func{}
 		if s.localStatus == LocalVar {
-			funcObj = s.Funcs.GetCallStackTop()
+			funcObj = head
 		} else {
 			funcObj = s.Funcs.GetFunc(MainFunc)
 		}
-		table = NewTable(funcObj.Name + " " + tableName)
-		funcObj.LocalTables[table.NormalizedName()] = table
-	} else {
-		parent := s.Tables.GetCallStackTop()
-		table = NewTable(parent.Name + " " + tableName)
-		parent.LocalTables[table.NormalizedName()] = table
+
+		funcObj.LocalVars[varName] = varObj
 	}
-	s.Tables.pushToStack(table)
+
+	s.expression = s.expression[pickI+len(value):]
+
+	if len(vars) > 0 {
+		s.candidateVar = strings.Join(vars[1:], ",")
+	}
+
 	return nil
+}
+
+func (s *InfoCollector) fields(str string) ([]string, bool) {
+	var blocks = strings.Split(str, "[")
+	if len(blocks) != 1 {
+		for i := range blocks {
+			blocks[i] = strings.TrimSuffix(blocks[i], "]")
+		}
+		return blocks, true
+	}
+	blocks = strings.Split(str, ".")
+	if len(blocks) > 1 {
+		return blocks, true
+	}
+	return blocks, false
+}
+
+func (s *InfoCollector) pickTable(value string) (*Table, error) {
+	var (
+		vars      = strings.Split(s.candidateVar, ",")
+		tableName = vars[0]
+		table     *Table
+	)
+
+	blocks, ok := s.fields(tableName)
+	if ok {
+		name, err := s.pickField(blocks, value, TypeTable)
+		if err != nil {
+			return nil, err
+		}
+		table, _ = s.Tables.GetTable(name)
+	} else {
+		if tableName == "" {
+			tableName = "0" // !! ???????
+		}
+
+		log.Println("s.expressions.expression", s.expression, "!", value)
+		s.expression = strings.TrimPrefix(s.expression, ",")
+		pickI := strings.Index(s.expression, value)
+		if pickI != 0 && s.expression != "" {
+			return nil, errors.New("cant pick")
+		}
+
+		if s.expression != "" {
+			s.expression = s.expression[pickI+len(value):]
+		}
+
+		if s.Tables.currentLvl == 0 {
+			funcObj := &Func{}
+			if s.localStatus == LocalVar {
+				funcObj = s.Funcs.GetCallStackTop()
+			} else {
+				funcObj = s.Funcs.GetFunc(MainFunc)
+			}
+			table = NewTable(funcObj.Name + " " + tableName)
+			funcObj.LocalTables[table.NormalizedName()] = table
+		} else {
+			parent := s.Tables.GetCallStackTop()
+			table = NewTable(parent.Name + " " + tableName)
+			parent.LocalTables[table.NormalizedName()] = table
+		}
+	}
+
+	log.Println("pickTable CREATE_TABLE", table.Name)
+	s.candidateVar = strings.Join(vars[1:], ",")
+
+	return table, nil
 }
 
 func (s *InfoCollector) pickField(
 	withPoints []string,
 	value string,
-	isTable bool,
+	who uint,
 ) (string, error) {
-
 	if len(withPoints) > 1 {
 		table, ok := s.Funcs.GetFunc(MainFunc).LocalTables[withPoints[0]]
 		if !ok {
@@ -195,17 +218,23 @@ func (s *InfoCollector) pickField(
 			}
 			if i == len(withPoints)-1 {
 				var name string
-				if isTable {
-					name = table.Name + " " + tableName
-					newTable, _ := s.Tables.GetTable(name)
-					s.Tables.pushToStack(newTable)
-					table.LocalTables[newTable.NormalizedName()] = newTable
-				} else {
+				switch who {
+				case TypeVar:
 					name = tableName
 					table.LocalVars[tableName] = &Var{
 						Name:  tableName,
 						Value: value,
 					}
+				case TypeTable:
+					name = table.Name + " " + tableName
+					newTable, _ := s.Tables.GetTable(name)
+					log.Println("aaaaaaaaaaaaaaaaaaaaaaaaaaaa", newTable.Path())
+					s.Tables.pushToStack(newTable)
+					table.LocalTables[newTable.NormalizedName()] = newTable
+				case TypeFunc:
+					name = table.Name + " " + tableName
+					newFunc := s.Funcs.GetFunc(name)
+					table.LocalFuncs[newFunc.NormalizedName()] = newFunc
 				}
 				return name, nil
 			}

@@ -3,7 +3,6 @@ package internal
 import (
 	"fmt"
 	"kurs/parser"
-	"log"
 	"strings"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
@@ -74,30 +73,35 @@ type AntlrNode interface {
 }
 
 func (s InfoCollector) GetText(ctx AntlrNode) string {
-	var str string
-	start := ctx.GetStart()
-	end := ctx.GetStop()
-	log.Println("start.GetLine()", start.GetLine())
+	var (
+		str   string
+		start = ctx.GetStart()
+		end   = ctx.GetStop()
+	)
+
 	for i := start.GetLine(); i < end.GetLine()+1; i++ {
-		if i == start.GetLine() {
+		switch {
+		case i == start.GetLine():
 			str += s.rows[i-1][start.GetColumn():]
-		} else if i == end.GetLine() {
+		case i == end.GetLine():
 			str += s.rows[i-1][:end.GetColumn()]
-		} else {
+		default:
 			str += s.rows[i-1]
 		}
 	}
 
-	var text = ctx.GetText()
-	words := strings.Split(str, " ")
-	var wordsNum = 0
-	var summSymbols = 0
+	var (
+		text                  = ctx.GetText()
+		words                 = strings.Split(str, " ")
+		wordsNum, summSymbols int
+	)
+
 	for summSymbols < len(text) && wordsNum < len(words) {
 		summSymbols += len(words[wordsNum])
 		if summSymbols > len(text) {
 			words[wordsNum] = words[wordsNum][:len(words[wordsNum])-(summSymbols-len(text))]
 		}
-		wordsNum += 1
+		wordsNum++
 	}
 	return strings.Join(words[:wordsNum], " ")
 }

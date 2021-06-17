@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -54,6 +55,9 @@ func (f *Tables) popFromStack() {
 }
 
 func (f *Tables) GetTable(name string) (*Table, bool) {
+
+	log.Println("GetTableGetTableGetTable", name)
+
 	name = FuncName(name)
 	funcObj, ok := f.Tables[name]
 	if ok {
@@ -130,23 +134,36 @@ func (table Table) Path() string {
 }
 
 func (s *InfoCollector) createTable(content string) {
-	var headTable = s.Tables.GetCallStackTop()
-	var name = headTable.Name + " "
-	var namedTable *Table
+	var (
+		headTable  = s.Tables.GetCallStackTop()
+		name       = headTable.Name + " "
+		namedTable *Table
+	)
 
 	if s.Tables.currentLvl > 0 {
-		if s.Tables.reserveName != "" {
-			name += " " + s.Tables.reserveName
+		reserveName := strings.TrimSpace(s.candidateVar)
+		if reserveName != "" {
+			name += " " + reserveName
+			s.candidateVar = ""
 		} else {
 			index := s.Tables.implicitIndex[s.Tables.currentLvl]
 			name += " anonymous " + strconv.Itoa(index+1)
 		}
+
 		namedTable, _ = s.Tables.GetTable(name)
 		headTable.LocalTables[namedTable.NormalizedName()] = namedTable
-		s.Tables.pushToStack(namedTable)
+		log.Println("CREATE_TABLE", reserveName, "!", name, "!", len(s.Tables.callStack))
 	} else {
-		s.pickTable(content)
+		var err error
+		namedTable, err = s.pickTable(content)
+		log.Println("errrrr", err)
+		if err != nil {
+			return
+		}
 	}
+	log.Println("s.Tables.pushToStack(namedTable)", namedTable.Name)
+	s.Tables.pushToStack(namedTable)
+
 	s.Tables.implicitIndex[s.Tables.currentLvl]++
 	s.Tables.currentLvl++
 

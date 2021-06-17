@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"kurs/internal/visualizer"
+	"log"
 	"strings"
 )
 
@@ -29,12 +30,19 @@ type Object interface {
 	NormalizedName() string
 }
 
+//var counter = 10
+
 func visualizeInternal(
 	parent string,
 	object Object,
 	nodes *[]*visualizer.Node,
 	edges *[]*visualizer.Edge,
 ) {
+	log.Println("call", object.Path())
+	// counter--
+	// if counter == 0 {
+	// 	return
+	// }
 	*nodes = append(*nodes, &visualizer.Node{
 		Name: object.Path(),
 		Style: func() map[string]string {
