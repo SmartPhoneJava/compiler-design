@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"kurs/parser"
+	"log"
 	"strings"
 )
 
@@ -91,16 +92,26 @@ func (s *InfoCollector) ExitLabel(ctx *parser.LabelContext) {}
 // EnterFuncname is called when production funcname is entered.
 func (s *InfoCollector) EnterFuncname(ctx *parser.FuncnameContext) {
 	name := ctx.GetText()
-	if len(strings.Split(name, ".")) > 1 {
-		s.tableFunc = name
-		return
-	}
-	namedFunc := s.Funcs.GetFunc(s.Funcs.GetCallStackTop().Name + " " + name)
+	var namedFunc *Func
+	blocks, ok := s.fields(name)
+	s.tableFunc = name
 
-	if s.localStatus != LocalFunc {
-		s.candidate = name
+	if ok {
+		name, err := s.pickField(blocks, "", TypeFunc)
+		if err != nil {
+			return
+		}
+		namedFunc = s.Funcs.GetFunc(name)
+		s.tableFunc = name
+	} else {
+		namedFunc = s.Funcs.GetFunc(s.Funcs.GetCallStackTop().Name + " " + name)
+		if s.localStatus != LocalFunc {
+			s.candidate = name
+		}
 	}
+
 	s.Funcs.pushToStack(namedFunc)
+	return
 }
 
 // ExitFuncname is called when production funcname is exited.
@@ -245,14 +256,12 @@ func (s *InfoCollector) ExitFunctiondef(ctx *parser.FunctiondefContext) {}
 
 // EnterFuncbody is called when production funcbody is entered.
 func (s *InfoCollector) EnterFuncbody(ctx *parser.FuncbodyContext) {
-	if s.tableFunc != "" {
-		tables := strings.Split(s.tableFunc, ".")
-		if len(tables) < 2 {
-			return
-		}
+
+	blocks, ok := s.fields(s.tableFunc)
+	if ok {
 		mainFunc := s.Funcs.GetFunc(MainFunc)
 		currentTable := &Table{}
-		for i, t := range tables {
+		for i, t := range blocks {
 			switch {
 			case i == 0:
 				newTable, ok := mainFunc.LocalTables[t]
@@ -260,7 +269,7 @@ func (s *InfoCollector) EnterFuncbody(ctx *parser.FuncbodyContext) {
 					return
 				}
 				currentTable = newTable
-			case i == len(tables)-1:
+			case i == len(blocks)-1:
 				var (
 					funcName    = currentTable.Name + " " + t
 					content     = ctx.GetText()
@@ -366,6 +375,8 @@ func (s *InfoCollector) EnterField(ctx *parser.FieldContext) {
 		if len(realTexts) > 1 {
 			realText = realTexts[1]
 		}
+
+		log.Println("namedTable", namedTable)
 		namedTable.LocalVars[varName] = &Var{
 			Name:     varName,
 			Value:    varValue,

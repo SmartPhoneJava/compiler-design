@@ -1,14 +1,8 @@
 digraph G {
-	"main"->"main global tables"[ color="#BDB76B" ];
-	"main global tables":luaValue->"main luaValue"[ color=lightgrey ];
-	"main luaValue"->"main luaValue local variables"[ color="#7FFFD4" ];
-	"main global tables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
-  <TR><TD PORT="0" COLSPAN="3" BGCOLOR="#BDB76B">table: Global tables</TD></TR>
-	<TR><TD BGCOLOR="#F0E68C" PORT="Name">Name</TD>\n<TD BGCOLOR="#F0E68C" PORT="num of fields">num of fields</TD>\n<TD BGCOLOR="#F0E68C" PORT="num of methods">num of methods</TD>\n</TR><TR><TD BGCOLOR="#EEE8AA" PORT="luaValue">luaValue</TD>\n<TD BGCOLOR="#EEE8AA" PORT="3">3</TD>\n<TD BGCOLOR="#EEE8AA" PORT="0">0</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
-	"main luaValue local variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
-  <TR><TD PORT="0" COLSPAN="2" BGCOLOR="#7FFFD4">table: Local variables</TD></TR>
-	<TR><TD BGCOLOR="#AFEEEE" PORT="Name">Name</TD>\n<TD BGCOLOR="#AFEEEE" PORT="Value">Value</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="">1</TD>\n<TD BGCOLOR="#E0FFFF" PORT="">"Blue"</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="">2</TD>\n<TD BGCOLOR="#E0FFFF" PORT="">"Red"</TD>\n</TR><TR><TD BGCOLOR="#E0FFFF" PORT="">0</TD>\n<TD BGCOLOR="#E0FFFF" PORT="">"Yellow"</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
-	"main luaValue" [ color=white, label=luaValue, shape="plaintext", style="rounded,filled" ];
+	"main"->"main global variables"[ color="brown" ];
+	"main global variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
+  <TR><TD PORT="0" COLSPAN="2" BGCOLOR="#FFDAB9">table: Global variables</TD></TR>
+	<TR><TD BGCOLOR="#FFE4B5" PORT="Name">Name</TD>\n<TD BGCOLOR="#FFE4B5" PORT="Value">Value</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="">a</TD>\n<TD BGCOLOR="#FFEFD5" PORT="">foo()</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="">d</TD>\n<TD BGCOLOR="#FFEFD5" PORT="">foo()</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="">localfunc</TD>\n<TD BGCOLOR="#FFEFD5" PORT="">8</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
 	"main" [ color=white, label=main, shape="plaintext", style="rounded,filled" ];
 
 }

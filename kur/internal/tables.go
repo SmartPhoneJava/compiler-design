@@ -147,7 +147,10 @@ func (s *InfoCollector) createTable(content string) {
 		headTable.LocalTables[namedTable.NormalizedName()] = namedTable
 		s.Tables.pushToStack(namedTable)
 	} else {
-		s.pickTable(content)
+		err := s.pickTable(content)
+		if err != nil {
+			log.Println("errr", err)
+		}
 	}
 	//s.Tables.implicitIndex[s.Tables.currentLvl]++
 	s.Tables.currentLvl++

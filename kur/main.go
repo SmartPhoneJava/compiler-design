@@ -33,5 +33,5 @@ func Parse(filename string) {
 }
 
 func main() {
-	Parse("assets/lua/tables.lua")
+	Parse("assets/lua/local_vals.lua")
 }

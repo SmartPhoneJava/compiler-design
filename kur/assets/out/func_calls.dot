@@ -1,4 +1,6 @@
 digraph G {
-	"main" [ color="#ffa000", shape="box", style="rounded,filled" ];
+	"main"->"main "[ color="#ffa000" ];
+	"main " [ color="#ffa000", shape="box", style="rounded,filled" ];
+	"main" [ color="#0288d1", shape="box", style="rounded,filled" ];
 
 }

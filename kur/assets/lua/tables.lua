@@ -1,5 +1,5 @@
-local luaValue = {"1","2","3","4","5","6"}
-local luaValue = {"Yellow","Blue","Red"} -- надо перетереть данные
+--local luaValue = {"1","2","3","4","5","6"}
+-- local luaValue = {"Yellow","Blue","Red"} -- надо перетереть данные
 
 
 -- mytable = {}
