@@ -3,7 +3,6 @@ package internal
 import (
 	"fmt"
 	"kurs/parser"
-	"log"
 	"strings"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
@@ -77,7 +76,6 @@ func (s InfoCollector) GetText(ctx AntlrNode) string {
 	var str string
 	start := ctx.GetStart()
 	end := ctx.GetStop()
-	log.Println("start.GetLine()", start.GetLine())
 	for i := start.GetLine(); i < end.GetLine()+1; i++ {
 		if i == start.GetLine() {
 			str += s.rows[i-1][start.GetColumn():]

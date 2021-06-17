@@ -3,7 +3,6 @@ package internal
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -67,7 +66,6 @@ func (s *InfoCollector) getVarName(varName string) string {
 
 func (s *InfoCollector) pickVar(node AntlrNode) error {
 	value := node.GetText()
-	log.Println("pickVar", s.candidateVar, "!", value)
 	var (
 		vars    = strings.Split(s.candidateVar, ",")
 		varName = vars[0]
@@ -86,7 +84,6 @@ func (s *InfoCollector) pickVar(node AntlrNode) error {
 	s.expression = strings.TrimPrefix(s.expression, ",")
 	pickI := strings.Index(s.expression, value)
 
-	log.Println("seeeeearch", s.expression, "!!", value, "!!", pickI)
 	if pickI != 0 {
 		return nil
 	}
@@ -116,7 +113,6 @@ func (s *InfoCollector) pickVar(node AntlrNode) error {
 		funcObj = s.Funcs.GetFunc(MainFunc)
 	}
 
-	log.Println("valuee", varName, "=", value)
 	funcObj.LocalVars[varName] = varObj
 	return nil
 }

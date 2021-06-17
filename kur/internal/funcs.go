@@ -3,7 +3,6 @@ package internal
 import (
 	"fmt"
 	"kurs/internal/visualizer"
-	"log"
 	"regexp"
 	"strings"
 )
@@ -238,7 +237,6 @@ func (s *InfoCollector) createFunc(content, funcName, bodyContent string) *Func 
 		funcName = "anonymous"
 	}
 
-	log.Println("naaaaamedFunc", head.Name+"!"+funcName)
 	namedFunc := s.Funcs.GetFunc(head.Name + " " + funcName)
 	if content[endI] == '(' {
 		leftBracket := endI

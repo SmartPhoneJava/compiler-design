@@ -29,12 +29,18 @@ type Object interface {
 	NormalizedName() string
 }
 
+var repeat = 1000
+
 func visualizeInternal(
 	parent string,
 	object Object,
 	nodes *[]*visualizer.Node,
 	edges *[]*visualizer.Edge,
 ) {
+	if repeat == 0 {
+		return
+	}
+	repeat--
 	*nodes = append(*nodes, &visualizer.Node{
 		Name: object.Path(),
 		Style: func() map[string]string {

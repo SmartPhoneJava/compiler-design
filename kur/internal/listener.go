@@ -3,7 +3,6 @@ package internal
 import (
 	"fmt"
 	"kurs/parser"
-	"log"
 	"strings"
 )
 
@@ -70,7 +69,6 @@ func (s *InfoCollector) EnterRetstat(ctx *parser.RetstatContext) {
 	retValue := ctx.GetText()
 	retValue = strings.TrimPrefix(retValue, "return")
 	namedFunc := s.Funcs.GetCallStackTop()
-	log.Println("reeeeeturn", retValue, namedFunc.Name)
 	namedFunc.Return = retValue
 	namedFunc.ReturnRaw = strings.TrimLeft(s.GetText(ctx), "return")
 	s.isReturning = true
@@ -103,7 +101,6 @@ func (s *InfoCollector) EnterFuncname(ctx *parser.FuncnameContext) {
 		s.candidate = name
 	}
 	s.Funcs.pushToStack(namedFunc)
-	log.Println("EnterFuncname", namedFunc.Name)
 }
 
 // ExitFuncname is called when production funcname is exited.
@@ -353,8 +350,9 @@ func (s *InfoCollector) EnterField(ctx *parser.FieldContext) {
 		varName = fieldParts[0]
 		varValue = fieldParts[1]
 	} else {
-		varName = fmt.Sprintf("%d", len(namedTable.LocalVars))
+		varName = fmt.Sprintf("%d", s.Tables.implicitIndex[s.Tables.currentLvl])
 		varValue = field
+		s.Tables.implicitIndex[s.Tables.currentLvl]++
 	}
 
 	// if s.Tables.currentLvl < 1 {
