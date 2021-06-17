@@ -101,7 +101,7 @@ func (f *Funcs) MustVisualize(path, name string) {
 		edges []*visualizer.Edge
 	)
 
-	f.visualizeInternal(mainFunc, &nodes, &edges)
+	f.visualizeInternal(mainFunc, &nodes, &edges, map[string]interface{}{})
 	visualizer.Visualize(nodes, edges, path, name)
 }
 
@@ -109,7 +109,13 @@ func (f *Funcs) visualizeInternal(
 	from *Func,
 	nodes *[]*visualizer.Node,
 	edges *[]*visualizer.Edge,
+	visited map[string]interface{},
 ) {
+	_, ok := visited[from.Name]
+	if ok {
+		return
+	}
+	visited[from.Name] = nil
 	for _, to := range from.Calls {
 		color := chooseColor(len(to.Calls))
 		*nodes = append(*nodes, &visualizer.Node{
@@ -117,6 +123,7 @@ func (f *Funcs) visualizeInternal(
 			Style: func() map[string]string {
 				return map[string]string{
 					"color": color,
+					"label": to.NormalizedName(),
 					"shape": `"box"`,
 					"style": `"rounded,filled"`,
 				}
@@ -131,7 +138,7 @@ func (f *Funcs) visualizeInternal(
 				}
 			},
 		})
-		f.visualizeInternal(to, nodes, edges)
+		f.visualizeInternal(to, nodes, edges, visited)
 	}
 }
 
@@ -248,7 +255,7 @@ func (s *InfoCollector) createFunc(content, funcName, bodyContent string) *Func 
 		}
 	}
 
-	head.Calls = append(head.Calls, namedFunc)
+	// head.Calls = append(head.Calls, namedFunc)
 	//s.Funcs.pushToStack(namedFunc)
 	return namedFunc
 }

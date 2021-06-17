@@ -34,53 +34,54 @@ function lvl1 (n)
   lvl2(n)
 end
 
-function square(num)
-  --b7 = max(num, 5)
-  res = num * num
-  return res
-end
+-- function square(num)
+--   --b7 = max(num, 5)
+--   res = num * num
+--   return res
+-- end
 
 
 
-function max(num1, num2)
-  return num1
-end
+-- function max(num1, num2)
+--   return num1
+-- end
 
-function fact (n)
-  if n == 0 then
-    return 1
-  else
-    return n * fact(n-1)
-  end
-end
+-- function fact (n)
+--   if n == 0 then
+--     return 1
+--   else
+--     return n * fact(n-1)
+--   end
+-- end
 
-function func_call_arg (arg) 
-  return arg("aaa")
-end
+-- function func_call_arg (arg) 
+--   return arg("aaa")
+-- end
 
-a1 = 5        -- read a 
-b1 = 6
+-- a1 = 5        -- read a 
+-- b1 = 6
 
-a2 = 5.        -- read a 
-b2 = 6.
+-- a2 = 5.        -- read a 
+-- b2 = 6.
   
-  b = 'if_you_see_it_is_bug("it is not function call")'
-  print('enter a number:')
-  a = io.read('*number')        -- read a number
+--   b = 'if_you_see_it_is_bug("it is not function call")'
+--   print('enter a number:')
+--   a = io.read('*number')        -- read a number
+ 
+--   -- fact 122
+
+
+--   local res = max(a, b)
+-- function max(num1, num2)
+--   return num1 + num2
+-- end
+
+--   print(res)
+
+--   func_call_arg(print)
+
+
+--   require( 'microscope' )( 'res.dot', res )
+--   require( "microscope" )( "res.dot", res )
+
   print(lvl1(a))
-  -- fact 122
-
-
-  local res = max(a, b)
-function max(num1, num2)
-  return num1 + num2
-end
-
-  print(res)
-
-  func_call_arg(print)
-
-
-  require( 'microscope' )( 'res.dot', res )
-  require( "microscope" )( "res.dot", res )
-

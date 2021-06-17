@@ -1,6 +1,7 @@
-local squares = imap({5, 6, 7, 8, 9, 10}, function (v) return v ^ 2 end)
+function max() return end
+local squares = max({5, 6, 7, 8, 9, 10}, function (v) return v ^ 2 end)
 
-setmetatable( t1, { __index = function( t, k )
+max( t1, { __index = function( t, k ) 
   if t2[ k ] ~= nil then
     return t2[ k ]
   else

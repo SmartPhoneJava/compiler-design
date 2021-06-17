@@ -3,7 +3,6 @@ package internal
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -163,7 +162,6 @@ func (s *InfoCollector) pickTable(value string) error {
 		}
 	}
 
-	log.Println("push table")
 	s.Tables.pushToStack(table)
 	s.candidateVar = strings.Join(vars[1:], ",")
 	return nil

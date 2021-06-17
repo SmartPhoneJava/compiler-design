@@ -142,7 +142,6 @@ func (s *InfoCollector) createTable(content string) {
 			index := s.Tables.implicitIndex[s.Tables.currentLvl]
 			name += " anonymous " + strconv.Itoa(index+1)
 		}
-		log.Println("create table", name)
 		namedTable, _ = s.Tables.GetTable(name)
 		headTable.LocalTables[namedTable.NormalizedName()] = namedTable
 		s.Tables.pushToStack(namedTable)

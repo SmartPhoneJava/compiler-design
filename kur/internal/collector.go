@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"kurs/parser"
 	"strings"
 
@@ -106,7 +105,7 @@ func (s *InfoCollector) VisitTerminal(node antlr.TerminalNode) {
 }
 
 func (s *InfoCollector) EnterEveryRule(c antlr.ParserRuleContext) {
-	fmt.Printf("rule %v %v\n", c.GetText(), c.GetRuleIndex())
+	//fmt.Printf("rule %v %v\n", c.GetText(), c.GetRuleIndex())
 }
 
 func (s *InfoCollector) ExitEveryRule(c antlr.ParserRuleContext) {

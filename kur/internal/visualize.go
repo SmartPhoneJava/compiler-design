@@ -16,7 +16,7 @@ func FuncTableMustVisualize(f *Funcs, path, name string) {
 		edges []*visualizer.Edge
 	)
 
-	visualizeInternal("", f.GetFunc(MainFunc), &nodes, &edges)
+	visualizeInternal("", f.GetFunc(MainFunc), &nodes, &edges, map[string]interface{}{})
 	visualizer.Visualize(nodes, edges, path, name)
 }
 
@@ -36,10 +36,14 @@ func visualizeInternal(
 	object Object,
 	nodes *[]*visualizer.Node,
 	edges *[]*visualizer.Edge,
+	visited map[string]interface{},
 ) {
-	if repeat == 0 {
+	_, ok := visited[object.Path()]
+	if ok {
 		return
 	}
+	visited[object.Path()] = nil
+
 	repeat--
 	*nodes = append(*nodes, &visualizer.Node{
 		Name: object.Path(),
@@ -98,6 +102,7 @@ func visualizeInternal(
 			funcObj,
 			nodes,
 			edges,
+			visited,
 		)
 	}
 
@@ -107,6 +112,7 @@ func visualizeInternal(
 			tableObj,
 			nodes,
 			edges,
+			visited,
 		)
 	}
 }

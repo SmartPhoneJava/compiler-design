@@ -189,6 +189,29 @@ func (s *InfoCollector) EnterFunctioncall(ctx *parser.FunctioncallContext) {
 	s.candidate = ctx.GetText()
 }
 
+func (s *InfoCollector) checkIfFunc() {
+	headFunc := s.Funcs.GetCallStackTop()
+	callI := strings.Index(s.candidate, "(")
+	funcName := s.candidate[:callI]
+	blocks, ok := s.fields(funcName)
+	funcObj := &Func{}
+	if ok {
+		funcName = blocks[len(blocks)-1]
+		mainFunc := s.Funcs.GetFunc(MainFunc)
+		funcObj, ok = mainFunc.LocalFuncs[funcName]
+		if !ok {
+			funcObj = NewFunc(mainFunc.Name + " " + funcName)
+		}
+	} else {
+		mainFunc := s.Funcs.GetFunc(MainFunc)
+		funcObj, ok = mainFunc.LocalFuncs[funcName]
+		if !ok {
+			funcObj = NewFunc(mainFunc.Name + " " + funcName)
+		}
+	}
+	headFunc.Calls = append(headFunc.Calls, funcObj)
+}
+
 // ExitFunctioncall is called when production functioncall is exited.
 func (s *InfoCollector) ExitFunctioncall(ctx *parser.FunctioncallContext) {}
 
@@ -224,9 +247,14 @@ func (s *InfoCollector) EnterArgs(ctx *parser.ArgsContext) {
 		funcName = s.candidate
 		funcArgs = s.candidate
 	)
+	log.Println(" s.candidate", s.candidate, s.candidateVar)
 	if argsI >= 0 {
 		funcName = s.candidate[:argsI]
 		funcArgs = s.candidate[argsI:]
+		s.candidate = s.candidate[argsI:]
+		if strings.HasPrefix(s.candidate, "(") {
+			s.candidate = s.candidate[1:]
+		}
 
 		args := strings.Split(funcArgs, ",")
 		funcArgs = ""
@@ -238,11 +266,13 @@ func (s *InfoCollector) EnterArgs(ctx *parser.ArgsContext) {
 		}
 	}
 
-	namedFunc := s.Funcs.GetFunc(s.Funcs.GetCallStackTop().Name + " " + funcName)
-	namedFunc.Args = funcArgs
+	namedFunc := s.Funcs.GetFunc(s.Funcs.GetFunc(MainFunc).Name + " " + funcName)
+	//namedFunc.Args = funcArgs
 
+	log.Println("namedFuncnamedFunc", namedFunc.Name)
 	headFunc := s.Funcs.GetCallStackTop()
 	headFunc.Calls = append(headFunc.Calls, namedFunc)
+	log.Println(headFunc.Name, "->", namedFunc.Name, " = ", len(headFunc.Calls))
 }
 
 // ExitArgs is called when production args is exited.
@@ -376,7 +406,6 @@ func (s *InfoCollector) EnterField(ctx *parser.FieldContext) {
 			realText = realTexts[1]
 		}
 
-		log.Println("namedTable", namedTable)
 		namedTable.LocalVars[varName] = &Var{
 			Name:     varName,
 			Value:    varValue,

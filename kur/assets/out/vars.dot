@@ -1,8 +1,18 @@
 digraph G {
-	"main"->"main global variables"[ color="brown" ];
-	"main global variables" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" color="black">
-  <TR><TD PORT="0" COLSPAN="2" BGCOLOR="#FFDAB9">table: Global variables</TD></TR>
-	<TR><TD BGCOLOR="#FFE4B5" PORT="Name">Name</TD>\n<TD BGCOLOR="#FFE4B5" PORT="Value">Value</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="">a</TD>\n<TD BGCOLOR="#FFEFD5" PORT="">foo()</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="">d</TD>\n<TD BGCOLOR="#FFEFD5" PORT="">foo()</TD>\n</TR><TR><TD BGCOLOR="#FFEFD5" PORT="">localfunc</TD>\n<TD BGCOLOR="#FFEFD5" PORT="">8</TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main"->"main global functions"[ color="#FF8C00" ];
+	"main global functions":lvl4->"main lvl4"[ color=lightgrey ];
+	"main global functions":lvl3->"main lvl3"[ color=lightgrey ];
+	"main global functions":lvl2->"main lvl2"[ color=lightgrey ];
+	"main global functions":lvl1->"main lvl1"[ color=lightgrey ];
+	"main global functions":lvl5->"main lvl5"[ color=lightgrey ];
+	"main global functions" [ color=white, label=<<TABLE BORDER="0" CELLBORDER="1" color="black" CELLSPACING="0">
+	<TR><TD COLSPAN="3" BGCOLOR="#FFD700">Global functions</TD></TR>
+	  <TR><TD BGCOLOR="#FFFF00" PORT="Name">Name</TD>\n<TD BGCOLOR="#FFFF00" PORT="Input">Input</TD>\n<TD BGCOLOR="#FFFF00" PORT="Output">Output</TD>\n</TR><TR><TD BGCOLOR="#FFFFE0" PORT="lvl5">lvl5</TD>\n<TD BGCOLOR="#FFFFE0" PORT="">n</TD>\n<TD BGCOLOR="#FFFFE0" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#FFFFE0" PORT="lvl4">lvl4</TD>\n<TD BGCOLOR="#FFFFE0" PORT="">n</TD>\n<TD BGCOLOR="#FFFFE0" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#FFFFE0" PORT="lvl3">lvl3</TD>\n<TD BGCOLOR="#FFFFE0" PORT="">n</TD>\n<TD BGCOLOR="#FFFFE0" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#FFFFE0" PORT="lvl2">lvl2</TD>\n<TD BGCOLOR="#FFFFE0" PORT="">n</TD>\n<TD BGCOLOR="#FFFFE0" PORT=""></TD>\n</TR><TR><TD BGCOLOR="#FFFFE0" PORT="lvl1">lvl1</TD>\n<TD BGCOLOR="#FFFFE0" PORT="">n</TD>\n<TD BGCOLOR="#FFFFE0" PORT=""></TD>\n</TR>\n</TABLE>>, shape="plaintext", style="rounded,filled" ];
+	"main lvl1" [ color=white, label=lvl1, shape="plaintext", style="rounded,filled" ];
+	"main lvl2" [ color=white, label=lvl2, shape="plaintext", style="rounded,filled" ];
+	"main lvl3" [ color=white, label=lvl3, shape="plaintext", style="rounded,filled" ];
+	"main lvl4" [ color=white, label=lvl4, shape="plaintext", style="rounded,filled" ];
+	"main lvl5" [ color=white, label=lvl5, shape="plaintext", style="rounded,filled" ];
 	"main" [ color=white, label=main, shape="plaintext", style="rounded,filled" ];
 
 }

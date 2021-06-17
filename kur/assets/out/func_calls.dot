@@ -1,6 +1,21 @@
 digraph G {
-	"main"->"main "[ color="#ffa000" ];
-	"main " [ color="#ffa000", shape="box", style="rounded,filled" ];
+	"main"->"main print"[ color="#ffa000" ];
+	"main"->"main lvl1"[ color="#03a9f4" ];
+	"main lvl1"->"main lvl2"[ color="#0288d1" ];
+	"main lvl2"->"main print"[ color="#ffa000" ];
+	"main lvl2"->"main lvl3"[ color="#0288d1" ];
+	"main lvl3"->"main print"[ color="#ffa000" ];
+	"main lvl3"->"main lvl4"[ color="#0288d1" ];
+	"main lvl4"->"main print"[ color="#ffa000" ];
+	"main lvl4"->"main lvl5"[ color="#0288d1" ];
+	"main lvl5"->"main print"[ color="#ffa000" ];
+	"main lvl5"->"main lvl5"[ color="#0288d1" ];
+	"main lvl1" [ color="#03a9f4", label=lvl1, shape="box", style="rounded,filled" ];
+	"main lvl2" [ color="#0288d1", label=lvl2, shape="box", style="rounded,filled" ];
+	"main lvl3" [ color="#0288d1", label=lvl3, shape="box", style="rounded,filled" ];
+	"main lvl4" [ color="#0288d1", label=lvl4, shape="box", style="rounded,filled" ];
+	"main lvl5" [ color="#0288d1", label=lvl5, shape="box", style="rounded,filled" ];
+	"main print" [ color="#ffa000", label=lvl5, shape="box", style="rounded,filled" ];
 	"main" [ color="#0288d1", shape="box", style="rounded,filled" ];
 
 }
